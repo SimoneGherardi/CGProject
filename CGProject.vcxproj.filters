@@ -58,11 +58,14 @@
     <Filter Include="Source Files\initializers\vulkan\surface">
       <UniqueIdentifier>{34bc959a-98fb-4169-880d-1fe1b0809c44}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\initializers\vulkan\graphics_pipeline">
-      <UniqueIdentifier>{55b6d665-fd4e-4b69-b13e-80ea0464e511}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\initializers\vulkan\render_passes">
       <UniqueIdentifier>{00e0135b-88f8-4cb9-8c85-d48737fea775}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\initializers\vulkan\graphics">
+      <UniqueIdentifier>{55b6d665-fd4e-4b69-b13e-80ea0464e511}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\initializers\vulkan\commands">
+      <UniqueIdentifier>{f3ba539d-b5d1-443e-9ef4-c56f1e701c4b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -108,20 +111,29 @@
     <ClCompile Include="ioutils.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
-    <ClCompile Include="graphics_pipeline.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+    <ClCompile Include="graphics_pipeline_states.cpp">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClCompile>
     <ClCompile Include="shader_module.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClCompile>
     <ClCompile Include="viewport.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClCompile>
     <ClCompile Include="graphics_pipeline_layout.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClCompile>
     <ClCompile Include="render_passes.cpp">
       <Filter>Source Files\initializers\vulkan\render_passes</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_pipeline.cpp">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="framebuffers.cpp">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="command_pool.cpp">
+      <Filter>Source Files\initializers\vulkan\commands</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -167,20 +179,32 @@
     <ClInclude Include="ioutils.h">
       <Filter>Source Files\utilities</Filter>
     </ClInclude>
-    <ClInclude Include="graphics_pipeline.h">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+    <ClInclude Include="graphics_pipeline_states.h">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClInclude>
     <ClInclude Include="shader_module.h">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClInclude>
     <ClInclude Include="viewport.h">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClInclude>
     <ClInclude Include="graphics_pipeline_layout.h">
-      <Filter>Source Files\initializers\vulkan\graphics_pipeline</Filter>
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
     </ClInclude>
     <ClInclude Include="render_passes.h">
       <Filter>Source Files\initializers\vulkan\render_passes</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_pipeline.h">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="framebuffers.h">
+      <Filter>Source Files\initializers\vulkan\graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="command_pool.h">
+      <Filter>Source Files\initializers\vulkan\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="command_buffers.h">
+      <Filter>Source Files\initializers\vulkan\commands</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

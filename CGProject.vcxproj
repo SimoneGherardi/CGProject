@@ -135,9 +135,12 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
     <ClCompile Include="extensions.cpp" />
+    <ClCompile Include="framebuffers.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
+    <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="instance.cpp" />
@@ -156,10 +159,14 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="command_buffers.h" />
+    <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="extensions.h" />
+    <ClInclude Include="framebuffers.h" />
     <ClInclude Include="graphics_pipeline.h" />
+    <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="instance.h" />

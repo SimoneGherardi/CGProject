@@ -163,10 +163,7 @@ void initializeRenderPass(const VkPhysicalDevice& physicalDevice, const VkDevice
     }
 }
 
-void cleanupRenderPass(
-    const VkDevice& device,
-    VkRenderPass& renderPass
-)
+void cleanupRenderPass(const VkDevice& device, VkRenderPass& renderPass)
 {
     vkDestroyRenderPass(device, renderPass, nullptr);
 }

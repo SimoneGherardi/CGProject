@@ -42,6 +42,8 @@ extern void initializeRenderPass(
     VkRenderPass* renderPass
 );
 
+extern void cleanupRenderPass(const VkDevice& device, VkRenderPass& renderPass);
+
 extern VkFormat findDepthFormat(const VkPhysicalDevice& physicalDevice);
 
 extern VkFormat findSupportedFormat(

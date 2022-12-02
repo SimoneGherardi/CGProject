@@ -163,6 +163,14 @@ void initializeRenderPass(const VkPhysicalDevice& physicalDevice, const VkDevice
     }
 }
 
+void cleanupRenderPass(
+    const VkDevice& device,
+    VkRenderPass& renderPass
+)
+{
+    vkDestroyRenderPass(device, renderPass, nullptr);
+}
+
 VkFormat findDepthFormat(const VkPhysicalDevice& physicalDevice) {
     return findSupportedFormat(
         physicalDevice,

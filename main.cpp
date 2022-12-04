@@ -47,6 +47,181 @@ const bool enableValidationLayers = true;
 const bool Verbose = true;
 #endif
 
+struct VertexDescriptor {
+    bool hasPos;
+    bool hasNormal;
+    bool hasTexCoord;
+    bool hasColor;
+    bool hasTangent;
+
+    int deltaPos;
+    int deltaNormal;
+    int deltaTexCoord;
+    int deltaColor;
+    int deltaTangent;
+
+    int locPos;
+    int locNormal;
+    int locTexCoord;
+    int locColor;
+    int locTangent;
+
+    int size;
+    int loc;
+
+    VertexDescriptor(bool hPos, bool hNormal, bool hTexCoord, bool hColor, bool hTangent) {
+        size = 0;
+        loc = 0;
+
+        hasPos = hPos;
+        hasNormal = hNormal;
+        hasTexCoord = hTexCoord;
+        hasColor = hColor;
+        hasTangent = hTangent;
+
+        if (hasPos) { deltaPos = size; size += 3; locPos = loc; loc++; }
+        else { deltaPos = -1; locPos = -1; }
+        if (hasNormal) { deltaNormal = size; size += 3; locNormal = loc; loc++; }
+        else { deltaNormal = -1; locNormal = -1; }
+        if (hasTexCoord) { deltaTexCoord = size; size += 2; locTexCoord = loc; loc++; }
+        else { deltaTexCoord = -1; locTexCoord = -1; }
+        if (hasColor) { deltaColor = size; size += 4; locColor = loc; loc++; }
+        else { deltaColor = -1; locColor = -1; }
+        if (hasTangent) { deltaTangent = size; size += 4; locTangent = loc; loc++; }
+        else { deltaTangent = -1; locTangent = -1; }
+    }
+
+
+    VkVertexInputBindingDescription getBindingDescription() {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = size * sizeof(float);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        return bindingDescription;
+    }
+
+    std::vector<VkVertexInputAttributeDescription>
+        getAttributeDescriptions(int binding = 0) {
+        std::vector<VkVertexInputAttributeDescription>
+            attributeDescriptions{};
+        attributeDescriptions.resize(loc);
+        if (hasPos) {
+            attributeDescriptions[locPos].binding = binding;
+            attributeDescriptions[locPos].location = locPos;
+            attributeDescriptions[locPos].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[locPos].offset = deltaPos * sizeof(float);
+        }
+
+        if (hasNormal) {
+            attributeDescriptions[locNormal].binding = binding;
+            attributeDescriptions[locNormal].location = locNormal;
+            attributeDescriptions[locNormal].format = VK_FORMAT_R32G32B32_SFLOAT;
+            attributeDescriptions[locNormal].offset = deltaNormal * sizeof(float);
+        }
+
+        if (hasTexCoord) {
+            attributeDescriptions[locTexCoord].binding = binding;
+            attributeDescriptions[locTexCoord].location = locTexCoord;
+            attributeDescriptions[locTexCoord].format = VK_FORMAT_R32G32_SFLOAT;
+            attributeDescriptions[locTexCoord].offset = deltaTexCoord * sizeof(float);
+        }
+
+        if (hasColor) {
+            attributeDescriptions[locColor].binding = binding;
+            attributeDescriptions[locColor].location = locColor;
+            attributeDescriptions[locColor].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attributeDescriptions[locColor].offset = deltaColor * sizeof(float);
+        }
+
+        if (hasTangent) {
+            attributeDescriptions[locTangent].binding = binding;
+            attributeDescriptions[locTangent].location = locTangent;
+            attributeDescriptions[locTangent].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+            attributeDescriptions[locTangent].offset = deltaTangent * sizeof(float);
+        }
+
+        return attributeDescriptions;
+    }
+
+    glm::vec3 getPos(float* data, int i) {
+        if (hasPos) {
+            return glm::vec3(data[i * size + deltaPos], data[i * size + deltaPos + 1], data[i * size + deltaPos + 2]);
+        }
+        else {
+            return glm::vec3(0.0f);
+            std::cerr << "Vertex has no position \n";
+        }
+    }
+
+    void setPos(float* data, int i, glm::vec3 pos) {
+        if (hasPos) {
+            data[i * size + deltaPos] = pos.x;
+            data[i * size + deltaPos + 1] = pos.y;
+            data[i * size + deltaPos + 2] = pos.z;
+        }
+        else {
+            std::cerr << "Vertex has no position \n";
+        }
+    }
+
+    glm::vec3 getNormal(float* data, int i) {
+        if (hasPos) {
+            return glm::vec3(data[i * size + deltaNormal], data[i * size + deltaNormal + 1], data[i * size + deltaNormal + 2]);
+        }
+        else {
+            return glm::vec3(0.0f);
+            std::cerr << "Vertex has no normal \n";
+        }
+    }
+
+    void setNormal(float* data, int i, glm::vec3 norm) {
+        if (hasNormal) {
+            data[i * size + deltaNormal] = norm.x;
+            data[i * size + deltaNormal + 1] = norm.y;
+            data[i * size + deltaNormal + 2] = norm.z;
+        }
+        else {
+            std::cerr << "Vertex has no normal \n";
+        }
+    }
+
+    glm::vec2 getTexCoord(float* data, int i) {
+        if (hasPos) {
+            return glm::vec2(data[i * size + deltaTexCoord], data[i * size + deltaTexCoord + 1]);
+        }
+        else {
+            return glm::vec2(0.0f);
+            std::cerr << "Vertex has no UV \n";
+        }
+    }
+
+    void setTexCoord(float* data, int i, glm::vec3 uv) {
+        if (hasNormal) {
+            data[i * size + deltaTexCoord] = uv.x;
+            data[i * size + deltaTexCoord + 1] = uv.y;
+        }
+        else {
+            std::cerr << "Vertex has no UV \n";
+        }
+    }
+};
+
+struct UniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+};
+
+struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 lightDir;
+    alignas(16) glm::vec3 lightPos;
+    alignas(16) glm::vec3 lightColor;
+    alignas(16) glm::vec3 eyePos;
+    alignas(16) glm::vec4 coneInOutDecayExp;
+    alignas(16) glm::vec4 selector;
+};
+
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
@@ -125,6 +300,32 @@ void PrintVkError(VkResult result) {
     std::cout << "Error: " << result << ", " << meaning << "\n";
 }
 
+struct ModelData {
+    VertexDescriptor* vertDesc;
+    std::vector<float> vertices;
+    std::vector<uint32_t> indices;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+};
+
+struct TextureData {
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
+    uint32_t mipLevels;
+};
+
+struct SceneModel {
+    // Model data
+    ModelData MD;
+
+    // Texture data
+    TextureData TD;
+};
+
 class CGProject {
 public:
     void run() {
@@ -159,6 +360,34 @@ private:
     VkImage colorImage;
     VkDeviceMemory colorImageMemory;
     VkImageView colorImageView;
+
+    VkDescriptorPool descriptorPool;
+
+    // Phong pipeline
+    VkDescriptorSetLayout PhongDescriptorSetLayout;
+    VkPipelineLayout PhongPipelineLayout;
+    VkPipeline PhongPipeline;
+    //// For the first uniform (per object)
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    //// For the second uniform (per scene)
+    std::vector<VkBuffer> globalUniformBuffers;
+    std::vector<VkDeviceMemory> globalUniformBuffersMemory;
+    // to access uniforms in the pipeline
+    std::vector<VkDescriptorSet> PhongDescriptorSets;
+    // Scene graph using the Phong pipeline
+    std::vector<SceneModel> Scene;
+
+    //  Skybox pipeline
+    VkDescriptorSetLayout SkyBoxDescriptorSetLayout; // for skybox
+    VkPipelineLayout SkyBoxPipelineLayout;	// for skybox
+    VkPipeline SkyBoxPipeline;		// for skybox
+    std::vector<VkBuffer> SkyBoxUniformBuffers;
+    std::vector<VkDeviceMemory> SkyBoxUniformBuffersMemory;
+    // to access uniforms in the pipeline
+    std::vector<VkDescriptorSet> SkyBoxDescriptorSets;
+    // Skybox definition, using the Skybox pipeline
+    std::vector<SceneModel> SkyBox;
 
     void initWindow() {
         glfwInit();
@@ -778,6 +1007,119 @@ private:
         }
 
         throw std::runtime_error("failed to find supported format!");
+    }
+
+    void createDescriptorSetLayouts() {
+        // Wireframe
+        createPhongDescriptorSetLayout();
+        // Phong
+        
+        // Skybox
+        createSkyBoxDescriptorSetLayout();
+        // Text?
+        createTextDescriptorSetLayout();
+    }
+
+    void createSkyBoxDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorType =
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings =
+        { uboLayoutBinding, samplerLayoutBinding };
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
+            nullptr, &SkyBoxDescriptorSetLayout);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create SkyBox descriptor set layout!");
+        }
+    }
+
+    void createPhongDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
+            PhongDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
+        allocInfo.pSetLayouts = layouts.data();
+
+        PhongDescriptorSets.resize(swapChainImages.size() * Scene.size());
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
+            PhongDescriptorSets.data());
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t k = 0; k < swapChainImages.size(); k++) {
+            for (size_t j = 0; j < Scene.size(); j++) {
+                size_t i = j * swapChainImages.size() + k;
+
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = uniformBuffers[i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = sizeof(UniformBufferObject);
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = Scene[j].TD.textureImageView;
+                imageInfo.sampler = Scene[j].TD.textureSampler;
+
+                VkDescriptorBufferInfo globalBufferInfo{};
+                globalBufferInfo.buffer = globalUniformBuffers[k];
+                globalBufferInfo.offset = 0;
+                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
+
+                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[0].dstBinding = 0;
+                descriptorWrites[0].dstArrayElement = 0;
+                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[0].descriptorCount = 1;
+                descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[1].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[1].dstBinding = 1;
+                descriptorWrites[1].dstArrayElement = 0;
+                descriptorWrites[1].descriptorType =
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorWrites[1].descriptorCount = 1;
+                descriptorWrites[1].pImageInfo = &imageInfo;
+
+                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[2].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[2].dstBinding = 2;
+                descriptorWrites[2].dstArrayElement = 0;
+                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[2].descriptorCount = 1;
+                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
+
+                vkUpdateDescriptorSets(device,
+                    static_cast<uint32_t>(descriptorWrites.size()),
+                    descriptorWrites.data(), 0, nullptr);
+            }
+        }
     }
 
 };

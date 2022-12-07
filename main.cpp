@@ -31,6 +31,10 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
+const std::string MODEL_PATH = "models/";
+const std::string TEXTURE_PATH = "textures/";
+const std::string SHADER_PATH = "shaders/";
+
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -363,6 +367,8 @@ private:
 
     VkDescriptorPool descriptorPool;
 
+    VertexDescriptor 	phongAndSkyBoxVertices = VertexDescriptor(true, true, true, false, false);
+
     // Phong pipeline
     VkDescriptorSetLayout PhongDescriptorSetLayout;
     VkPipelineLayout PhongPipelineLayout;
@@ -377,6 +383,21 @@ private:
     std::vector<VkDescriptorSet> PhongDescriptorSets;
     // Scene graph using the Phong pipeline
     std::vector<SceneModel> Scene;
+
+    // Wireframe pipeline
+    VkDescriptorSetLayout WireframeDescriptorSetLayout;
+    VkPipelineLayout WireframePipelineLayout;
+    VkPipeline WireframePipeline;
+    //// For the first uniform (per object)
+    std::vector<VkBuffer> WireframeUniformBuffers;
+    std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
+    //// For the second uniform (per scene)
+    std::vector<VkBuffer> WireframeGlobalUniformBuffers;
+    std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
+    // to access uniforms in the pipeline
+    std::vector<VkDescriptorSet> WireframeDescriptorSets;
+    // Scene graph using the Wireframe pipeline
+    std::vector<SceneModel> WireframeScene;
 
     //  Skybox pipeline
     VkDescriptorSetLayout SkyBoxDescriptorSetLayout; // for skybox
@@ -407,6 +428,8 @@ private:
         createSwapChain();
         createImageViews();
         createRenderPass();
+        createDescriptorSetLayouts();
+        createPipelines();
     }
 
     void mainLoop() {
@@ -1010,14 +1033,12 @@ private:
     }
 
     void createDescriptorSetLayouts() {
-        // Wireframe
-        createPhongDescriptorSetLayout();
-        // Phong
-        
         // Skybox
         createSkyBoxDescriptorSetLayout();
-        // Text?
-        createTextDescriptorSetLayout();
+        // Wireframe
+        createWireframeDescriptorSetLayout();
+        // Phong
+        createPhongDescriptorSetLayout();
     }
 
     void createSkyBoxDescriptorSetLayout() {
@@ -1049,6 +1070,82 @@ private:
         if (result != VK_SUCCESS) {
             PrintVkError(result);
             throw std::runtime_error("failed to create SkyBox descriptor set layout!");
+        }
+    }
+    void createPhongDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorType =
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
+        globalUboLayoutBinding.binding = 2;
+        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        globalUboLayoutBinding.descriptorCount = 1;
+        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+        globalUboLayoutBinding.pImmutableSamplers = nullptr;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
+        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
+            nullptr, &PhongDescriptorSetLayout);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create descriptor set layout!");
+        }
+    }
+    void createWireframeDescriptorSetLayout() {
+        VkDescriptorSetLayoutBinding uboLayoutBinding{};
+        uboLayoutBinding.binding = 0;
+        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        uboLayoutBinding.descriptorCount = 1;
+        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+        uboLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
+        samplerLayoutBinding.binding = 1;
+        samplerLayoutBinding.descriptorType =
+            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        samplerLayoutBinding.descriptorCount = 1;
+        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+        samplerLayoutBinding.pImmutableSamplers = nullptr;
+
+        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
+        globalUboLayoutBinding.binding = 2;
+        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        globalUboLayoutBinding.descriptorCount = 1;
+        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
+        globalUboLayoutBinding.pImmutableSamplers = nullptr;
+
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
+        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
+
+        VkDescriptorSetLayoutCreateInfo layoutInfo{};
+        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
+        layoutInfo.pBindings = bindings.data();
+
+        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
+            nullptr, &PhongDescriptorSetLayout);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create descriptor set layout!");
         }
     }
 
@@ -1122,6 +1219,254 @@ private:
         }
     }
 
+    void createPipelines() {
+        createSkyBoxPipeline();
+        createPhongPipeline();
+        createWireframePipeline();
+    }
+
+    // Phong pipeline differs from wireframe in parameter VK_POLYGON_MODE_LINE
+    void createPhongPipeline() {
+        createPipeline("PhongVert.spv", "PhongFrag.spv",
+            PhongPipelineLayout, PhongPipeline,
+            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
+    }
+
+    void createWireframePipeline() {
+        createPipeline("WireframeVert.spv", "WireframeFrag.spv",
+            WireframePipelineLayout, WireframePipeline,
+            WireframeDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
+            VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
+    }
+
+    void createSkyBoxPipeline() {
+        createPipeline("SkyBoxVert.spv", "SkyBoxFrag.spv",
+            SkyBoxPipelineLayout, SkyBoxPipeline,
+            SkyBoxDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
+    }
+
+    void createPipeline(const char* VertexShaderName, const char* FragShaderName,
+        VkPipelineLayout& PipelineLayout,
+        VkPipeline& Pipeline,
+        VkDescriptorSetLayout& descriptorSetLayout,
+        VkCompareOp compareOp, VkPolygonMode polyModel,
+        VkCullModeFlagBits CM, bool transp,
+        VertexDescriptor& VD) {
+        auto vertShaderCode = readFile((SHADER_PATH + VertexShaderName).c_str());
+        auto fragShaderCode = readFile((SHADER_PATH + FragShaderName).c_str());
+
+        VkShaderModule vertShaderModule =
+            createShaderModule(vertShaderCode);
+        VkShaderModule fragShaderModule =
+            createShaderModule(fragShaderCode);
+
+        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
+        vertShaderStageInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
+        vertShaderStageInfo.module = vertShaderModule;
+        vertShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
+        fragShaderStageInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
+        fragShaderStageInfo.module = fragShaderModule;
+        fragShaderStageInfo.pName = "main";
+
+        VkPipelineShaderStageCreateInfo shaderStages[] =
+        { vertShaderStageInfo, fragShaderStageInfo };
+
+        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
+        vertexInputInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+        auto bindingDescription = VD.getBindingDescription();
+        auto attributeDescriptions = VD.getAttributeDescriptions();
+
+        vertexInputInfo.vertexBindingDescriptionCount = 1;
+        vertexInputInfo.vertexAttributeDescriptionCount =
+            static_cast<uint32_t>(attributeDescriptions.size());
+        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+        vertexInputInfo.pVertexAttributeDescriptions =
+            attributeDescriptions.data();
+
+        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
+        inputAssembly.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.primitiveRestartEnable = VK_FALSE;
+
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = (float)swapChainExtent.width;
+        viewport.height = (float)swapChainExtent.height;
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
+
+        VkRect2D scissor{};
+        scissor.offset = { 0, 0 };
+        scissor.extent = swapChainExtent;
+
+        VkPipelineViewportStateCreateInfo viewportState{};
+        viewportState.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        viewportState.viewportCount = 1;
+        viewportState.pViewports = &viewport;
+        viewportState.scissorCount = 1;
+        viewportState.pScissors = &scissor;
+
+        VkPipelineRasterizationStateCreateInfo rasterizer{};
+        rasterizer.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+        rasterizer.depthClampEnable = VK_FALSE;
+        rasterizer.rasterizerDiscardEnable = VK_FALSE;
+        rasterizer.polygonMode = polyModel;
+        rasterizer.lineWidth = 1.0f;
+        rasterizer.cullMode = CM;
+        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+        rasterizer.depthBiasEnable = VK_FALSE;
+        rasterizer.depthBiasConstantFactor = 0.0f; // Optional
+        rasterizer.depthBiasClamp = 0.0f; // Optional
+        rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
+
+        VkPipelineMultisampleStateCreateInfo multisampling{};
+        multisampling.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+        multisampling.sampleShadingEnable = VK_TRUE;
+        multisampling.minSampleShading = .2f;
+        multisampling.rasterizationSamples = msaaSamples;
+        multisampling.minSampleShading = 1.0f; // Optional
+        multisampling.pSampleMask = nullptr; // Optional
+        multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
+        multisampling.alphaToOneEnable = VK_FALSE; // Optional
+
+        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
+        colorBlendAttachment.colorWriteMask =
+            VK_COLOR_COMPONENT_R_BIT |
+            VK_COLOR_COMPONENT_G_BIT |
+            VK_COLOR_COMPONENT_B_BIT |
+            VK_COLOR_COMPONENT_A_BIT;
+        colorBlendAttachment.blendEnable = transp ? VK_TRUE : VK_FALSE;
+        colorBlendAttachment.srcColorBlendFactor =
+            transp ? VK_BLEND_FACTOR_SRC_ALPHA : VK_BLEND_FACTOR_ONE;
+        colorBlendAttachment.dstColorBlendFactor =
+            transp ? VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : VK_BLEND_FACTOR_ZERO;
+        colorBlendAttachment.colorBlendOp =
+            VK_BLEND_OP_ADD; // Optional
+        colorBlendAttachment.srcAlphaBlendFactor =
+            VK_BLEND_FACTOR_ONE; // Optional
+        colorBlendAttachment.dstAlphaBlendFactor =
+            VK_BLEND_FACTOR_ZERO; // Optional
+        colorBlendAttachment.alphaBlendOp =
+            VK_BLEND_OP_ADD; // Optional
+
+        VkPipelineColorBlendStateCreateInfo colorBlending{};
+        colorBlending.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+        colorBlending.logicOpEnable = VK_FALSE;
+        colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
+        colorBlending.attachmentCount = 1;
+        colorBlending.pAttachments = &colorBlendAttachment;
+        colorBlending.blendConstants[0] = 0.0f; // Optional
+        colorBlending.blendConstants[1] = 0.0f; // Optional
+        colorBlending.blendConstants[2] = 0.0f; // Optional
+        colorBlending.blendConstants[3] = 0.0f; // Optional
+
+        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
+        pipelineLayoutInfo.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+        pipelineLayoutInfo.setLayoutCount = 1;
+        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
+        pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
+
+        VkResult result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
+            &PipelineLayout);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create pipeline layout!");
+        }
+
+        VkPipelineDepthStencilStateCreateInfo depthStencil{};
+        depthStencil.sType =
+            VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        depthStencil.depthTestEnable = VK_TRUE;
+        depthStencil.depthWriteEnable = VK_TRUE;
+        depthStencil.depthCompareOp = compareOp;
+        depthStencil.depthBoundsTestEnable = VK_FALSE;
+        depthStencil.minDepthBounds = 0.0f; // Optional
+        depthStencil.maxDepthBounds = 1.0f; // Optional
+        depthStencil.stencilTestEnable = VK_FALSE;
+        depthStencil.front = {}; // Optional
+        depthStencil.back = {}; // Optional
+
+        VkGraphicsPipelineCreateInfo pipelineInfo{};
+        pipelineInfo.sType =
+            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+        pipelineInfo.stageCount = 2;
+        pipelineInfo.pStages = shaderStages;
+        pipelineInfo.pVertexInputState = &vertexInputInfo;
+        pipelineInfo.pInputAssemblyState = &inputAssembly;
+        pipelineInfo.pViewportState = &viewportState;
+        pipelineInfo.pRasterizationState = &rasterizer;
+        pipelineInfo.pMultisampleState = &multisampling;
+        pipelineInfo.pDepthStencilState = &depthStencil;
+        pipelineInfo.pColorBlendState = &colorBlending;
+        pipelineInfo.pDynamicState = nullptr; // Optional
+        pipelineInfo.layout = PipelineLayout;
+        pipelineInfo.renderPass = renderPass;
+        pipelineInfo.subpass = 0;
+        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
+        pipelineInfo.basePipelineIndex = -1; // Optional
+
+        result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
+            &pipelineInfo, nullptr, &Pipeline);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create graphics pipeline!");
+        }
+
+        vkDestroyShaderModule(device, fragShaderModule, nullptr);
+        vkDestroyShaderModule(device, vertShaderModule, nullptr);
+    }
+
+    VkShaderModule createShaderModule(const std::vector<char>& code) {
+        VkShaderModuleCreateInfo createInfo{};
+        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+        createInfo.codeSize = code.size();
+        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
+
+        VkShaderModule shaderModule;
+
+        VkResult result = vkCreateShaderModule(device, &createInfo, nullptr,
+            &shaderModule);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create shader module!");
+        }
+
+        return shaderModule;
+    }
+
+    static std::vector<char> readFile(const std::string& filename) {
+        std::ifstream file(filename, std::ios::ate | std::ios::binary);
+        if (!file.is_open()) {
+            throw std::runtime_error("failed to open file!");
+        }
+
+        size_t fileSize = (size_t)file.tellg();
+        std::vector<char> buffer(fileSize);
+
+        file.seekg(0);
+        file.read(buffer.data(), fileSize);
+
+        file.close();
+
+        return buffer;
+    }
 };
 
 int main() {

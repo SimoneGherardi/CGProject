@@ -32,9 +32,9 @@
 const uint32_t WIDTH = 640;
 const uint32_t HEIGHT = 480;
 
-const std::string MODEL_PATH = "models/";
-const std::string TEXTURE_PATH = "textures/";
-const std::string SHADER_PATH = "shaders/";
+const std::string MODEL_PATH = "resources/models/";
+const std::string TEXTURE_PATH = "resources/textures/";
+const std::string SHADER_PATH = "resources/shaders/";
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;

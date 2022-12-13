@@ -26,6 +26,8 @@
 
 #include <chrono>
 
+#include <flecs.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 
 

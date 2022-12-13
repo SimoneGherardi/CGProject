@@ -809,16 +809,17 @@ private:
     }
 
     void cleanup() {
+        vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
+
         vkDestroyCommandPool(device, commandPool, nullptr);
+
         vkDestroyDevice(device, nullptr);
+
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
-        glfwDestroyWindow(window);
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
 
-        for (auto imageView : swapChainImageViews) {
-            vkDestroyImageView(device, imageView, nullptr);
-        }
+        glfwDestroyWindow(window);
 
         glfwTerminate();
     }

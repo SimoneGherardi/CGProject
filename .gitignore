@@ -1,6 +1,7 @@
 .vs/**/*
 x64/**/*
 x86/**/*
+enc_temp_folder/**/*
 
 # Compiled source #
 ###################

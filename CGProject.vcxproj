@@ -145,6 +145,7 @@
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="ioutils.cpp" />
+    <ClCompile Include="libraries\flecs\flecs.c" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="physical_device.cpp" />

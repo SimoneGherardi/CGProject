@@ -28,6 +28,7 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 
+
 const uint32_t WIDTH = 640;
 const uint32_t HEIGHT = 480;
 
@@ -49,6 +50,7 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
+
 
 const std::vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -279,6 +281,7 @@ private:
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     VkQueue graphicsQueue;
+
     VkSurfaceKHR surface;
     VkQueue presentQueue;
     VkCommandPool commandPool;
@@ -322,6 +325,7 @@ private:
     VkPipeline SkyBoxPipeline;
 
     void initWindow() {
+
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -343,10 +347,10 @@ private:
         createColorResources();
         createDepthResources();
         createFramebuffers();
-
         createCommandBuffer();
 
     }
+   
 
     void createInstance() {
         VkApplicationInfo appInfo{};
@@ -1451,13 +1455,16 @@ private:
     }
 };
 
-int main() {
+int main()
+{
     CGProject app;
 
-    try {
+    try
+    {
         app.run();
     }
-    catch (const std::exception& e) {
+    catch (const std::exception& e)
+    {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }

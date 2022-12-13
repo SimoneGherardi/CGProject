@@ -301,6 +301,9 @@ private:
     VkDeviceMemory colorImageMemory;
     VkImageView colorImageView;
 
+    std::vector<VkFramebuffer> swapChainFramebuffers;
+    size_t currentFrame = 0;
+
     VertexDescriptor 	phongAndSkyBoxVertices = VertexDescriptor(true, true, true, false, false);
 
     // Wireframe pipeline
@@ -339,6 +342,8 @@ private:
         createCommandPool();
         createColorResources();
         createDepthResources();
+        createFramebuffers();
+
         createCommandBuffer();
 
     }
@@ -1415,6 +1420,34 @@ private:
     bool hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
             format == VK_FORMAT_D24_UNORM_S8_UINT;
+    }
+
+    void createFramebuffers() {
+        swapChainFramebuffers.resize(swapChainImageViews.size());
+        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+            std::array<VkImageView, 2> attachments = {
+                swapChainImageViews[i],
+                depthImageView
+            };
+
+            VkFramebufferCreateInfo framebufferInfo{};
+            framebufferInfo.sType =
+                VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+            framebufferInfo.renderPass = renderPass;
+            framebufferInfo.attachmentCount =
+                static_cast<uint32_t>(attachments.size());;
+            framebufferInfo.pAttachments = attachments.data();
+            framebufferInfo.width = swapChainExtent.width;
+            framebufferInfo.height = swapChainExtent.height;
+            framebufferInfo.layers = 1;
+
+            VkResult result = vkCreateFramebuffer(device, &framebufferInfo, nullptr,
+                &swapChainFramebuffers[i]);
+            if (result != VK_SUCCESS) {
+                PrintVkError(result);
+                throw std::runtime_error("failed to create framebuffer!");
+            }
+        }
     }
 };
 

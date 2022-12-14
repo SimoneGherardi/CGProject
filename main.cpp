@@ -1,5 +1,9 @@
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
+
+#include <flecs.h>
+#include "test.h"
 
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
@@ -1487,11 +1491,28 @@ void testPhysics()
     return 0;
 }
 
+void testECS()
+{
+    flecs::world world;
+    world.import<Test>();
+
+    auto e = world.entity()
+        .set<Counter>({ 0 });
+
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+}
+
 int main()
 {
     testPhysics();
     
     CGProject app;
+
+    testECS();
 
     try
     {
@@ -1504,5 +1525,4 @@ int main()
     }
 
     return EXIT_SUCCESS;
-    
 }

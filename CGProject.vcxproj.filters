@@ -70,6 +70,12 @@
     <Filter Include="Source Files\libraries">
       <UniqueIdentifier>{73bb6f91-0f9e-4555-b898-55e645e412cb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\ecs">
+      <UniqueIdentifier>{4c9d8187-73dd-44ca-ab36-9e4cc2de8afc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ecs">
+      <UniqueIdentifier>{9e3dc080-f924-47d8-bd90-19d199bff037}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -141,6 +147,9 @@
     <ClCompile Include="libraries\flecs\flecs.c">
       <Filter>Source Files\libraries</Filter>
     </ClCompile>
+    <ClCompile Include="test.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="window.h">
@@ -211,6 +220,9 @@
     </ClInclude>
     <ClInclude Include="command_buffers.h">
       <Filter>Source Files\initializers\vulkan\commands</Filter>
+    </ClInclude>
+    <ClInclude Include="test.h">
+      <Filter>Header Files\ecs</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

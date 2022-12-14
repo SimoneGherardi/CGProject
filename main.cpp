@@ -58,6 +58,8 @@ const std::string MODEL_PATH = "resources/models/";
 const std::string TEXTURE_PATH = "resources/textures/";
 const std::string SHADER_PATH = "resources/shaders/";
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
     std::optional<uint32_t> presentFamily;
@@ -491,6 +493,8 @@ private:
         createDescriptorSets();
 
         createCommandBuffers();
+
+        createSyncObjects();
 
     }
    
@@ -2553,6 +2557,37 @@ private:
             }
         }
     }
+
+    void createSyncObjects() {
+        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
+        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        imagesInFlight.resize(swapChainImages.size(), VK_NULL_HANDLE);
+
+        VkSemaphoreCreateInfo semaphoreInfo{};
+        semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+
+        VkFenceCreateInfo fenceInfo{};
+        fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+        fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            VkResult result1 = vkCreateSemaphore(device, &semaphoreInfo, nullptr,
+                &imageAvailableSemaphores[i]);
+            VkResult result2 = vkCreateSemaphore(device, &semaphoreInfo, nullptr,
+                &renderFinishedSemaphores[i]);
+            VkResult result3 = vkCreateFence(device, &fenceInfo, nullptr,
+                &inFlightFences[i]);
+            if (result1 != VK_SUCCESS ||
+                result2 != VK_SUCCESS ||
+                result3 != VK_SUCCESS) {
+                PrintVkError(result1);
+                PrintVkError(result2);
+                PrintVkError(result3);
+                throw std::runtime_error("failed to create synchronization objects for a frame!!");
+            }
+        }
+    }
 };
 
 using namespace reactphysics3d;
@@ -2618,8 +2653,7 @@ int main()
     {
         app.run();
     }
-    catch (const std::exception& e)
-    {
+    catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }

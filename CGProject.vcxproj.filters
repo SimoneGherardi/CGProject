@@ -224,5 +224,8 @@
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
+    <ClInclude Include="vulkan.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

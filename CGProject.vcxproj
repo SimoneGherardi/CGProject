@@ -186,6 +186,7 @@
     <ClInclude Include="test.h" />
     <ClInclude Include="validation_layers.h" />
     <ClInclude Include="viewport.h" />
+    <ClInclude Include="vulkan.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

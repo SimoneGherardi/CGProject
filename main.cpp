@@ -2590,12 +2590,13 @@ private:
     }
 };
 
+
 using namespace reactphysics3d;
 
 void testPhysics()
 {
     PhysicsCommon physicsCommon;
-
+    
     PhysicsWorld* world = physicsCommon.createPhysicsWorld();
 
     Vector3 position(0, 20, 0);

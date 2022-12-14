@@ -1,5 +1,9 @@
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
+
+#include <flecs.h>
+#include "test.h"
 
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
@@ -25,6 +29,10 @@
 #include <glm/gtx/hash.hpp>
 
 #include <chrono>
+
+#include <reactphysics3d/reactphysics3d.h>
+#include <flecs.h>
+
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
@@ -52,6 +60,7 @@ const std::string TEXTURE_PATH = "resources/textures/";
 const std::string SHADER_PATH = "resources/shaders/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -2583,6 +2592,35 @@ private:
     }
 };
 
+
+using namespace reactphysics3d;
+
+void testECS()
+{
+    flecs::world world;
+    world.import<Test>();
+
+    // auto e = world.entity();
+
+    // Set the value for the Position & Velocity components. A component will be
+    // added if the entity doesn't have it yet.
+    auto a = world.entity()
+        .set<Counter>({ 0 });
+    auto b = world.entity()
+        .set<Counter>({ 10 });
+    auto c = world.entity()
+        .set<Counter>({ 20 });
+    world.system<Counter>().kind(flecs::OnUpdate).iter([](flecs::iter it) {
+        printf("AAA\n");
+        });
+
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+}
+
 int main()
 {
     CGProject app;
@@ -2594,5 +2632,6 @@ int main()
         return EXIT_FAILURE;
     }
 
-    return EXIT_SUCCESS;
+    return EXIT_SUCCESS;*/
+    
 }

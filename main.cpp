@@ -90,6 +90,25 @@ const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Moon.jpg", {0,0.0, 0.0}, 1.0}
 };
 
+struct UniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+};
+
+struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 lightDir0;
+    alignas(16) glm::vec3 lightColor0;
+    alignas(16) glm::vec3 lightDir1;
+    alignas(16) glm::vec3 lightColor1;
+    alignas(16) glm::vec3 lightDir2;
+    alignas(16) glm::vec3 lightColor2;
+    alignas(16) glm::vec3 lightDir3;
+    alignas(16) glm::vec3 lightColor3;
+    alignas(16) glm::vec3 eyePos;
+    alignas(16) glm::vec4 selector;
+};
+
 struct SkyBoxModel {
     const char* ObjFile;
     ModelType type;
@@ -453,6 +472,7 @@ private:
         createFramebuffers();
         
         loadModels();
+        createUniformBuffers();
 
         createCommandBuffer();
 
@@ -2156,6 +2176,57 @@ private:
             VK_IMAGE_ASPECT_COLOR_BIT,
             TD.mipLevels,
             VK_IMAGE_VIEW_TYPE_CUBE, 6);
+    }
+
+    void createUniformBuffers() {
+        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+
+        uniformBuffers.resize(swapChainImages.size() * Scene.size());
+        uniformBuffersMemory.resize(swapChainImages.size() * Scene.size());
+
+        for (size_t i = 0; i < swapChainImages.size() * Scene.size(); i++) {
+            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                uniformBuffers[i], uniformBuffersMemory[i]);
+        }
+
+        bufferSize = sizeof(GlobalUniformBufferObject);
+
+        globalUniformBuffers.resize(swapChainImages.size());
+        globalUniformBuffersMemory.resize(swapChainImages.size());
+
+        for (size_t i = 0; i < swapChainImages.size(); i++) {
+            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                globalUniformBuffers[i], globalUniformBuffersMemory[i]);
+        }
+
+        bufferSize = sizeof(UniformBufferObject);
+
+        SkyBoxUniformBuffers.resize(swapChainImages.size() * SkyBox.size());
+        SkyBoxUniformBuffersMemory.resize(swapChainImages.size() * SkyBox.size());
+
+        for (size_t i = 0; i < swapChainImages.size() * SkyBox.size(); i++) {
+            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                SkyBoxUniformBuffers[i], SkyBoxUniformBuffersMemory[i]);
+        }
+
+        /* Text buffer not needed but keet it here for now
+        bufferSize = sizeof(UniformBufferObject);
+        TextUniformBuffers.resize(swapChainImages.size());
+        TextUniformBuffersMemory.resize(swapChainImages.size());
+
+        for (size_t i = 0; i < swapChainImages.size(); i++) {
+            createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                TextUniformBuffers[i], TextUniformBuffersMemory[i]);
+        }
+        */
     }
 };
 

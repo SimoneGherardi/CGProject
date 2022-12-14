@@ -1,0 +1,9 @@
+sources/*
+!sources/include
+!sources/src
+
+builds/*
+!builds/x64
+!builds/x86
+!builds/Release
+!builds/Debug

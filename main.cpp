@@ -1,5 +1,9 @@
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
+
+#include <flecs.h>
+#include "test.h"
 
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
@@ -26,15 +30,17 @@
 
 #include <chrono>
 
+#include <flecs.h>
+
 #define STB_IMAGE_IMPLEMENTATION
 
 
 const uint32_t WIDTH = 640;
 const uint32_t HEIGHT = 480;
 
-const std::string MODEL_PATH = "models/";
-const std::string TEXTURE_PATH = "textures/";
-const std::string SHADER_PATH = "shaders/";
+const std::string MODEL_PATH = "resources/models/";
+const std::string TEXTURE_PATH = "resources/textures/";
+const std::string SHADER_PATH = "resources/shaders/";
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -1455,9 +1461,37 @@ private:
     }
 };
 
+void testECS()
+{
+    flecs::world world;
+    world.import<Test>();
+
+    // auto e = world.entity();
+
+    // Set the value for the Position & Velocity components. A component will be
+    // added if the entity doesn't have it yet.
+    auto a = world.entity()
+        .set<Counter>({ 0 });
+    auto b = world.entity()
+        .set<Counter>({ 10 });
+    auto c = world.entity()
+        .set<Counter>({ 20 });
+    world.system<Counter>().kind(flecs::OnUpdate).iter([](flecs::iter it) {
+        printf("AAA\n");
+        });
+
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+}
+
 int main()
 {
     CGProject app;
+
+    testECS();
 
     try
     {

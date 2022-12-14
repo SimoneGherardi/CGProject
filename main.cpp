@@ -406,13 +406,13 @@ private:
     VkPipelineLayout WireframePipelineLayout;
     VkPipeline WireframePipeline;
 
-    //std::vector<VkBuffer> WireframeUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
+    std::vector<VkBuffer> WireframeUniformBuffers;
+    std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
 
-    //std::vector<VkBuffer> WireframeGlobalUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
+    std::vector<VkBuffer> WireframeGlobalUniformBuffers;
+    std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
 
-    //std::vector<VkDescriptorSet> WireframeDescriptorSets;
+    std::vector<VkDescriptorSet> WireframeDescriptorSets;
 
     // Phong pipeline
     VkDescriptorSetLayout PhongDescriptorSetLayout;
@@ -469,6 +469,7 @@ private:
         loadModels();
         createUniformBuffers();
         createDescriptorPool();
+        createDescriptorSets();
 
         createCommandBuffer();
 
@@ -2257,6 +2258,209 @@ private:
         if (result != VK_SUCCESS) {
             PrintVkError(result);
             throw std::runtime_error("failed to create descriptor pool!");
+        }
+    }
+
+    void createDescriptorSets() {
+        createPhongDescriptorSets();
+        // createWireframeDescriptorSets();
+        createSkyBoxDescriptorSets();
+    }
+
+    void createPhongDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
+            PhongDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
+        allocInfo.pSetLayouts = layouts.data();
+
+        PhongDescriptorSets.resize(swapChainImages.size() * Scene.size());
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
+            PhongDescriptorSets.data());
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t k = 0; k < swapChainImages.size(); k++) {
+            for (size_t j = 0; j < Scene.size(); j++) {
+                size_t i = j * swapChainImages.size() + k;
+
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = uniformBuffers[i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = sizeof(UniformBufferObject);
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = Scene[j].TD.textureImageView;
+                imageInfo.sampler = Scene[j].TD.textureSampler;
+
+                VkDescriptorBufferInfo globalBufferInfo{};
+                globalBufferInfo.buffer = globalUniformBuffers[k];
+                globalBufferInfo.offset = 0;
+                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
+
+                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[0].dstBinding = 0;
+                descriptorWrites[0].dstArrayElement = 0;
+                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[0].descriptorCount = 1;
+                descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[1].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[1].dstBinding = 1;
+                descriptorWrites[1].dstArrayElement = 0;
+                descriptorWrites[1].descriptorType =
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorWrites[1].descriptorCount = 1;
+                descriptorWrites[1].pImageInfo = &imageInfo;
+
+                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[2].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[2].dstBinding = 2;
+                descriptorWrites[2].dstArrayElement = 0;
+                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[2].descriptorCount = 1;
+                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
+
+                vkUpdateDescriptorSets(device,
+                    static_cast<uint32_t>(descriptorWrites.size()),
+                    descriptorWrites.data(), 0, nullptr);
+            }
+        }
+    }
+
+    void createWireframeDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
+            WireframeDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
+        allocInfo.pSetLayouts = layouts.data();
+
+        WireframeDescriptorSets.resize(swapChainImages.size() * Scene.size());
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
+            WireframeDescriptorSets.data());
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to allocate descriptor sets!");
+        }
+
+        for (size_t k = 0; k < swapChainImages.size(); k++) {
+            for (size_t j = 0; j < Scene.size(); j++) {
+                size_t i = j * swapChainImages.size() + k;
+
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = uniformBuffers[i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = sizeof(UniformBufferObject);
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = Scene[j].TD.textureImageView;
+                imageInfo.sampler = Scene[j].TD.textureSampler;
+
+                VkDescriptorBufferInfo globalBufferInfo{};
+                globalBufferInfo.buffer = WireframeGlobalUniformBuffers[k];
+                globalBufferInfo.offset = 0;
+                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
+
+                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
+                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
+                descriptorWrites[0].dstBinding = 0;
+                descriptorWrites[0].dstArrayElement = 0;
+                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[0].descriptorCount = 1;
+                descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[1].dstSet = WireframeDescriptorSets[i];
+                descriptorWrites[1].dstBinding = 1;
+                descriptorWrites[1].dstArrayElement = 0;
+                descriptorWrites[1].descriptorType =
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorWrites[1].descriptorCount = 1;
+                descriptorWrites[1].pImageInfo = &imageInfo;
+
+                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[2].dstSet = WireframeDescriptorSets[i];
+                descriptorWrites[2].dstBinding = 2;
+                descriptorWrites[2].dstArrayElement = 0;
+                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[2].descriptorCount = 1;
+                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
+
+                vkUpdateDescriptorSets(device,
+                    static_cast<uint32_t>(descriptorWrites.size()),
+                    descriptorWrites.data(), 0, nullptr);
+            }
+        }
+    }
+
+    void createSkyBoxDescriptorSets() {
+        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * SkyBox.size(),
+            SkyBoxDescriptorSetLayout);
+        VkDescriptorSetAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * SkyBox.size());
+        allocInfo.pSetLayouts = layouts.data();
+
+        SkyBoxDescriptorSets.resize(swapChainImages.size() * SkyBox.size());
+
+        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
+            SkyBoxDescriptorSets.data());
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to allocate Skybox descriptor sets!");
+        }
+
+        for (size_t k = 0; k < swapChainImages.size(); k++) {
+            for (size_t j = 0; j < SkyBox.size(); j++) {
+                size_t i = j * swapChainImages.size() + k;
+
+                VkDescriptorBufferInfo bufferInfo{};
+                bufferInfo.buffer = SkyBoxUniformBuffers[i];
+                bufferInfo.offset = 0;
+                bufferInfo.range = sizeof(UniformBufferObject);
+
+                VkDescriptorImageInfo imageInfo{};
+                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+                imageInfo.imageView = SkyBox[j].TD.textureImageView;
+                imageInfo.sampler = SkyBox[j].TD.textureSampler;
+
+                std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
+                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[0].dstSet = SkyBoxDescriptorSets[i];
+                descriptorWrites[0].dstBinding = 0;
+                descriptorWrites[0].dstArrayElement = 0;
+                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                descriptorWrites[0].descriptorCount = 1;
+                descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+                descriptorWrites[1].dstSet = SkyBoxDescriptorSets[i];
+                descriptorWrites[1].dstBinding = 1;
+                descriptorWrites[1].dstArrayElement = 0;
+                descriptorWrites[1].descriptorType =
+                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                descriptorWrites[1].descriptorCount = 1;
+                descriptorWrites[1].pImageInfo = &imageInfo;
+
+                vkUpdateDescriptorSets(device,
+                    static_cast<uint32_t>(descriptorWrites.size()),
+                    descriptorWrites.data(), 0, nullptr);
+            }
         }
     }
 };

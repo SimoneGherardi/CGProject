@@ -1,5 +1,9 @@
 #define GLFW_INCLUDE_VULKAN
+
 #include <GLFW/glfw3.h>
+
+#include <flecs.h>
+#include "test.h"
 
 #include <cstdint> // Necessary for uint32_t
 #include <limits> // Necessary for std::numeric_limits
@@ -1457,9 +1461,30 @@ private:
     }
 };
 
+void testECS()
+{
+    flecs::world world;
+    world.import<Test>();
+
+    // auto e = world.entity();
+
+    // Set the value for the Position & Velocity components. A component will be
+    // added if the entity doesn't have it yet.
+    auto e = world.entity()
+        .set<Counter>({ 0 });
+
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+    world.progress();
+}
+
 int main()
 {
     CGProject app;
+
+    testECS();
 
     try
     {

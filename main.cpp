@@ -1496,8 +1496,15 @@ void testECS()
     flecs::world world;
     world.import<Test>();
 
-    auto e = world.entity()
+    auto a = world.entity()
         .set<Counter>({ 0 });
+    auto b = world.entity()
+        .set<Counter>({ 10 });
+    auto c = world.entity()
+        .set<Counter>({ 20 });
+    world.system<Counter>().kind(flecs::OnUpdate).iter([](flecs::iter it) {
+        printf("AAA\n");
+        });
 
     world.progress();
     world.progress();

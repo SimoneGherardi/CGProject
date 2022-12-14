@@ -1470,8 +1470,15 @@ void testECS()
 
     // Set the value for the Position & Velocity components. A component will be
     // added if the entity doesn't have it yet.
-    auto e = world.entity()
+    auto a = world.entity()
         .set<Counter>({ 0 });
+    auto b = world.entity()
+        .set<Counter>({ 10 });
+    auto c = world.entity()
+        .set<Counter>({ 20 });
+    world.system<Counter>().kind(flecs::OnUpdate).iter([](flecs::iter it) {
+        printf("AAA\n");
+        });
 
     world.progress();
     world.progress();

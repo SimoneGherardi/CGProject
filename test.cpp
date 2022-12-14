@@ -7,7 +7,7 @@ void Count(flecs::entity e, Counter& counter)
 
 void Print(flecs::entity e, Counter& counter)
 {
-    printf("%d", counter.count);
+    printf("%d\n", counter.count);
 }
 
 Test::Test(flecs::world& world)

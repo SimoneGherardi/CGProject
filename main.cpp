@@ -2593,7 +2593,7 @@ private:
 
 using namespace reactphysics3d;
 
-void testPhysics()
+int testPhysics()
 {
     PhysicsCommon physicsCommon;
     

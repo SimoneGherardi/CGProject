@@ -34,7 +34,22 @@
 #include <flecs.h>
 
 #define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
 
+#define TINYOBJLOADER_IMPLEMENTATION
+#include <tiny_obj_loader.h>
+
+#define TINYGLTF_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define TINYGLTF_NO_INCLUDE_STB_IMAGE
+#include <tiny_gltf.h>
+
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#ifndef _CRT_NONSTDC_NO_DEPRECATE
+#define _CRT_NONSTDC_NO_DEPRECATE
+#endif
 
 const uint32_t WIDTH = 640;
 const uint32_t HEIGHT = 480;
@@ -56,6 +71,36 @@ struct SwapChainSupportDetails {
     VkSurfaceCapabilitiesKHR capabilities;
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
+};
+
+enum ModelType { OBJ, GLTF };
+
+struct Model {
+    const char* ObjFile;
+    ModelType type;
+    const char* TextureFile;
+    const glm::vec3 pos;
+    const float scale;
+};
+
+const std::vector<Model> SceneToLoad = {
+    {"Sphere.obj", OBJ, "Plaster.png", {0,0.0, 0.0}, 1.0},
+    {"Sphere.obj", OBJ, "Ball15.png", {0,0.0, 0.0}, 1.0},
+    {"Sphere.obj", OBJ, "soccer_sph.png", {0,0.0, 0.0}, 1.0},
+    {"Sphere.obj", OBJ, "Moon.jpg", {0,0.0, 0.0}, 1.0}
+};
+
+struct SkyBoxModel {
+    const char* ObjFile;
+    ModelType type;
+    const char* TextureFile[6];
+};
+
+const std::vector<SkyBoxModel> SkyBoxToLoad = {
+    {"SkyBoxCube.obj", OBJ, {"sky1/posx.jpg", "sky1/negx.jpg", "sky1/posy.jpg", "sky1/negy.jpg", "sky1/posz.jpg", "sky1/negz.jpg"}},
+    {"SkyBoxCube.obj", OBJ, {"sky2/posx.jpg", "sky2/negx.jpg", "sky2/posy.jpg", "sky2/negy.jpg", "sky2/posz.jpg", "sky2/negz.jpg"}},
+    {"SkyBoxCube.obj", OBJ, {"sky3/ToonSkybox-2-1.png", "sky3/ToonSkybox-0-1.png", "sky3/ToonSkybox-1-0.png", "sky3/ToonSkybox-1-2.png", "sky3/ToonSkybox-1-1.png", "sky3/ToonSkybox-3-1.png"}},
+    {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}}
 };
 
 
@@ -269,6 +314,32 @@ struct VertexDescriptor {
     }
 };
 
+struct ModelData {
+    VertexDescriptor* vertDesc;
+    std::vector<float> vertices;
+    std::vector<uint32_t> indices;
+    VkBuffer vertexBuffer;
+    VkDeviceMemory vertexBufferMemory;
+    VkBuffer indexBuffer;
+    VkDeviceMemory indexBufferMemory;
+};
+
+struct TextureData {
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
+    uint32_t mipLevels;
+};
+
+struct SceneModel {
+    // Model data
+    ModelData MD;
+
+    // Texture data
+    TextureData TD;
+};
+
 class CGProject {
 public:
     void run() {
@@ -321,15 +392,41 @@ private:
     VkPipelineLayout WireframePipelineLayout;
     VkPipeline WireframePipeline;
 
+    //std::vector<VkBuffer> WireframeUniformBuffers;
+    //std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
+
+    //std::vector<VkBuffer> WireframeGlobalUniformBuffers;
+    //std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
+
+    //std::vector<VkDescriptorSet> WireframeDescriptorSets;
+
     // Phong pipeline
     VkDescriptorSetLayout PhongDescriptorSetLayout;
     VkPipelineLayout PhongPipelineLayout;
     VkPipeline PhongPipeline;
+    
+    std::vector<VkBuffer> uniformBuffers;
+    std::vector<VkDeviceMemory> uniformBuffersMemory;
+    
+    std::vector<VkBuffer> globalUniformBuffers;
+    std::vector<VkDeviceMemory> globalUniformBuffersMemory;
+    
+    std::vector<VkDescriptorSet> PhongDescriptorSets;
+
+    std::vector<SceneModel> Scene;
+    
 
     //  Skybox pipeline
     VkDescriptorSetLayout SkyBoxDescriptorSetLayout; // for skybox
     VkPipelineLayout SkyBoxPipelineLayout;	// for skybox
     VkPipeline SkyBoxPipeline;
+
+    std::vector<VkBuffer> SkyBoxUniformBuffers;
+    std::vector<VkDeviceMemory> SkyBoxUniformBuffersMemory;
+    
+    std::vector<VkDescriptorSet> SkyBoxDescriptorSets;
+    
+    std::vector<SceneModel> SkyBox;
 
     void initWindow() {
 
@@ -354,6 +451,9 @@ private:
         createColorResources();
         createDepthResources();
         createFramebuffers();
+        
+        loadModels();
+
         createCommandBuffer();
 
     }
@@ -1437,9 +1537,10 @@ private:
     void createFramebuffers() {
         swapChainFramebuffers.resize(swapChainImageViews.size());
         for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            std::array<VkImageView, 2> attachments = {
-                swapChainImageViews[i],
-                depthImageView
+            std::array<VkImageView, 3> attachments = {
+                colorImageView,
+                depthImageView,
+                swapChainImageViews[i]
             };
 
             VkFramebufferCreateInfo framebufferInfo{};
@@ -1460,6 +1561,601 @@ private:
                 throw std::runtime_error("failed to create framebuffer!");
             }
         }
+    }
+
+    void loadModels() {
+        Scene.resize(SceneToLoad.size());
+        int i = 0;
+
+        for (const auto& M : SceneToLoad) {
+            loadModelWithTexture(M, i);
+            i++;
+        }
+
+        loadSkyBox();
+    }
+
+    void loadModelWithTexture(const Model& M, int i) {
+        loadMesh(M.ObjFile, M.type, Scene[i].MD, phongAndSkyBoxVertices);
+        createVertexBuffer(Scene[i].MD);
+        createIndexBuffer(Scene[i].MD);
+
+        createTextureImage(M.TextureFile, Scene[i].TD);
+        createTextureImageView(Scene[i].TD);
+        createTextureSampler(Scene[i].TD);
+    }
+
+    void loadMesh(const char* FName, ModelType T, ModelData& MD, VertexDescriptor& VD) {
+        switch (T) {
+        case OBJ:
+            loadObjMesh(FName, MD, VD);
+            break;
+        case GLTF:
+            loadGLTFMesh(FName, MD, VD);
+            break;
+        }
+    }
+
+    void loadObjMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
+        tinyobj::attrib_t attrib;
+        std::vector<tinyobj::shape_t> shapes;
+        std::vector<tinyobj::material_t> materials;
+        std::string warn, err;
+
+        if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
+            (MODEL_PATH + FName).c_str())) {
+            throw std::runtime_error(warn + err);
+        }
+
+        MD.vertDesc = &VD;
+
+        std::cout << FName << "\n";
+
+        std::vector<float> vertex{};
+        vertex.resize(VD.size);
+
+        //		std::unordered_map<std::vector<float>, uint32_t> uniqueVertices{};
+        for (const auto& shape : shapes) {
+            for (const auto& index : shape.mesh.indices) {
+
+                vertex[VD.deltaPos + 0] = attrib.vertices[3 * index.vertex_index + 0];
+                vertex[VD.deltaPos + 1] = attrib.vertices[3 * index.vertex_index + 1];
+                vertex[VD.deltaPos + 2] = attrib.vertices[3 * index.vertex_index + 2];
+                vertex[VD.deltaTexCoord + 0] = attrib.texcoords[2 * index.texcoord_index + 0];
+                vertex[VD.deltaTexCoord + 1] = 1 - attrib.texcoords[2 * index.texcoord_index + 1];
+                vertex[VD.deltaNormal + 0] = attrib.normals[3 * index.normal_index + 0];
+                vertex[VD.deltaNormal + 1] = attrib.normals[3 * index.normal_index + 1];
+                vertex[VD.deltaNormal + 2] = attrib.normals[3 * index.normal_index + 2];
+
+                //				if (uniqueVertices.count(vertex) == 0) {
+                int j = MD.vertices.size() / VD.size;
+                //					uniqueVertices[vertex] =
+                //							static_cast<uint32_t>(j);
+                int s = MD.vertices.size();
+                MD.vertices.resize(s + VD.size);
+                for (int k = 0; k < VD.size; k++) {
+                    MD.vertices[s + k] = vertex[k];
+                }
+                /**/				MD.indices.push_back(j);
+                //				}
+
+                //				MD.indices.push_back(uniqueVertices[vertex]);
+            }
+        }
+
+        std::cout << FName << " -> V: " << MD.vertices.size()
+            << ", I: " << MD.indices.size() << "\n";
+    }
+
+    void loadGLTFMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
+        tinygltf::Model model;
+        tinygltf::TinyGLTF loader;
+        std::string warn, err;
+
+        if (!loader.LoadASCIIFromFile(&model, &warn, &err,
+            (MODEL_PATH + FName).c_str())) {
+            throw std::runtime_error(warn + err);
+        }
+
+        for (const auto& mesh : model.meshes) {
+            std::cout << "Primitives: " << mesh.primitives.size() << "\n";
+            for (const auto& primitive : mesh.primitives) {
+                if (primitive.indices < 0) {
+                    continue;
+                }
+                //				for (const auto& attribute :  primitive.attributes) {
+                //					std::cout << attribute.first << "\n";
+                //					tinygltf::Accessor accessor = model.accessors[attribute.second];
+                //					std::cout << accessor.bufferView << "\n";
+                //				}
+
+                const float* bufferPos = nullptr;
+                const float* bufferNormals = nullptr;
+                const float* bufferTangents = nullptr;
+                const float* bufferTexCoords = nullptr;
+
+                const tinygltf::Accessor& posAccessor = model.accessors[primitive.attributes.find("POSITION")->second];
+                const tinygltf::BufferView& posView = model.bufferViews[posAccessor.bufferView];
+                bufferPos = reinterpret_cast<const float*>(&(model.buffers[posView.buffer].data[posAccessor.byteOffset + posView.byteOffset]));
+
+                const tinygltf::Accessor& normAccessor = model.accessors[primitive.attributes.find("NORMAL")->second];
+                const tinygltf::BufferView& normView = model.bufferViews[normAccessor.bufferView];
+                bufferNormals = reinterpret_cast<const float*>(&(model.buffers[normView.buffer].data[normAccessor.byteOffset + normView.byteOffset]));
+
+                const tinygltf::Accessor& tanAccessor = model.accessors[primitive.attributes.find("TANGENT")->second];
+                const tinygltf::BufferView& tanView = model.bufferViews[tanAccessor.bufferView];
+                bufferTangents = reinterpret_cast<const float*>(&(model.buffers[tanView.buffer].data[tanAccessor.byteOffset + tanView.byteOffset]));
+
+                const tinygltf::Accessor& uvAccessor = model.accessors[primitive.attributes.find("TEXCOORD_0")->second];
+                const tinygltf::BufferView& uvView = model.bufferViews[uvAccessor.bufferView];
+                bufferTexCoords = reinterpret_cast<const float*>(&(model.buffers[uvView.buffer].data[uvAccessor.byteOffset + uvView.byteOffset]));
+
+                if ((posAccessor.count != normAccessor.count) || (posAccessor.count != tanAccessor.count) || (posAccessor.count != uvAccessor.count)) {
+                    std::cerr << "Attribute counts mismatch" << std::endl;
+                    throw std::runtime_error("Error loading GLTF component");
+                }
+
+                //				std::cout << posAccessor.count << "\n";
+                //				std::cout << posView.byteOffset << " " << posView.byteLength << " " << posView.byteStride << "\n";
+                //				std::cout << normView.byteOffset << " " << normView.byteLength << " " << normView.byteStride << "\n";
+                //				std::cout << uvView.byteOffset << " " << uvView.byteLength << " " << uvView.byteStride << "\n";
+
+                std::vector<float> vertex{};
+                vertex.resize(VD.size);
+                for (int i = 0; i < posAccessor.count; i++) {
+                    vertex[VD.deltaPos + 0] = bufferPos[3 * i + 0];
+                    vertex[VD.deltaPos + 1] = bufferPos[3 * i + 1];
+                    vertex[VD.deltaPos + 2] = bufferPos[3 * i + 2];
+                    vertex[VD.deltaTexCoord + 0] = bufferTexCoords[2 * i + 0];
+                    vertex[VD.deltaTexCoord + 1] = bufferTexCoords[2 * i + 1];
+                    vertex[VD.deltaNormal + 0] = bufferNormals[3 * i + 0];
+                    vertex[VD.deltaNormal + 1] = bufferNormals[3 * i + 1];
+                    vertex[VD.deltaNormal + 2] = bufferNormals[3 * i + 2];
+
+                    int j = MD.vertices.size() / VD.size;
+                    int s = MD.vertices.size();
+                    MD.vertices.resize(s + VD.size);
+                    for (int k = 0; k < VD.size; k++) {
+                        MD.vertices[s + k] = vertex[k];
+                    }
+                }
+
+                const tinygltf::Accessor& accessor = model.accessors[primitive.indices];
+                const tinygltf::BufferView& bufferView = model.bufferViews[accessor.bufferView];
+                const tinygltf::Buffer& buffer = model.buffers[bufferView.buffer];
+
+                switch (accessor.componentType) {
+                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_SHORT:
+                {
+                    const uint16_t* bufferIndex = reinterpret_cast<const uint16_t*>(&(buffer.data[accessor.byteOffset + bufferView.byteOffset]));
+                    for (int i = 0; i < accessor.count; i++) {
+                        MD.indices.push_back(bufferIndex[i]);
+                    }
+                }
+                break;
+                case TINYGLTF_PARAMETER_TYPE_UNSIGNED_INT:
+                {
+                    const uint32_t* bufferIndex = reinterpret_cast<const uint32_t*>(&(buffer.data[accessor.byteOffset + bufferView.byteOffset]));
+                    for (int i = 0; i < accessor.count; i++) {
+                        MD.indices.push_back(bufferIndex[i]);
+                    }
+                }
+                break;
+                default:
+                    std::cerr << "Index component type " << accessor.componentType << " not supported!" << std::endl;
+                    throw std::runtime_error("Error loading GLTF component");
+                }
+            }
+        }
+
+        std::cout << FName << " (GLTF) -> V: " << MD.vertices.size()
+            << ", I: " << MD.indices.size() << "\n";
+        //		throw std::runtime_error("Now We Stop Here!");			
+    }
+
+    void createVertexBuffer(ModelData& Md) {
+        VkDeviceSize bufferSize = sizeof(Md.vertices[0]) * Md.vertices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, Md.vertices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            Md.vertexBuffer, Md.vertexBufferMemory);
+
+        copyBuffer(stagingBuffer, Md.vertexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = size;
+        bufferInfo.usage = usage;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VkResult result =
+            vkCreateBuffer(device, &bufferInfo, nullptr, &buffer);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create vertex buffer!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(device, buffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex =
+            findMemoryType(memRequirements.memoryTypeBits, properties);
+
+        result = vkAllocateMemory(device, &allocInfo, nullptr,
+            &bufferMemory);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to allocate vertex buffer memory!");
+        }
+
+        vkBindBufferMemory(device, buffer, bufferMemory, 0);
+    }
+
+    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferCopy copyRegion{};
+        copyRegion.srcOffset = 0; // Optional copyRegion.dstOffset = 0; // Optional
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
+    void createIndexBuffer(ModelData& Md) {
+        VkDeviceSize bufferSize = sizeof(Md.indices[0]) * Md.indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, Md.indices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+            Md.indexBuffer, Md.indexBufferMemory);
+
+        copyBuffer(stagingBuffer, Md.indexBuffer, bufferSize);
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    void createTextureImage(const char* FName, TextureData& TD) {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels = stbi_load((TEXTURE_PATH + FName).c_str(), &texWidth, &texHeight,
+            &texChannels, STBI_rgb_alpha);
+        if (!pixels) {
+            std::cout << (TEXTURE_PATH + FName).c_str() << "\n";
+            throw std::runtime_error("failed to load texture image!");
+        }
+        std::cout << FName << " -> size: " << texWidth
+            << "x" << texHeight << ", ch: " << texChannels << "\n";
+
+        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        TD.mipLevels = static_cast<uint32_t>(std::floor(
+            std::log2(std::max(texWidth, texHeight)))) + 1;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+
+        createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory);
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, imageSize, 0, &data);
+        memcpy(data, pixels, static_cast<size_t>(imageSize));
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        stbi_image_free(pixels);
+
+        createImage(texWidth, texHeight, TD.mipLevels,
+            VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, TD.textureImage,
+            TD.textureImageMemory);
+
+        transitionImageLayout(TD.textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TD.mipLevels, 1);
+        copyBufferToImage(stagingBuffer, TD.textureImage,
+            static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 1);
+
+        generateMipmaps(TD.textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+            texWidth, texHeight, TD.mipLevels, 1);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t
+        width, uint32_t height, int layerCount) {
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkBufferImageCopy region{};
+        region.bufferOffset = 0;
+        region.bufferRowLength = 0;
+        region.bufferImageHeight = 0;
+        region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        region.imageSubresource.mipLevel = 0;
+        region.imageSubresource.baseArrayLayer = 0;
+        region.imageSubresource.layerCount = layerCount;
+        region.imageOffset = { 0, 0, 0 };
+        region.imageExtent = { width, height, 1 };
+
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image,
+            VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
+    void generateMipmaps(VkImage image, VkFormat imageFormat,
+        int32_t texWidth, int32_t texHeight,
+        uint32_t mipLevels, int layerCount) {
+        VkFormatProperties formatProperties;
+        vkGetPhysicalDeviceFormatProperties(physicalDevice, imageFormat,
+            &formatProperties);
+
+        if (!(formatProperties.optimalTilingFeatures &
+            VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
+            throw std::runtime_error("texture image format does not support linear blitting!");
+        }
+
+        VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+        VkImageMemoryBarrier barrier{};
+        barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+        barrier.image = image;
+        barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+        barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        barrier.subresourceRange.baseArrayLayer = 0;
+        barrier.subresourceRange.layerCount = layerCount;
+        barrier.subresourceRange.levelCount = 1;
+
+        int32_t mipWidth = texWidth;
+        int32_t mipHeight = texHeight;
+
+        for (uint32_t i = 1; i < mipLevels; i++) {
+            barrier.subresourceRange.baseMipLevel = i - 1;
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+            barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+
+            vkCmdPipelineBarrier(commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_TRANSFER_BIT, 0,
+                0, nullptr, 0, nullptr,
+                1, &barrier);
+
+            VkImageBlit blit{};
+            blit.srcOffsets[0] = { 0, 0, 0 };
+            blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
+            blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.srcSubresource.mipLevel = i - 1;
+            blit.srcSubresource.baseArrayLayer = 0;
+            blit.srcSubresource.layerCount = layerCount;
+            blit.dstOffsets[0] = { 0, 0, 0 };
+            blit.dstOffsets[1] = { mipWidth > 1 ? mipWidth / 2 : 1,
+                                   mipHeight > 1 ? mipHeight / 2 : 1, 1 };
+            blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+            blit.dstSubresource.mipLevel = i;
+            blit.dstSubresource.baseArrayLayer = 0;
+            blit.dstSubresource.layerCount = layerCount;
+
+            vkCmdBlitImage(commandBuffer, image,
+                VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+                image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+                &blit, VK_FILTER_LINEAR);
+
+            barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+            barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+            barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+            barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+            vkCmdPipelineBarrier(commandBuffer,
+                VK_PIPELINE_STAGE_TRANSFER_BIT,
+                VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+                0, nullptr, 0, nullptr,
+                1, &barrier);
+            if (mipWidth > 1) mipWidth /= 2;
+            if (mipHeight > 1) mipHeight /= 2;
+        }
+
+        barrier.subresourceRange.baseMipLevel = mipLevels - 1;
+        barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+        barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+        vkCmdPipelineBarrier(commandBuffer,
+            VK_PIPELINE_STAGE_TRANSFER_BIT,
+            VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0,
+            0, nullptr, 0, nullptr,
+            1, &barrier);
+
+        endSingleTimeCommands(commandBuffer);
+    }
+
+    void createTextureImageView(TextureData& TD) {
+        TD.textureImageView = createImageView(TD.textureImage,
+            VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            TD.mipLevels,
+            VK_IMAGE_VIEW_TYPE_2D, 1);
+    }
+
+    void createTextureSampler(TextureData& TD) {
+        VkSamplerCreateInfo samplerInfo{};
+        samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        samplerInfo.magFilter = VK_FILTER_LINEAR;
+        samplerInfo.minFilter = VK_FILTER_LINEAR;
+        samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+        samplerInfo.anisotropyEnable = VK_TRUE;
+        samplerInfo.maxAnisotropy = 16;
+        samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+        samplerInfo.unnormalizedCoordinates = VK_FALSE;
+        samplerInfo.compareEnable = VK_FALSE;
+        samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
+        samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+        samplerInfo.mipLodBias = 0.0f;
+        samplerInfo.minLod = 0.0f;
+        samplerInfo.maxLod = static_cast<float>(TD.mipLevels);
+
+        VkResult result = vkCreateSampler(device, &samplerInfo, nullptr,
+            &TD.textureSampler);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create texture sampler!");
+        }
+    }
+
+    void loadSkyBox() {
+        int i = 0;
+        SkyBox.resize(SkyBoxToLoad.size());
+        for (const auto& M : SkyBoxToLoad) {
+            loadMesh(M.ObjFile, M.type, SkyBox[i].MD, phongAndSkyBoxVertices);
+            createVertexBuffer(SkyBox[i].MD);
+            createIndexBuffer(SkyBox[i].MD);
+
+            createCubicTextureImage(M.TextureFile, SkyBox[i].TD);
+            createSkyBoxImageView(SkyBox[i].TD);
+            createTextureSampler(SkyBox[i].TD);
+
+            i++;
+        }
+    }
+
+    void createCubicTextureImage(const char* const FName[6], TextureData& TD) {
+        int texWidth, texHeight, texChannels;
+        stbi_uc* pixels[6];
+
+        for (int i = 0; i < 6; i++) {
+            pixels[i] = stbi_load((TEXTURE_PATH + FName[i]).c_str(), &texWidth, &texHeight,
+                &texChannels, STBI_rgb_alpha);
+            if (!pixels[i]) {
+                std::cout << (TEXTURE_PATH + FName[i]).c_str() << "\n";
+                throw std::runtime_error("failed to load texture image!");
+            }
+            std::cout << FName[i] << " -> size: " << texWidth
+                << "x" << texHeight << ", ch: " << texChannels << "\n";
+        }
+
+        VkDeviceSize imageSize = texWidth * texHeight * 4;
+        VkDeviceSize totalImageSize = texWidth * texHeight * 4 * 6;
+        TD.mipLevels = static_cast<uint32_t>(std::floor(
+            std::log2(std::max(texWidth, texHeight)))) + 1;
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+
+        createBuffer(totalImageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
+            VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            stagingBuffer, stagingBufferMemory);
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, totalImageSize, 0, &data);
+        for (int i = 0; i < 6; i++) {
+            memcpy(static_cast<char*>(data) + imageSize * i, pixels[i], static_cast<size_t>(imageSize));
+        }
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        for (int i = 0; i < 6; i++) {
+            stbi_image_free(pixels[i]);
+        }
+        createSkyBoxImage(texWidth, texHeight, TD.mipLevels, TD.textureImage,
+            TD.textureImageMemory);
+
+        transitionImageLayout(TD.textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, TD.mipLevels, 6);
+        copyBufferToImage(stagingBuffer, TD.textureImage,
+            static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight), 6);
+
+        generateMipmaps(TD.textureImage, VK_FORMAT_R8G8B8A8_SRGB,
+            texWidth, texHeight, TD.mipLevels, 6);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
+
+    void createSkyBoxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkImage& image,
+        VkDeviceMemory& imageMemory) {
+        VkImageCreateInfo imageInfo{};
+        imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+        imageInfo.imageType = VK_IMAGE_TYPE_2D;
+        imageInfo.extent.width = width;
+        imageInfo.extent.height = height;
+        imageInfo.extent.depth = 1;
+        imageInfo.mipLevels = mipLevels;
+        imageInfo.arrayLayers = 6;
+        imageInfo.format = VK_FORMAT_R8G8B8A8_SRGB;
+        imageInfo.tiling = VK_IMAGE_TILING_OPTIMAL;
+        imageInfo.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        imageInfo.usage = VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+        imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+        imageInfo.flags = VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT;
+
+        VkResult result = vkCreateImage(device, &imageInfo, nullptr, &image);
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
+            throw std::runtime_error("failed to create image!");
+        }
+
+        VkMemoryRequirements memRequirements;
+        vkGetImageMemoryRequirements(device, image, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+        if (vkAllocateMemory(device, &allocInfo, nullptr, &imageMemory) !=
+            VK_SUCCESS) {
+            throw std::runtime_error("failed to allocate image memory!");
+        }
+
+        vkBindImageMemory(device, image, imageMemory, 0);
+    }
+
+    void createSkyBoxImageView(TextureData& TD) {
+        TD.textureImageView = createImageView(TD.textureImage,
+            VK_FORMAT_R8G8B8A8_SRGB,
+            VK_IMAGE_ASPECT_COLOR_BIT,
+            TD.mipLevels,
+            VK_IMAGE_VIEW_TYPE_CUBE, 6);
     }
 };
 

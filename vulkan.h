@@ -38,10 +38,18 @@
 #include <tiny_gltf.h>
 
 #ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
+    #define _CRT_SECURE_NO_WARNINGS
 #endif
 #ifndef _CRT_NONSTDC_NO_DEPRECATE
-#define _CRT_NONSTDC_NO_DEPRECATE
+    #define _CRT_NONSTDC_NO_DEPRECATE
+#endif
+
+#ifdef NDEBUG
+const bool enableValidationLayers = false;
+const bool Verbose = false;
+#else
+const bool enableValidationLayers = true;
+const bool Verbose = true;
 #endif
 
 const uint32_t WIDTH = 640;
@@ -52,6 +60,14 @@ const std::string TEXTURE_PATH = "resources/textures/";
 const std::string SHADER_PATH = "resources/shaders/";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
+const std::vector<const char*> validationLayers = {
+    "VK_LAYER_KHRONOS_validation"
+};
+
+const std::vector<const char*> deviceExtensions = {
+    VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -67,6 +83,7 @@ struct SwapChainSupportDetails {
     std::vector<VkSurfaceFormatKHR> formats;
     std::vector<VkPresentModeKHR> presentModes;
 };
+
 
 enum ModelType { OBJ, GLTF };
 
@@ -117,10 +134,32 @@ const std::vector<SkyBoxModel> SkyBoxToLoad = {
     {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}}
 };
 
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
+    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
+    const VkAllocationCallbacks* pAllocator,
+    VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)
+        vkGetInstanceProcAddr(instance,
+            "vkCreateDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    }
+    else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
 
-const std::vector<const char*> deviceExtensions = {
-    VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
+void DestroyDebugUtilsMessengerEXT(VkInstance instance,
+    VkDebugUtilsMessengerEXT debugMessenger,
+    const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
+        vkGetInstanceProcAddr(instance,
+            "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
+    }
+}
+
 
 struct errorcode {
     VkResult resultCode;
@@ -370,6 +409,7 @@ private:
 
     GLFWwindow* window;
     VkInstance instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
     VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
     VkDevice device;
     VkQueue graphicsQueue;
@@ -403,6 +443,7 @@ private:
     std::vector<VkFence> inFlightFences;
     std::vector<VkFence> imagesInFlight;
     size_t currentFrame = 0;
+    bool framebufferResized = false;
 
     VkDescriptorPool descriptorPool;
 
@@ -465,8 +506,15 @@ private:
         window = glfwCreateWindow(WIDTH, HEIGHT, "CG Project", nullptr, nullptr);
     }
 
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+        auto app = reinterpret_cast<CGProject*>
+            (glfwGetWindowUserPointer(window));
+        app->framebufferResized = true;
+    }
+
     void initVulkan() {
         createInstance();
+        setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -479,23 +527,19 @@ private:
         createColorResources();
         createDepthResources();
         createFramebuffers();
-        
         loadModels();
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
-
         createCommandBuffers();
-
         createSyncObjects();
-
     }
    
 
     void createInstance() {
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "Hello Triangle";
+        appInfo.pApplicationName = "CGProject";
         appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -507,7 +551,6 @@ private:
 
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
-
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
         createInfo.enabledExtensionCount = glfwExtensionCount;
@@ -515,10 +558,123 @@ private:
 
         createInfo.enabledLayerCount = 0;
 
+        uint32_t extensionCount = 0;
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
+
+        std::vector<VkExtensionProperties> extensionsPr(extensionCount);
+        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
+            extensionsPr.data());
+
+        auto extensions = getRequiredExtensions();
+        createInfo.enabledExtensionCount =
+            static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
+
+        if (enableValidationLayers && !checkValidationLayerSupport()) {
+            throw std::runtime_error("validation layers requested, but not available!");
+        }
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount =
+                static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+
+            populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
+                &debugCreateInfo;
+        }
+        else {
+            createInfo.enabledLayerCount = 0;
+            createInfo.pNext = nullptr;
+        }
+
         VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
-        if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+        if (result != VK_SUCCESS) {
+            PrintVkError(result);
             throw std::runtime_error("failed to create instance!");
+        }
+    }
+
+    std::vector<const char*> getRequiredExtensions() {
+        uint32_t glfwExtensionCount = 0;
+        const char** glfwExtensions;
+        glfwExtensions =
+            glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+
+        std::vector<const char*> extensions(glfwExtensions,
+            glfwExtensions + glfwExtensionCount);
+        if (enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        }
+
+        return extensions;
+    }
+
+    bool checkValidationLayerSupport() {
+        uint32_t layerCount;
+        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+        std::vector<VkLayerProperties> availableLayers(layerCount);
+        vkEnumerateInstanceLayerProperties(&layerCount,
+            availableLayers.data());
+
+        for (const char* layerName : validationLayers) {
+            bool layerFound = false;
+
+            for (const auto& layerProperties : availableLayers) {
+                if (strcmp(layerName, layerProperties.layerName) == 0) {
+                    layerFound = true;
+                    break;
+                }
+            }
+
+            if (!layerFound) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    void populateDebugMessengerCreateInfo(
+        VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+        createInfo = {};
+        createInfo.sType =
+            VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+        createInfo.messageSeverity =
+            //			VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | // disabled in the tutorial
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr;
+    }
+
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+
+        if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
+            std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        }
+        return VK_FALSE;
+    }
+
+    void setupDebugMessenger() {
+        if (!enableValidationLayers) return;
+
+        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+        populateDebugMessengerCreateInfo(createInfo);
+
+        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr,
+            &debugMessenger) != VK_SUCCESS) {
+            throw std::runtime_error("failed to set up debug messenger!");
         }
     }
 
@@ -945,24 +1101,14 @@ private:
     void mainLoop() {
         while (!glfwWindowShouldClose(window)) {
             glfwPollEvents();
+            drawFrame();
+
+            if (glfwGetKey(window, GLFW_KEY_ESCAPE)) {
+                break;
+            }
         }
     }
 
-    void cleanup() {
-        vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
-        vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
-
-        vkDestroyCommandPool(device, commandPool, nullptr);
-
-        vkDestroyDevice(device, nullptr);
-
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-        vkDestroyInstance(instance, nullptr);
-
-        glfwDestroyWindow(window);
-
-        glfwTerminate();
-    }
 
     void createCommandPool() {
         QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
@@ -2580,5 +2726,363 @@ private:
                 throw std::runtime_error("failed to create synchronization objects for a frame!!");
             }
         }
+    }
+
+    void drawFrame() {
+        vkWaitForFences(device, 1, &inFlightFences[currentFrame],
+            VK_TRUE, UINT64_MAX);
+
+        uint32_t imageIndex;
+
+        VkResult result = vkAcquireNextImageKHR(device, swapChain, UINT64_MAX,
+            imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+            recreateSwapChain();
+            return;
+        }
+        else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+            throw std::runtime_error("failed to acquire swap chain image!");
+        }
+
+        if (imagesInFlight[imageIndex] != VK_NULL_HANDLE) {
+            vkWaitForFences(device, 1, &imagesInFlight[imageIndex],
+                VK_TRUE, UINT64_MAX);
+        }
+        imagesInFlight[imageIndex] = inFlightFences[currentFrame];
+
+        updateUniformBuffer(imageIndex);
+
+        VkSubmitInfo submitInfo{};
+        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        VkSemaphore waitSemaphores[] = { imageAvailableSemaphores[currentFrame] };
+        VkPipelineStageFlags waitStages[] =
+        { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
+        submitInfo.waitSemaphoreCount = 1;
+        submitInfo.pWaitSemaphores = waitSemaphores;
+        submitInfo.pWaitDstStageMask = waitStages;
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffers[imageIndex];
+        VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
+        submitInfo.signalSemaphoreCount = 1;
+        submitInfo.pSignalSemaphores = signalSemaphores;
+
+        vkResetFences(device, 1, &inFlightFences[currentFrame]);
+        // vkEndCommandBuffer(*submitInfo.pCommandBuffers);
+        if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
+            inFlightFences[currentFrame]) != VK_SUCCESS) {
+            throw std::runtime_error("failed to submit draw command buffer!");
+        }
+
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
+
+        VkSwapchainKHR swapChains[] = { swapChain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &imageIndex;
+        presentInfo.pResults = nullptr; // Optional
+
+        result = vkQueuePresentKHR(presentQueue, &presentInfo);
+
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
+            framebufferResized) {
+            framebufferResized = false;
+            recreateSwapChain();
+        }
+        else if (result != VK_SUCCESS) {
+            throw std::runtime_error("failed to present swap chain image!");
+        }
+
+        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    }
+
+    void recreateSwapChain() {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(window, &width, &height);
+
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(window, &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(device);
+
+        cleanupSwapChain();
+
+        createSwapChain();
+        createImageViews();
+        createRenderPass();
+        createPipelines();
+        createColorResources();
+        createDepthResources();
+        createFramebuffers();
+        createUniformBuffers();
+        createDescriptorPool();
+        createDescriptorSets();
+        createCommandBuffers();
+    }
+
+    void cleanupSwapChain() {
+        vkDestroyImageView(device, colorImageView, nullptr);
+        vkDestroyImage(device, colorImage, nullptr);
+        vkFreeMemory(device, colorImageMemory, nullptr);
+
+        vkDestroyImageView(device, depthImageView, nullptr);
+        vkDestroyImage(device, depthImage, nullptr);
+        vkFreeMemory(device, depthImageMemory, nullptr);
+
+        for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
+            vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+        }
+
+        vkFreeCommandBuffers(device, commandPool,
+            static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+
+        vkDestroyPipeline(device, PhongPipeline, nullptr);
+        vkDestroyPipelineLayout(device, PhongPipelineLayout, nullptr);
+
+        vkDestroyPipeline(device, SkyBoxPipeline, nullptr);
+        vkDestroyPipelineLayout(device, SkyBoxPipelineLayout, nullptr);
+
+        /*
+        vkDestroyPipeline(device, TextPipeline, nullptr);
+        vkDestroyPipelineLayout(device, TextPipelineLayout, nullptr);
+        */
+
+        vkDestroyRenderPass(device, renderPass, nullptr);
+
+        for (size_t i = 0; i < swapChainImageViews.size(); i++) {
+            vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+        }
+
+        vkDestroySwapchainKHR(device, swapChain, nullptr);
+
+        for (size_t i = 0; i < swapChainImages.size() * Scene.size(); i++) {
+            vkDestroyBuffer(device, uniformBuffers[i], nullptr);
+            vkFreeMemory(device, uniformBuffersMemory[i], nullptr);
+        }
+        for (size_t i = 0; i < swapChainImages.size(); i++) {
+            vkDestroyBuffer(device, globalUniformBuffers[i], nullptr);
+            vkFreeMemory(device, globalUniformBuffersMemory[i], nullptr);
+        }
+        for (size_t i = 0; i < swapChainImages.size() * SkyBox.size(); i++) {
+            vkDestroyBuffer(device, SkyBoxUniformBuffers[i], nullptr);
+            vkFreeMemory(device, SkyBoxUniformBuffersMemory[i], nullptr);
+        }
+
+        /*
+        for (size_t i = 0; i < swapChainImages.size(); i++) {
+            vkDestroyBuffer(device, TextUniformBuffers[i], nullptr);
+            vkFreeMemory(device, TextUniformBuffersMemory[i], nullptr);
+        }
+        */
+
+        vkDestroyDescriptorPool(device, descriptorPool, nullptr);
+    }
+
+    void updateUniformBuffer(uint32_t currentImage) {
+        static auto startTime = std::chrono::high_resolution_clock::now();
+        static float lastTime = 0.0f;
+
+        auto currentTime = std::chrono::high_resolution_clock::now();
+        float time = std::chrono::duration<float, std::chrono::seconds::period>
+            (currentTime - startTime).count();
+        float deltaT = time - lastTime;
+        lastTime = time;
+
+        static float debounce = time;
+
+        const float ROT_SPEED = glm::radians(60.0f);
+        const float MOVE_SPEED = 1.75f;
+
+        /*
+        if (glfwGetKey(window, GLFW_KEY_SPACE)) {
+            if (time - debounce > 0.33) {
+                curText = (curText + 1) % SceneText.size();
+                debounce = time;
+                framebufferResized = true;
+            }
+        }
+        */
+
+        static bool useTexture = true;
+        if (glfwGetKey(window, GLFW_KEY_T)) {
+            if (time - debounce > 0.33) {
+                debounce = time;
+                useTexture = !useTexture;
+            }
+        }
+
+        const float MOUSE_RES = 500.0f;
+
+        static double old_xpos = 0, old_ypos = 0;
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        double m_dx = xpos - old_xpos;
+        double m_dy = ypos - old_ypos;
+        old_xpos = xpos; old_ypos = ypos;
+        //std::cout << xpos << " " << ypos << " " << m_dx << " " << m_dy << "\n";
+
+        glfwSetInputMode(window, GLFW_STICKY_MOUSE_BUTTONS, GLFW_TRUE);
+        if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+            CamAng.y += m_dx * ROT_SPEED / MOUSE_RES;
+            CamAng.x += m_dy * ROT_SPEED / MOUSE_RES;
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_LEFT)) {
+            CamAng.y += deltaT * ROT_SPEED;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            CamAng.y -= deltaT * ROT_SPEED;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP)) {
+            CamAng.x += deltaT * ROT_SPEED;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN)) {
+            CamAng.x -= deltaT * ROT_SPEED;
+        }
+        if (glfwGetKey(window, GLFW_KEY_Q)) {
+            CamAng.z -= deltaT * ROT_SPEED;
+        }
+        if (glfwGetKey(window, GLFW_KEY_E)) {
+            CamAng.z += deltaT * ROT_SPEED;
+        }
+
+        glm::mat3 CamDir = glm::mat3(glm::rotate(glm::mat4(1.0f), CamAng.y, glm::vec3(0.0f, 1.0f, 0.0f))) *
+            glm::mat3(glm::rotate(glm::mat4(1.0f), CamAng.x, glm::vec3(1.0f, 0.0f, 0.0f))) *
+            glm::mat3(glm::rotate(glm::mat4(1.0f), CamAng.z, glm::vec3(0.0f, 0.0f, 1.0f)));
+
+
+        if (glfwGetKey(window, GLFW_KEY_A)) {
+            CamPos -= MOVE_SPEED * glm::vec3(glm::rotate(glm::mat4(1.0f), CamAng.y,
+                glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(1, 0, 0, 1)) * deltaT;
+        }
+        if (glfwGetKey(window, GLFW_KEY_D)) {
+            CamPos += MOVE_SPEED * glm::vec3(glm::rotate(glm::mat4(1.0f), CamAng.y,
+                glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(1, 0, 0, 1)) * deltaT;
+        }
+        if (glfwGetKey(window, GLFW_KEY_S)) {
+            CamPos += MOVE_SPEED * glm::vec3(glm::rotate(glm::mat4(1.0f), CamAng.y,
+                glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0, 0, 1, 1)) * deltaT;
+        }
+        if (glfwGetKey(window, GLFW_KEY_W)) {
+            CamPos -= MOVE_SPEED * glm::vec3(glm::rotate(glm::mat4(1.0f), CamAng.y,
+                glm::vec3(0.0f, 1.0f, 0.0f)) * glm::vec4(0, 0, 1, 1)) * deltaT;
+        }
+        if (glfwGetKey(window, GLFW_KEY_F)) {
+            CamPos -= MOVE_SPEED * glm::vec3(0, 1, 0) * deltaT;
+        }
+        if (glfwGetKey(window, GLFW_KEY_R)) {
+            CamPos += MOVE_SPEED * glm::vec3(0, 1, 0) * deltaT;
+        }
+
+        // std::cout << "Cam Pos: " << CamPos[0] << " " << CamPos[1] << " " << CamPos[2] << "\n";
+
+        glm::mat4 CamMat = glm::translate(glm::transpose(glm::mat4(CamDir)), -CamPos);
+
+        glm::mat4 Prj = glm::perspective(glm::radians(45.0f),
+            swapChainExtent.width / (float)swapChainExtent.height,
+            0.1f, 50.0f);
+        Prj[1][1] *= -1;
+
+        // Updates unifoms for the objects
+        for (int j = 0; j < Scene.size(); j++) {
+            UniformBufferObject ubo{};
+            glm::vec3 delta;
+
+            float rotAng = 0.0f;
+
+            ubo.mMat = glm::translate(glm::mat4(1), SceneToLoad[j].pos);
+            ubo.mMat = glm::scale(ubo.mMat, glm::vec3(SceneToLoad[j].scale));
+            ubo.mvpMat = Prj * CamMat * ubo.mMat;
+            ubo.nMat = glm::inverse(glm::transpose(ubo.mMat));
+            //			ubo.nMat = glm::inverse(glm::transpose(glm::mat3(ubo.mMat)));
+            //
+            //for(int ti=0;ti<3;ti++){for(int tj=0;tj<3;tj++){std::cout << ubo.nMat[ti][tj] << " ";}std::cout<<"\n";}std::cout<<"\n";
+            //glm::mat4 tM = glm::inverse(glm::transpose(ubo.mMat));
+            //for(int ti=0;ti<4;ti++){for(int tj=0;tj<4;tj++){std::cout << tM[ti][tj] << " ";}std::cout<<"\n";}std::cout<<"\n";
+
+
+            int i = j * swapChainImages.size() + currentImage;
+
+            void* data;
+            vkMapMemory(device, uniformBuffersMemory[i], 0,
+                sizeof(ubo), 0, &data);
+            memcpy(data, &ubo, sizeof(ubo));
+            vkUnmapMemory(device, uniformBuffersMemory[i]);
+        }
+
+        // updates global uniforms
+        GlobalUniformBufferObject gubo{};
+        gubo.lightColor0 = glm::vec3(1.0f, 1.0f, 1.0f);
+        gubo.lightColor1 = glm::vec3(0.0f, 0.0f, 0.0f);
+        gubo.lightColor2 = glm::vec3(0.0f, 0.0f, 0.0f);
+        gubo.lightColor3 = glm::vec3(0.0f, 0.0f, 0.0f);
+        gubo.lightDir0 = glm::vec3(cos(glm::radians(135.0f)) * cos(glm::radians(-30.0f)), sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-30.0f)));
+        gubo.lightDir1 = glm::vec3(-cos(glm::radians(135.0f)) * cos(glm::radians(-30.0f)), sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-30.0f)));
+        gubo.lightDir2 = glm::vec3(cos(glm::radians(135.0f)) * cos(glm::radians(-30.0f)), -sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-30.0f)));
+        gubo.lightDir3 = glm::vec3(-cos(glm::radians(135.0f)) * cos(glm::radians(-30.0f)), -sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-30.0f)));
+        gubo.eyePos = CamPos;
+
+        switch (curText) {
+        case 0:
+            gubo.selector = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
+            break;
+        case 1:
+            gubo.selector = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
+            gubo.lightColor0 = glm::vec3(0.3f, 0.3f, 0.3f);
+            gubo.lightColor1 = glm::vec3(0.3f, 0.4f, 0.4f);
+            gubo.lightColor2 = glm::vec3(0.4f, 0.3f, 0.4f);
+            gubo.lightColor3 = glm::vec3(0.4f, 0.4f, 0.3f);
+            gubo.lightDir0 = glm::vec3(-0.4830f, 0.8365f, -0.2588f);
+            gubo.lightDir1 = glm::vec3(-0.1677f, 0.9513f, -0.2588f);
+            gubo.lightDir2 = glm::vec3(0.1677f, 0.9513f, -0.2588f);
+            gubo.lightDir3 = glm::vec3(0.4830f, 0.8365f, -0.2588f);
+            break;
+        case 2:
+            gubo.selector = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
+            gubo.lightDir0 = glm::vec3(cos(glm::radians(135.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-60.0f)));
+            break;
+        case 3:
+            gubo.selector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
+            gubo.lightDir0 = glm::vec3(cos(glm::radians(150.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(150.0f)), cos(glm::radians(150.0f)) * sin(glm::radians(-60.0f)));
+            break;
+        }
+        gubo.selector.w = useTexture ? 1.0 : 0.0;
+        void* data;
+        vkMapMemory(device, globalUniformBuffersMemory[currentImage], 0,
+            sizeof(gubo), 0, &data);
+        memcpy(data, &gubo, sizeof(gubo));
+        vkUnmapMemory(device, globalUniformBuffersMemory[currentImage]);
+
+        // updates SkyBox uniforms
+        UniformBufferObject ubo{};
+        ubo.mMat = glm::mat4(1.0f);
+        ubo.nMat = glm::mat4(1.0f);
+        ubo.mvpMat = Prj * glm::transpose(glm::mat4(CamDir));
+        int is = curText * swapChainImages.size() + currentImage;
+        vkMapMemory(device, SkyBoxUniformBuffersMemory[is], 0,
+            sizeof(ubo), 0, &data);
+        memcpy(data, &ubo, sizeof(ubo));
+        vkUnmapMemory(device, SkyBoxUniformBuffersMemory[is]);
+    }
+
+    void cleanup() {
+        vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
+
+        vkDestroyCommandPool(device, commandPool, nullptr);
+
+        vkDestroyDevice(device, nullptr);
+
+        vkDestroySurfaceKHR(instance, surface, nullptr);
+        vkDestroyInstance(instance, nullptr);
+
+        glfwDestroyWindow(window);
+
+        glfwTerminate();
     }
 };

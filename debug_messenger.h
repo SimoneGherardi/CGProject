@@ -24,10 +24,10 @@ extern VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo(
 );
 
 extern void initializeDebugMessenger(
-	const VkInstance& instance,
+	const VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 	const VkAllocationCallbacks* pAllocator,
 	VkDebugUtilsMessengerEXT* pDebugMessenger
 );
 
-extern void cleanupDebugMessenger(const VkInstance& instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);
+extern void cleanupDebugMessenger(const VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator);

@@ -12,9 +12,9 @@ extern VkPipelineVertexInputStateCreateInfo getPipelineVertexInputStateCreateInf
 
 extern VkPipelineInputAssemblyStateCreateInfo getPipelineInputAssemblyStateCreateInfo(const VkPrimitiveTopology topology, const VkBool32 primitiveRestartEnable);
 
-extern VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(const VkShaderModule& shaderModule, const VkShaderStageFlagBits stageFlag);
+extern VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(const VkShaderModule shaderModule, const VkShaderStageFlagBits stageFlag);
 
-extern VkPipelineDynamicStateCreateInfo getPipelineDynamicStateCreateInfo(const std::vector<VkDynamicState>& dynamicStates);
+extern VkPipelineDynamicStateCreateInfo getPipelineDynamicStateCreateInfo(const std::vector<VkDynamicState> dynamicStates);
 
 extern VkPipelineViewportStateCreateInfo getPipelineViewportStateCreateInfo(
 	const uint32_t viewportCount,

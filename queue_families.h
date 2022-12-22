@@ -10,4 +10,4 @@ struct QueueFamilyIndices {
     }
 };
 
-extern struct QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice& device, const VkSurfaceKHR& surface);
+extern struct QueueFamilyIndices findQueueFamilies(const VkPhysicalDevice device, const VkSurfaceKHR surface);

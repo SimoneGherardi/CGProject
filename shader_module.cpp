@@ -1,6 +1,6 @@
 #include "shader_module.h"
 
-VkShaderModule initializeShaderModule(const VkDevice& device, const std::vector<char>& code)
+VkShaderModule initializeShaderModule(const VkDevice device, const std::vector<char> code)
 {
 	VkShaderModuleCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

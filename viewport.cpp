@@ -11,14 +11,14 @@ VkViewport getViewport(const float x, const float y, const float width, const fl
 	return viewport;
 }
 
-VkViewport getViewport(const float x, const float y, const VkExtent2D& extent, const float minDepth, const float maxDepth)
+VkViewport getViewport(const float x, const float y, const VkExtent2D extent, const float minDepth, const float maxDepth)
 {
 	float width = (float)extent.width;
 	float height = (float)extent.height;
 	return getViewport(x, y, width, height, minDepth, maxDepth);
 }
 
-VkRect2D getScissor(const float offx, const float offy, const VkExtent2D& extent)
+VkRect2D getScissor(const float offx, const float offy, const VkExtent2D extent)
 {
 	VkRect2D scissor{};
 	scissor.offset = { 0, 0 };

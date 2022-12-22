@@ -6,10 +6,10 @@
 #include "swap_chain_support.h"
 
 extern VkDevice initializeLogicalDevice(
-    const VkPhysicalDevice& physicalDevice,
-    const VkSurfaceKHR& surface,
-    const ValidationLayers& validationLayers,
-    const Extensions& deviceExtensions,
+    const VkPhysicalDevice physicalDevice,
+    const VkSurfaceKHR surface,
+    const ValidationLayers validationLayers,
+    const Extensions deviceExtensions,
     VkQueue* graphicsQueue,
     VkQueue* presentationQueue
 );

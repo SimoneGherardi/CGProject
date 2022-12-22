@@ -1,6 +1,6 @@
 #include "physical_device.h"
 
-std::vector<VkPhysicalDevice> getPhysicalDevices(const VkInstance& instance)
+std::vector<VkPhysicalDevice> getPhysicalDevices(const VkInstance instance)
 {
     uint32_t deviceCount = 0;
     vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
@@ -9,7 +9,7 @@ std::vector<VkPhysicalDevice> getPhysicalDevices(const VkInstance& instance)
     return devices;
 }
 
-VkPhysicalDevice getOptimalPhysicalDevice(const std::vector<VkPhysicalDevice>& devices, const VkSurfaceKHR& surface, const Extensions& deviceExtensions)
+VkPhysicalDevice getOptimalPhysicalDevice(const std::vector<VkPhysicalDevice> devices, const VkSurfaceKHR surface, const Extensions deviceExtensions)
 {
     VkPhysicalDevice physicalDevice = {};
     uint32_t deviceCount = devices.size();
@@ -38,7 +38,7 @@ VkPhysicalDevice getOptimalPhysicalDevice(const std::vector<VkPhysicalDevice>& d
     return physicalDevice;
 }
 
-float getPhysicalDeviceSuitability(const VkPhysicalDevice& device, const VkSurfaceKHR& surface, const Extensions& deviceExtensions)
+float getPhysicalDeviceSuitability(const VkPhysicalDevice device, const VkSurfaceKHR surface, const Extensions deviceExtensions)
 {
     float score = 0;
     VkPhysicalDeviceProperties deviceProperties;
@@ -65,7 +65,7 @@ float getPhysicalDeviceSuitability(const VkPhysicalDevice& device, const VkSurfa
     return score;
 }
 
-bool isDeviceSuitable(const VkPhysicalDevice& device, const VkSurfaceKHR& surface, const Extensions& deviceExtensions)
+bool isDeviceSuitable(const VkPhysicalDevice device, const VkSurfaceKHR surface, const Extensions deviceExtensions)
 {
     QueueFamilyIndices indices = findQueueFamilies(device, surface);
 
@@ -88,7 +88,7 @@ bool isDeviceSuitable(const VkPhysicalDevice& device, const VkSurfaceKHR& surfac
 
 
 
-bool checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice& device, const Extensions& deviceExtensions)
+bool checkPhysicalDeviceExtensionSupport(const VkPhysicalDevice device, const Extensions deviceExtensions)
 {
     uint32_t extensionCount;
     vkEnumerateDeviceExtensionProperties(device, nullptr,

@@ -14,10 +14,10 @@ extern VkApplicationInfo getApplicationInfoApi(const char* applicationName, cons
 extern VkApplicationInfo getApplicationInfo(const char* applicationName, const uint32_t applicationVersion);
 
 extern VkInstanceCreateInfo getInstanceCreateInfo(
-    const VkApplicationInfo& applicationInfo,
-    const ValidationLayers& validationLayers,
-    const Extensions& extensions,
+    const VkApplicationInfo applicationInfo,
+    const ValidationLayers validationLayers,
+    const Extensions extensions,
     VkDebugUtilsMessengerCreateInfoEXT* debugMessengerCreateInfo
 );
 
-extern void initializeInstance(const VkInstanceCreateInfo& createInfo, VkInstance* instance);
+extern void initializeInstance(const VkInstanceCreateInfo createInfo, VkInstance* instance);

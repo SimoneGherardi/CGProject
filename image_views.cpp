@@ -1,9 +1,9 @@
 #include "image_views.h"
 
 void initializeImageViews(
-    const VkDevice& device,
-    const std::vector<VkImage>& swapChainImages,
-    const VkFormat& swapChainImageFormat,
+    const VkDevice device,
+    const std::vector<VkImage> swapChainImages,
+    const VkFormat swapChainImageFormat,
     std::vector<VkImageView>* swapChainImageViews
 )
 {
@@ -23,8 +23,8 @@ void initializeImageViews(
 }
 
 VkImageView initializeImageView(
-    const VkDevice& device,
-    const VkImage& image,
+    const VkDevice device,
+    const VkImage image,
     const VkFormat format,
     const VkImageAspectFlags aspectFlags,
     const uint32_t mipLevels,

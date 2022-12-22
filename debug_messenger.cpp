@@ -35,7 +35,7 @@ VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo(
 }
 
 void initializeDebugMessenger(
-	const VkInstance& instance,
+	const VkInstance instance,
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
 	const VkAllocationCallbacks* pAllocator,
 	VkDebugUtilsMessengerEXT* pDebugMessenger
@@ -54,7 +54,7 @@ void initializeDebugMessenger(
 	}
 }
 
-void cleanupDebugMessenger(const VkInstance& instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
+void cleanupDebugMessenger(const VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func != nullptr) {
 		func(instance, debugMessenger, pAllocator);

@@ -159,6 +159,7 @@
     <ClCompile Include="swap_chain_support.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="validation_layers.cpp" />
+    <ClCompile Include="vertex_buffers.cpp" />
     <ClCompile Include="viewport.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
@@ -185,6 +186,7 @@
     <ClInclude Include="swap_chain_support.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="validation_layers.h" />
+    <ClInclude Include="vertex_buffers.h" />
     <ClInclude Include="viewport.h" />
     <ClInclude Include="vulkan.h" />
     <ClInclude Include="window.h" />

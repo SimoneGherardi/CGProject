@@ -2475,16 +2475,18 @@ private:
         poolSizes[5].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
         poolSizes[6].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[6].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+        
         poolSizes[7].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         poolSizes[7].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
         poolSizes[8].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
         poolSizes[8].descriptorCount = static_cast<uint32_t>(swapChainImages.size());
+        
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size() * (Scene.size() + SkyBox.size() + 1));
+        poolInfo.maxSets = static_cast<uint32_t>(swapChainImages.size() * (Scene.size() + SkyBox.size()));
 
         VkResult result = vkCreateDescriptorPool(device, &poolInfo, nullptr,
             &descriptorPool);
@@ -2766,9 +2768,10 @@ private:
         VkSemaphore signalSemaphores[] = { renderFinishedSemaphores[currentFrame] };
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
-
+        
+        
         vkResetFences(device, 1, &inFlightFences[currentFrame]);
-        // vkEndCommandBuffer(*submitInfo.pCommandBuffers);
+        
         if (vkQueueSubmit(graphicsQueue, 1, &submitInfo,
             inFlightFences[currentFrame]) != VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
@@ -2898,15 +2901,15 @@ private:
         const float ROT_SPEED = glm::radians(60.0f);
         const float MOVE_SPEED = 1.75f;
 
-        /*
+        
         if (glfwGetKey(window, GLFW_KEY_SPACE)) {
             if (time - debounce > 0.33) {
-                curText = (curText + 1) % SceneText.size();
+                //curText = (curText + 1) % SceneText.size();
                 debounce = time;
                 framebufferResized = true;
             }
         }
-        */
+        
 
         static bool useTexture = true;
         if (glfwGetKey(window, GLFW_KEY_T)) {
@@ -3071,12 +3074,61 @@ private:
     }
 
     void cleanup() {
+        cleanupSwapChain();
+
+        for (size_t i = 0; i < Scene.size(); i++) {
+            vkDestroySampler(device, Scene[i].TD.textureSampler, nullptr);
+            vkDestroyImageView(device, Scene[i].TD.textureImageView, nullptr);
+            vkDestroyImage(device, Scene[i].TD.textureImage, nullptr);
+            vkFreeMemory(device, Scene[i].TD.textureImageMemory, nullptr);
+
+            vkDestroyBuffer(device, Scene[i].MD.indexBuffer, nullptr);
+            vkFreeMemory(device, Scene[i].MD.indexBufferMemory, nullptr);
+
+            vkDestroyBuffer(device, Scene[i].MD.vertexBuffer, nullptr);
+            vkFreeMemory(device, Scene[i].MD.vertexBufferMemory, nullptr);
+        }
+        for (size_t i = 0; i < SkyBox.size(); i++) {
+            vkDestroySampler(device, SkyBox[i].TD.textureSampler, nullptr);
+            vkDestroyImageView(device, SkyBox[i].TD.textureImageView, nullptr);
+            vkDestroyImage(device, SkyBox[i].TD.textureImage, nullptr);
+            vkFreeMemory(device, SkyBox[i].TD.textureImageMemory, nullptr);
+
+            vkDestroyBuffer(device, SkyBox[i].MD.indexBuffer, nullptr);
+            vkFreeMemory(device, SkyBox[i].MD.indexBufferMemory, nullptr);
+
+            vkDestroyBuffer(device, SkyBox[i].MD.vertexBuffer, nullptr);
+            vkFreeMemory(device, SkyBox[i].MD.vertexBufferMemory, nullptr);
+        }
+
+        // vkDestroySampler(device, SText.TD.textureSampler, nullptr);
+        //vkDestroyImageView(device, SText.TD.textureImageView, nullptr);
+        //vkDestroyImage(device, SText.TD.textureImage, nullptr);
+        //vkFreeMemory(device, SText.TD.textureImageMemory, nullptr);
+
+        //vkDestroyBuffer(device, SText.MD.indexBuffer, nullptr);
+        //vkFreeMemory(device, SText.MD.indexBufferMemory, nullptr);
+
+        //vkDestroyBuffer(device, SText.MD.vertexBuffer, nullptr);
+        //vkFreeMemory(device, SText.MD.vertexBufferMemory, nullptr);
+
         vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
         vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
+        // vkDestroyDescriptorSetLayout(device, TextDescriptorSetLayout, nullptr);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+            vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
+            vkDestroySemaphore(device, imageAvailableSemaphores[i], nullptr);
+            vkDestroyFence(device, inFlightFences[i], nullptr);
+        }
 
         vkDestroyCommandPool(device, commandPool, nullptr);
 
         vkDestroyDevice(device, nullptr);
+
+        if (enableValidationLayers) {
+            DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+        }
 
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);

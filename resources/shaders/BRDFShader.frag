@@ -1,4 +1,5 @@
-#version 450#extension GL_ARB_separate_shader_objects : enable
+#version 450
+#extension GL_ARB_separate_shader_objects : enable
 
 layout(location = 0) in vec3 fragPos;
 layout(location = 1) in vec3 fragNorm;
@@ -21,8 +22,6 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
 	vec4 selector;
 } gubo;
 
-/**** Modify from here *****/
-
 
 vec3 Lambert_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C) {
 	// Lambert Diffuse BRDF model
@@ -32,6 +31,7 @@ vec3 Lambert_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C) {
 	// vec3 V : view direction
 	// vec3 C : main color (diffuse color, or specular color)
 	
+	//C = std::clamp()
 	return C;
 }
 
@@ -68,8 +68,6 @@ vec3 Toon_Specular_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, float thr)  {
 	return vec3(0,0,0);
 }
 
-
-/**** To here *****/
 
 
 

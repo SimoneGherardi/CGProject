@@ -204,7 +204,7 @@ void PrintVkError(VkResult result) {
             break;
         }
     }
-    std::cout << "Error: " << result << ", " << meaning << "\n";
+    std::cout << "Error: " << result << ", " << meaning << std::endl << std::endl;
 }
 
 struct VertexDescriptor {
@@ -1203,6 +1203,10 @@ private:
             vkCmdDrawIndexed(commandBuffers[i],
                 static_cast<uint32_t>(SkyBox[curText].MD.indices.size()), 1, 0, 0, 0);
 
+            if (vkEndCommandBuffer(commandBuffers[i]) !=
+                VK_SUCCESS) {
+                throw std::runtime_error("failed to end recording command buffer!");
+            }
         }
     }
 
@@ -1859,7 +1863,7 @@ private:
 
         MD.vertDesc = &VD;
 
-        std::cout << FName << "\n";
+        std::cout << FName << std::endl;
 
         std::vector<float> vertex{};
         vertex.resize(VD.size);
@@ -1894,7 +1898,7 @@ private:
         }
 
         std::cout << FName << " -> V: " << MD.vertices.size()
-            << ", I: " << MD.indices.size() << "\n";
+            << ", I: " << MD.indices.size() << std::endl;
     }
 
     void loadGLTFMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
@@ -1908,7 +1912,7 @@ private:
         }
 
         for (const auto& mesh : model.meshes) {
-            std::cout << "Primitives: " << mesh.primitives.size() << "\n";
+            std::cout << "Primitives: " << mesh.primitives.size() << std::endl;
             for (const auto& primitive : mesh.primitives) {
                 if (primitive.indices < 0) {
                     continue;
@@ -1999,7 +2003,7 @@ private:
         }
 
         std::cout << FName << " (GLTF) -> V: " << MD.vertices.size()
-            << ", I: " << MD.indices.size() << "\n";
+            << ", I: " << MD.indices.size() << std::endl;
         //		throw std::runtime_error("Now We Stop Here!");			
     }
 
@@ -2105,11 +2109,11 @@ private:
         stbi_uc* pixels = stbi_load((TEXTURE_PATH + FName).c_str(), &texWidth, &texHeight,
             &texChannels, STBI_rgb_alpha);
         if (!pixels) {
-            std::cout << (TEXTURE_PATH + FName).c_str() << "\n";
+            std::cout << (TEXTURE_PATH + FName).c_str() << std::endl;
             throw std::runtime_error("failed to load texture image!");
         }
         std::cout << FName << " -> size: " << texWidth
-            << "x" << texHeight << ", ch: " << texChannels << "\n";
+            << "x" << texHeight << ", ch: " << texChannels << std::endl;
 
         VkDeviceSize imageSize = texWidth * texHeight * 4;
         TD.mipLevels = static_cast<uint32_t>(std::floor(
@@ -2316,11 +2320,11 @@ private:
             pixels[i] = stbi_load((TEXTURE_PATH + FName[i]).c_str(), &texWidth, &texHeight,
                 &texChannels, STBI_rgb_alpha);
             if (!pixels[i]) {
-                std::cout << (TEXTURE_PATH + FName[i]).c_str() << "\n";
+                std::cout << (TEXTURE_PATH + FName[i]).c_str() << std::endl;
                 throw std::runtime_error("failed to load texture image!");
             }
             std::cout << FName[i] << " -> size: " << texWidth
-                << "x" << texHeight << ", ch: " << texChannels << "\n";
+                << "x" << texHeight << ", ch: " << texChannels << std::endl;
         }
 
         VkDeviceSize imageSize = texWidth * texHeight * 4;

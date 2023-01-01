@@ -1,3 +1,7 @@
+#ifdef __APPLE__
+    #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
+#endif
+
 #include <flecs.h>
 #include "test.h"
 

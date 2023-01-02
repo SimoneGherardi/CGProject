@@ -78,13 +78,6 @@ struct Model {
     const float scale;
 };
 
-const std::vector<Model> SceneToLoad = {
-    {"Sphere.obj", OBJ, "Plaster.png", {0,0.0, 0.0}, 1.0},
-    {"Sphere.obj", OBJ, "Ball15.png", {0,0.0, 0.0}, 1.0},
-    {"Sphere.obj", OBJ, "soccer_sph.png", {0,0.0, 0.0}, 1.0},
-    {"Sphere.obj", OBJ, "Moon.jpg", {0,0.0, 0.0}, 1.0}
-};
-
 struct UniformBufferObject {
     alignas(16) glm::mat4 mvpMat;
     alignas(16) glm::mat4 mMat;

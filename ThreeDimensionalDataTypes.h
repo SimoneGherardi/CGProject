@@ -11,6 +11,8 @@ struct Model {
     const char* ObjFile;
     ModelType type;
     const char* TextureFile;
+    const char* NormalFile;
+    const char* MaterialFile;
     const glm::vec3 pos;
     const float scale;
 };
@@ -183,4 +185,12 @@ struct ModelData {
     VkDeviceMemory vertexBufferMemory;
     VkBuffer indexBuffer;
     VkDeviceMemory indexBufferMemory;
+};
+
+struct TextureData {
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+    VkSampler textureSampler;
+    uint32_t mipLevels;
 };

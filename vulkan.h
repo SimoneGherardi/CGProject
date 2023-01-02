@@ -87,6 +87,23 @@ struct Model {
     const float scale;
 };
 
+struct UniformBufferObject {
+    alignas(16) glm::mat4 mvpMat;
+    alignas(16) glm::mat4 mMat;
+    alignas(16) glm::mat4 nMat;
+};
+
+struct GlobalUniformBufferObject {
+    alignas(16) glm::vec3 lightDir0;
+    alignas(16) glm::vec3 lightColor0;
+    alignas(16) glm::vec3 lightDir1;
+    alignas(16) glm::vec3 lightColor1;
+    alignas(16) glm::vec3 lightDir2;
+    alignas(16) glm::vec3 lightColor2;
+    alignas(16) glm::vec3 lightDir3;
+    alignas(16) glm::vec3 lightColor3;
+    alignas(16) glm::vec3 eyePos;
+    alignas(16) glm::vec4 selector;
 const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Ball15.png", {0,0.0, 0.0}, 1.0},

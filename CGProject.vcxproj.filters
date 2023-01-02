@@ -25,6 +25,29 @@
     <Filter Include="Source Files\ecs">
       <UniqueIdentifier>{9e3dc080-f924-47d8-bd90-19d199bff037}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\3d">
+      <UniqueIdentifier>{8ef06d93-78b4-401e-9a85-c41ececd312c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\3d">
+      <UniqueIdentifier>{9b643005-dcfb-4a74-89db-becaa2408713}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\managers">
+      <UniqueIdentifier>{985a1b2b-51a6-4c54-8459-b1dad9d83650}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\storage">
+      <UniqueIdentifier>{561be373-5d54-4a0b-bd47-11992be665e4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\storage">
+      <UniqueIdentifier>{186238d5-e0a0-4416-aac8-405c8d921042}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\managers">
+      <UniqueIdentifier>{cb03ee9a-6fe8-4a05-8ebb-7ac915491efc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\pipeline">
+      <UniqueIdentifier>{4c535ba8-24e8-4a40-bb35-e8eaa817bd98}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\pipeline">
+      <UniqueIdentifier>{c2c6a89c-caed-4b83-8c12-1ea38263c87a}</UniqueIdentifier>
     <Filter Include="Source Files\vulkan">
       <UniqueIdentifier>{e1c6febf-2b0b-48a7-8b5d-93cd40c809a6}</UniqueIdentifier>
     </Filter>
@@ -42,6 +65,23 @@
     <ClCompile Include="test.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="GLTFLoader.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="Loader3D.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="ObjLoader.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="Scene.cpp">
+      <Filter>Source Files\storage</Filter>
+    </ClCompile>
+    <ClCompile Include="ScenesManager.cpp">
+      <Filter>Source Files\managers</Filter>
+    </ClCompile>
+    <ClCompile Include="PipelineBuilder.cpp">
+      <Filter>Source Files\pipeline</Filter>
     <ClCompile Include="command_pool.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
@@ -113,6 +153,29 @@
     <ClInclude Include="vulkan.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GLTFLoader.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="Loader3D.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="ObjLoader.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="ThreeDimensionalDataTypes.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="Scene.h">
+      <Filter>Header Files\storage</Filter>
+    </ClInclude>
+    <ClInclude Include="assets.h">
+      <Filter>Header Files\storage</Filter>
+    </ClInclude>
+    <ClInclude Include="ScenesManager.h">
+      <Filter>Header Files\managers</Filter>
+    </ClInclude>
+    <ClInclude Include="PipelineBuilder.h">
+      <Filter>Header Files\pipeline</Filter>
     <ClInclude Include="command_pool.h">
       <Filter>Header Files</Filter>
     </ClInclude>

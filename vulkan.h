@@ -72,11 +72,11 @@ const std::vector<const char*> deviceExtensions = {
 };
 
 #ifdef NDEBUG
-const bool enableValidationLayers = false;
-const bool Verbose = false;
+    const bool enableValidationLayers = false;
+    const bool Verbose = false;
 #else
-const bool enableValidationLayers = true;
-const bool Verbose = true;
+    const bool enableValidationLayers = true;
+    const bool Verbose = true;
 #endif
 
 const std::vector<Model> SceneToLoad = {
@@ -272,7 +272,6 @@ public:
     void run() {
         initWindow();
         initVulkan();
-        initApp();
         mainLoop();
         cleanup();
     }
@@ -3271,11 +3270,6 @@ private:
         glfwDestroyWindow(window);
 
         glfwTerminate();
-    }
-
-
-    void initApp() {
-        // This will not be needed in this assignment!
     }
 
 };

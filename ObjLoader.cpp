@@ -1,37 +1,37 @@
 #include "ObjLoader.h"
 
-void loadModels() {
-    Scene.resize(SceneToLoad.size());
-    int i = 0;
-
-    for (const auto& M : SceneToLoad) {
-        loadModelWithTexture(M, i);
-        i++;
-    }
-
-    loadSkyBox();
-}
-
-void loadModelWithTexture(const Model& M, int i) {
-    loadMesh(M.ObjFile, M.type, Scene[i].MD, phongAndSkyBoxVertices);
-    createVertexBuffer(Scene[i].MD);
-    createIndexBuffer(Scene[i].MD);
-
-    createTextureImage(M.TextureFile, Scene[i].TD);
-    createTextureImageView(Scene[i].TD);
-    createTextureSampler(Scene[i].TD);
-}
-
-void loadMesh(const char* FName, ModelType T, ModelData& MD, VertexDescriptor& VD) {
-    switch (T) {
-    case OBJ:
-        loadObjMesh(FName, MD, VD);
-        break;
-    case GLTF:
-        loadGLTFMesh(FName, MD, VD);
-        break;
-    }
-}
+//void loadModels() {
+//    Scene.resize(SceneToLoad.size());
+//    int i = 0;
+//
+//    for (const auto& M : SceneToLoad) {
+//        loadModelWithTexture(M, i);
+//        i++;
+//    }
+//
+//    loadSkyBox();
+//}
+//
+//void loadModelWithTexture(const Model& M, int i) {
+//    loadMesh(M.ObjFile, M.type, Scene[i].MD, phongAndSkyBoxVertices);
+//    createVertexBuffer(Scene[i].MD);
+//    createIndexBuffer(Scene[i].MD);
+//
+//    createTextureImage(M.TextureFile, Scene[i].TD);
+//    createTextureImageView(Scene[i].TD);
+//    createTextureSampler(Scene[i].TD);
+//}
+//
+//void loadMesh(const char* FName, ModelType T, ModelData& MD, VertexDescriptor& VD) {
+//    switch (T) {
+//    case OBJ:
+//        loadObjMesh(FName, MD, VD);
+//        break;
+//    case GLTF:
+//        loadGLTFMesh(FName, MD, VD);
+//        break;
+//    }
+//}
 
 void ObjLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
 {

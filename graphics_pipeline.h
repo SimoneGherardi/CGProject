@@ -2,7 +2,7 @@
 #include "defines.h"
 
 extern void initializeGraphicsPipeline(
-	const VkDevice& device,
+	const VkDevice device,
 	const uint32_t shaderStagesCount,
 	const VkPipelineShaderStageCreateInfo* shaderStages,
 	const VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
@@ -13,12 +13,12 @@ extern void initializeGraphicsPipeline(
 	const VkPipelineDepthStencilStateCreateInfo* depthStencil,
 	const VkPipelineColorBlendStateCreateInfo* colorBlending,
 	const VkPipelineDynamicStateCreateInfo* dynamicState,
-	const VkPipelineLayout& pipelineLayout,
-	const VkRenderPass& renderPass,
+	const VkPipelineLayout pipelineLayout,
+	const VkRenderPass renderPass,
 	VkPipeline* pipeline
 );
 
 extern void cleanupGraphicsPipeline(
-	const VkDevice& device,
-	const VkPipeline& pipeline
+	const VkDevice device,
+	const VkPipeline pipeline
 );

@@ -70,7 +70,7 @@ VkSubpassDependency getSubpassDependency(
     return dependency;
 }
 
-void initializeRenderPass(const VkPhysicalDevice& physicalDevice, const VkDevice& device, const VkFormat format, const VkSampleCountFlagBits msaaSamples, VkRenderPass* renderPass) {
+void initializeRenderPass(const VkPhysicalDevice physicalDevice, const VkDevice device, const VkFormat format, const VkSampleCountFlagBits msaaSamples, VkRenderPass* renderPass) {
     auto colorAttachmentResolve = getAttachmentDescription(
         format,
         VK_SAMPLE_COUNT_1_BIT,
@@ -163,12 +163,12 @@ void initializeRenderPass(const VkPhysicalDevice& physicalDevice, const VkDevice
     }
 }
 
-void cleanupRenderPass(const VkDevice& device, VkRenderPass& renderPass)
+void cleanupRenderPass(const VkDevice device, VkRenderPass renderPass)
 {
     vkDestroyRenderPass(device, renderPass, nullptr);
 }
 
-VkFormat findDepthFormat(const VkPhysicalDevice& physicalDevice) {
+VkFormat findDepthFormat(const VkPhysicalDevice physicalDevice) {
     return findSupportedFormat(
         physicalDevice,
         {
@@ -182,7 +182,7 @@ VkFormat findDepthFormat(const VkPhysicalDevice& physicalDevice) {
 }
 
 VkFormat findSupportedFormat(
-    const VkPhysicalDevice& physicalDevice,
+    const VkPhysicalDevice physicalDevice,
     const std::vector<VkFormat> candidates,
     const VkImageTiling tiling,
     const VkFormatFeatureFlags features

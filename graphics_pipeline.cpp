@@ -1,7 +1,7 @@
 #include "graphics_pipeline.h"
 
 void initializeGraphicsPipeline(
-	const VkDevice& device,
+	const VkDevice device,
 	const uint32_t shaderStagesCount,
 	const VkPipelineShaderStageCreateInfo* shaderStages,
 	const VkPipelineVertexInputStateCreateInfo* vertexInputInfo,
@@ -12,8 +12,8 @@ void initializeGraphicsPipeline(
 	const VkPipelineDepthStencilStateCreateInfo* depthStencil,
 	const VkPipelineColorBlendStateCreateInfo* colorBlending,
 	const VkPipelineDynamicStateCreateInfo* dynamicState,
-	const VkPipelineLayout& pipelineLayout,
-	const VkRenderPass& renderPass,
+	const VkPipelineLayout pipelineLayout,
+	const VkRenderPass renderPass,
 	VkPipeline* pipeline
 )
 {
@@ -41,8 +41,8 @@ void initializeGraphicsPipeline(
 }
 
 void cleanupGraphicsPipeline(
-	const VkDevice& device,
-	const VkPipeline& pipeline
+	const VkDevice device,
+	const VkPipeline pipeline
 )
 {
 	vkDestroyPipeline(device, pipeline, nullptr);

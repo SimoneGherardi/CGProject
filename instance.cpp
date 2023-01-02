@@ -23,9 +23,9 @@ VkApplicationInfo getApplicationInfo(const char* applicationName, const uint32_t
 }
 
 VkInstanceCreateInfo getInstanceCreateInfo(
-    const VkApplicationInfo& applicationInfo,
-    const ValidationLayers& validationLayers,
-    const Extensions& extensions,
+    const VkApplicationInfo applicationInfo,
+    const ValidationLayers validationLayers,
+    const Extensions extensions,
     VkDebugUtilsMessengerCreateInfoEXT* debugMessengerCreateInfo
 )
 {
@@ -53,7 +53,7 @@ VkInstanceCreateInfo getInstanceCreateInfo(
     return createInfo;
 }
 
-void initializeInstance(const VkInstanceCreateInfo& instanceCreateInfo, VkInstance* instance)
+void initializeInstance(const VkInstanceCreateInfo instanceCreateInfo, VkInstance* instance)
 {
     auto result = vkCreateInstance(&instanceCreateInfo, nullptr, instance);
     if (result != VK_SUCCESS) {

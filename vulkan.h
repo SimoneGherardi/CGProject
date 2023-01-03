@@ -51,6 +51,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "ThreeDimensionalDataTypes.h"
 #include "debug_messenger.h"
 #include "queue_families.h"
+#include "swap_chain_support.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -171,13 +172,6 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec3 eyePos;
     alignas(16) glm::vec4 selector;
 };
-
-struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
 
 struct errorcode {
     VkResult resultCode;
@@ -581,7 +575,7 @@ private:
 
         bool swapChainAdequate = false;
         if (extensionsSupported) {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
+            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
             swapChainAdequate = !swapChainSupport.formats.empty() &&
                 !swapChainSupport.presentModes.empty();
         }
@@ -610,35 +604,6 @@ private:
         }
 
         return requiredExtensions.empty();
-    }
-
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
-        SwapChainSupportDetails details;
-
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
-            &details.capabilities);
-
-        uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
-            nullptr);
-
-        if (formatCount != 0) {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface,
-                &formatCount, details.formats.data());
-        }
-
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface,
-            &presentModeCount, nullptr);
-
-        if (presentModeCount != 0) {
-            details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface,
-                &presentModeCount, details.presentModes.data());
-        }
-
-        return details;
     }
 
     VkSampleCountFlagBits getMaxUsableSampleCount() {
@@ -715,7 +680,7 @@ private:
 
     void createSwapChain() {
         SwapChainSupportDetails swapChainSupport =
-            querySwapChainSupport(physicalDevice);
+            querySwapChainSupport(physicalDevice, surface);
         VkSurfaceFormatKHR surfaceFormat =
             chooseSwapSurfaceFormat(swapChainSupport.formats);
         VkPresentModeKHR presentMode =

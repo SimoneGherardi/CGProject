@@ -1,20 +1,4 @@
-#define GLFW_INCLUDE_VULKAN
-
-#include <GLFW/glfw3.h>
-#include <cstdint> // Necessary for uint32_t
-#include <limits> // Necessary for std::numeric_limits
-#include <algorithm> // Necessary for std::clamp
-
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
-#include <vector>
-#include <optional>
-#include <set>
-#include <array>
-#include <map>
-#include <unordered_map>
-#include <fstream>
+#include "defines.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -76,14 +60,6 @@ const std::vector<const char*> deviceExtensions = {
         ,"VK_KHR_portability_subset"
     #endif
 };
-
-#ifdef NDEBUG
-const bool enableValidationLayers = false;
-const bool Verbose = false;
-#else
-const bool enableValidationLayers = true;
-const bool Verbose = true;
-#endif
 
 const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
@@ -358,9 +334,9 @@ private:
     void initVulkan() {
         createInstance();
 
-        if (enableValidationLayers) {
-            setupDebugMessenger();
-        }
+#ifdef ENABLE_VALIDATION_LAYERS
+        setupDebugMessenger();
+#endif
 
         createSurface();
         pickPhysicalDevice();
@@ -418,29 +394,28 @@ private:
             static_cast<uint32_t>(extensions.size());
         createInfo.ppEnabledExtensionNames = extensions.data();
 
-        if (enableValidationLayers && !checkValidationLayerSupport()) {
+#ifdef ENABLE_VALIDATION_LAYERS
+        if (!checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
         }
 
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount =
-                static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
+        createInfo.enabledLayerCount =
+            static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
 
-            auto debugCreateInfo = getDebugMessengerCreateInfo(
-                debugCallback,
-                DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
-                DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
-                nullptr
-            );
+        auto debugCreateInfo = getDebugMessengerCreateInfo(
+            debugCallback,
+            DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
+            DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
+            nullptr
+        );
 
-            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
-                &debugCreateInfo;
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
-            createInfo.pNext = nullptr;
-        }
+        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
+            &debugCreateInfo;
+#else
+        createInfo.enabledLayerCount = 0;
+        createInfo.pNext = nullptr;
+#endif
 
         VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
 
@@ -458,9 +433,10 @@ private:
 
         std::vector<const char*> extensions(glfwExtensions,
             glfwExtensions + glfwExtensionCount);
-        if (enableValidationLayers) {
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        }
+
+#ifdef ENABLE_VALIDATION_LAYERS
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
         
         extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
         extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
@@ -574,14 +550,13 @@ private:
             static_cast<uint32_t>(deviceExtensions.size());
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount =
-                static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
-        }
+#ifdef ENABLE_VALIDATION_LAYERS
+        createInfo.enabledLayerCount =
+            static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+#else
+        createInfo.enabledLayerCount = 0;
+#endif
 
         VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
 
@@ -3063,9 +3038,9 @@ private:
 
         vkDestroyDevice(device, nullptr);
 
-        if (enableValidationLayers) {
-            cleanupDebugMessenger(instance, debugMessenger, nullptr);
-        }
+#ifdef ENABLE_VALIDATION_LAYERS
+        cleanupDebugMessenger(instance, debugMessenger, nullptr);
+#endif
 
         cleanupSurface(instance, surface);
 

@@ -54,6 +54,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "swap_chain_support.h"
 #include "window.h"
 #include "surface.h"
+#include "physical_device.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -517,92 +518,8 @@ private:
     }
 
     void pickPhysicalDevice() {
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-        if (deviceCount == 0) {
-            throw std::runtime_error("failed to find GPUs with Vulkan support!");
-        }
-
-        std::multimap<int, VkPhysicalDevice> candidates;
-
-        for (const auto& device : devices) {
-            int score = rateDeviceSuitability(device);
-            candidates.insert(std::make_pair(score, device));
-        }
-
-        for (const auto& device : devices) {
-            if (isDeviceSuitable(device)) {
-                physicalDevice = device;
-                break;
-            }
-        }
-
-        if (physicalDevice == VK_NULL_HANDLE) {
-            throw std::runtime_error("failed to find a suitable GPU!");
-        }
-    }
-
-    int rateDeviceSuitability(VkPhysicalDevice device) {
-        int score = 0;
-        VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceProperties(device, &deviceProperties);
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-        // Discrete GPUs have a significant performance advantage
-        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            score += 1000;
-        }
-
-        // Maximum possible size of textures affects graphics quality
-        score += deviceProperties.limits.maxImageDimension2D;
-
-        // Application can't function without geometry shaders
-        if (!deviceFeatures.geometryShader) {
-            return 0;
-        }
-        return score;
-    }
-
-    bool isDeviceSuitable(VkPhysicalDevice device) {
-        QueueFamilyIndices indices = findQueueFamilies(device, surface);
-
-        bool extensionsSupported = checkDeviceExtensionSupport(device);
-
-        bool swapChainAdequate = false;
-        if (extensionsSupported) {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device, surface);
-            swapChainAdequate = !swapChainSupport.formats.empty() &&
-                !swapChainSupport.presentModes.empty();
-        }
-
-        VkPhysicalDeviceFeatures supportedFeatures;
-        vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-
-        return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-            supportedFeatures.samplerAnisotropy;
-    }
-
-    bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(device, nullptr,
-            &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateDeviceExtensionProperties(device, nullptr,
-            &extensionCount, availableExtensions.data());
-
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(),
-            deviceExtensions.end());
-
-        for (const auto& extension : availableExtensions) {
-            requiredExtensions.erase(extension.extensionName);
-        }
-
-        return requiredExtensions.empty();
+        auto devices = getPhysicalDevices(instance);
+        physicalDevice = getOptimalPhysicalDevice(devices, surface, deviceExtensions);
     }
 
     VkSampleCountFlagBits getMaxUsableSampleCount() {

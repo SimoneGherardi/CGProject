@@ -83,6 +83,7 @@ const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Ball15.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "soccer_sph.png", "", "", {0,0.0, 0.0}, 1.0},
+    {"Sphere.obj", OBJ, "Moon.jpg", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Moon.jpg", "", "", {0,0.0, 0.0}, 1.0}
 };
 
@@ -96,7 +97,8 @@ const std::vector<SkyBoxModel> SkyBoxToLoad = {
     {"SkyBoxCube.obj", OBJ, {"sky1/posx.jpg", "sky1/negx.jpg", "sky1/posy.jpg", "sky1/negy.jpg", "sky1/posz.jpg", "sky1/negz.jpg"}},
     {"SkyBoxCube.obj", OBJ, {"sky2/posx.jpg", "sky2/negx.jpg", "sky2/posy.jpg", "sky2/negy.jpg", "sky2/posz.jpg", "sky2/negz.jpg"}},
     {"SkyBoxCube.obj", OBJ, {"sky3/ToonSkybox-2-1.png", "sky3/ToonSkybox-0-1.png", "sky3/ToonSkybox-1-0.png", "sky3/ToonSkybox-1-2.png", "sky3/ToonSkybox-1-1.png", "sky3/ToonSkybox-3-1.png"}},
-    {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}}
+    {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}},
+    {"SkyBoxCube.obj", OBJ, {"sky3/ToonSkybox-2-1.png", "sky3/ToonSkybox-0-1.png", "sky3/ToonSkybox-1-0.png", "sky3/ToonSkybox-1-2.png", "sky3/ToonSkybox-1-1.png", "sky3/ToonSkybox-3-1.png"}}
 };
 
 struct SingleText {
@@ -110,7 +112,8 @@ std::vector<SingleText> SceneText = {
     {1, {"Lambert","","",""}, 0, 0},
     {1, {"Phong","","",""}, 0, 0},
     {1, {"Toon","","",""}, 0, 0},
-    {1, {"Oren Nayar","","",""}, 0, 0} };
+    {1, {"Oren Nayar","","",""}, 0, 0},
+    {1, {"Wireframe","","",""}, 0, 0} };
 
 namespace std {
     template<> struct hash<std::vector<float>> {
@@ -334,14 +337,7 @@ private:
     SceneModel SText;
 
     // Wireframe pipeline
-    //VkDescriptorSetLayout WireframeDescriptorSetLayout;
-    //VkPipelineLayout WireframePipelineLayout;
-    //VkPipeline WireframePipeline;
-    //std::vector<VkBuffer> WireframeUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
-    //std::vector<VkBuffer> WireframeGlobalUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
-
+    VkPipeline WireframePipeline;
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
@@ -370,11 +366,7 @@ private:
 
     // Other global variables
     int curText = 0;
-
-
-    
-
-    std::vector<VkDescriptorSet> WireframeDescriptorSets;
+    bool wireFrame = false;
 
     void initWindow() {
         glfwInit();
@@ -1120,64 +1112,23 @@ private:
             throw std::runtime_error("failed to create Text descriptor set layout!");
         }
     }
-
-    /*
-    void createWireframeDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
-        globalUboLayoutBinding.binding = 2;
-        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        globalUboLayoutBinding.descriptorCount = 1;
-        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        globalUboLayoutBinding.pImmutableSamplers = nullptr;
-
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
-        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &WireframeDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
-
-    }
-    */
+    
 
     void createPipelines() {
         createPhongPipeline();
+        createWireframePipeline();
         createSkyBoxPipeline();
         createTextPipeline();
     }
 
-    /*
+    
     void createWireframePipeline() {
-        createPipeline("WireframeVert.spv", "WireframeFrag.spv",
-            WireframePipelineLayout, WireframePipeline,
-            WireframeDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
+        createPipeline("BRDFVert.spv", "BRDFFrag.spv",
+            PhongPipelineLayout, WireframePipeline,
+            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
             VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
     }
-    */
+    
 
     void createPhongPipeline() {
         createPipeline("BRDFVert.spv", "BRDFFrag.spv",
@@ -2650,77 +2601,6 @@ private:
 
 
 
-    /*
-    void createWireframeDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
-            WireframeDescriptorSetLayout);
-        VkDescriptorSetAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
-        allocInfo.pSetLayouts = layouts.data();
-
-        WireframeDescriptorSets.resize(swapChainImages.size() * Scene.size());
-
-        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
-            WireframeDescriptorSets.data());
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to allocate descriptor sets!");
-        }
-
-        for (size_t k = 0; k < swapChainImages.size(); k++) {
-            for (size_t j = 0; j < Scene.size(); j++) {
-                size_t i = j * swapChainImages.size() + k;
-
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffers[i];
-                bufferInfo.offset = 0;
-                bufferInfo.range = sizeof(UniformBufferObject);
-
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = Scene[j].TD.textureImageView;
-                imageInfo.sampler = Scene[j].TD.textureSampler;
-
-                VkDescriptorBufferInfo globalBufferInfo{};
-                globalBufferInfo.buffer = WireframeGlobalUniformBuffers[k];
-                globalBufferInfo.offset = 0;
-                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
-
-                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
-                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
-                descriptorWrites[0].dstBinding = 0;
-                descriptorWrites[0].dstArrayElement = 0;
-                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[0].descriptorCount = 1;
-                descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[1].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[1].dstBinding = 1;
-                descriptorWrites[1].dstArrayElement = 0;
-                descriptorWrites[1].descriptorType =
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                descriptorWrites[1].descriptorCount = 1;
-                descriptorWrites[1].pImageInfo = &imageInfo;
-
-                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[2].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[2].dstBinding = 2;
-                descriptorWrites[2].dstArrayElement = 0;
-                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[2].descriptorCount = 1;
-                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
-
-                vkUpdateDescriptorSets(device,
-                    static_cast<uint32_t>(descriptorWrites.size()),
-                    descriptorWrites.data(), 0, nullptr);
-            }
-        }
-    }
-    */
 
     void createCommandBuffers() {
         commandBuffers.resize(swapChainFramebuffers.size());
@@ -2767,8 +2647,16 @@ private:
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo,
                 VK_SUBPASS_CONTENTS_INLINE);
 
-            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                PhongPipeline);
+            // picking Pipeline depending on wireFrame value
+            if (!wireFrame) {
+                vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    PhongPipeline);
+            }
+            else {
+                vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    WireframePipeline);
+            }
+            
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
             VkBuffer vertexBuffers[] = { Scene[j].MD.vertexBuffer };
@@ -3085,9 +2973,11 @@ private:
 
         switch (curText) {
         case 0:
+            wireFrame = false;
             gubo.selector = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             break;
         case 1:
+            wireFrame = false;
             gubo.selector = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
             gubo.lightColor0 = glm::vec3(0.3f, 0.3f, 0.3f);
             gubo.lightColor1 = glm::vec3(0.3f, 0.4f, 0.4f);
@@ -3099,12 +2989,17 @@ private:
             gubo.lightDir3 = glm::vec3(0.4830f, 0.8365f, -0.2588f);
             break;
         case 2:
+            wireFrame = false;
             gubo.selector = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             gubo.lightDir0 = glm::vec3(cos(glm::radians(135.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-60.0f)));
             break;
         case 3:
+            wireFrame = false;
             gubo.selector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
             gubo.lightDir0 = glm::vec3(cos(glm::radians(150.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(150.0f)), cos(glm::radians(150.0f)) * sin(glm::radians(-60.0f)));
+            break;
+        case 4:
+            wireFrame = true;
             break;
         }
         gubo.selector.w = useTexture ? 1.0 : 0.0;

@@ -53,6 +53,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "queue_families.h"
 #include "swap_chain_support.h"
 #include "window.h"
+#include "surface.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -512,10 +513,7 @@ private:
     }
 
     void createSurface() {
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface)
-            != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
+        initializeSurface(instance, window, &surface);
     }
 
     void pickPhysicalDevice() {
@@ -3152,7 +3150,8 @@ private:
             cleanupDebugMessenger(instance, debugMessenger, nullptr);
         }
 
-        vkDestroySurfaceKHR(instance, surface, nullptr);
+        cleanupSurface(instance, surface);
+
         vkDestroyInstance(instance, nullptr);
 
         cleanupWindow(window);

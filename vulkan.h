@@ -52,6 +52,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "debug_messenger.h"
 #include "queue_families.h"
 #include "swap_chain_support.h"
+#include "window.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -337,13 +338,13 @@ private:
     std::vector<VkDescriptorSet> WireframeDescriptorSets;
 
     void initWindow() {
-        glfwInit();
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-        glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+        window = initializeWindow(
+            "CGProject",
+            WIDTH,
+            HEIGHT,
+            this,
+            framebufferResizeCallback
+        );
     }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
@@ -3154,9 +3155,7 @@ private:
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
 
-        glfwDestroyWindow(window);
-
-        glfwTerminate();
+        cleanupWindow(window);
     }
 
 };

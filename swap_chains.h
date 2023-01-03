@@ -13,6 +13,6 @@ extern void initializeSwapChain(
     VkFormat* swapChainImageFormat,
     VkExtent2D* swapChainExtent
 );
-extern VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats);
-extern VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
-extern VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window);
+extern VkSurfaceFormatKHR getSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats);
+extern VkPresentModeKHR getSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
+extern VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window);

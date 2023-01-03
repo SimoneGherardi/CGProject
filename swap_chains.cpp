@@ -12,9 +12,9 @@ void initializeSwapChain(
 )
 {
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
-    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, window);
+    VkSurfaceFormatKHR surfaceFormat = getSwapSurfaceFormat(swapChainSupport.formats);
+    VkPresentModeKHR presentMode = getSwapPresentMode(swapChainSupport.presentModes);
+    VkExtent2D extent = getSwapExtent(swapChainSupport.capabilities, window);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
@@ -34,8 +34,11 @@ void initializeSwapChain(
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-    uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(),
-                                     indices.presentFamily.value() };
+    uint32_t queueFamilyIndices[] = {
+        indices.graphicsFamily.value(),
+        indices.presentFamily.value()
+    };
+
     if (indices.graphicsFamily != indices.presentFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
@@ -70,7 +73,7 @@ void initializeSwapChain(
 
 
 
-VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats)
+VkSurfaceFormatKHR getSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats)
 {
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
@@ -82,7 +85,7 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
     return availableFormats[0];
 }
 
-VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
+VkPresentModeKHR getSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
 {
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -92,7 +95,7 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> avail
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window)
+VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window)
 {
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;

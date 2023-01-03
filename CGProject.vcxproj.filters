@@ -16,57 +16,6 @@
     <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{0ce16b84-cbd3-4efb-8de3-a61a91f201de}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\initializers">
-      <UniqueIdentifier>{9e44044b-8104-4312-afd5-998f0364655e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan">
-      <UniqueIdentifier>{e1c6febf-2b0b-48a7-8b5d-93cd40c809a6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\glfw">
-      <UniqueIdentifier>{9467d64e-a66b-4050-9b33-9ef9fcb39ddc}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\device">
-      <UniqueIdentifier>{5d74436b-8f4a-4a55-8f70-a03f58e38a6a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\queue_families">
-      <UniqueIdentifier>{f545e4f8-fe8c-49bb-b973-b04304295264}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\device\physical">
-      <UniqueIdentifier>{d9d00246-2616-4ec7-a916-669cc05fa969}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\device\logical">
-      <UniqueIdentifier>{c636c0c9-bbc9-495a-a150-8fcd402066c8}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\swap_chains">
-      <UniqueIdentifier>{986eacf5-ebbf-425d-a909-17beea356503}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\image_views">
-      <UniqueIdentifier>{adac26fc-8020-4dd7-8883-f5834d180c77}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\debug_messenger">
-      <UniqueIdentifier>{c072e2be-6d0e-408d-9f03-923dd7e80da1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\extensions">
-      <UniqueIdentifier>{a2d64214-de21-46f1-9f9a-f15eff9e5c72}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\validation_layers">
-      <UniqueIdentifier>{d21feabf-55ae-44b2-a0bf-dbe4304750c6}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\instance">
-      <UniqueIdentifier>{fd7db6e1-b0ee-4746-8631-c7467fa04c8e}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\surface">
-      <UniqueIdentifier>{34bc959a-98fb-4169-880d-1fe1b0809c44}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\render_passes">
-      <UniqueIdentifier>{00e0135b-88f8-4cb9-8c85-d48737fea775}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\graphics">
-      <UniqueIdentifier>{55b6d665-fd4e-4b69-b13e-80ea0464e511}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\initializers\vulkan\commands">
-      <UniqueIdentifier>{f3ba539d-b5d1-443e-9ef4-c56f1e701c4b}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\libraries">
       <UniqueIdentifier>{73bb6f91-0f9e-4555-b898-55e645e412cb}</UniqueIdentifier>
     </Filter>
@@ -103,73 +52,25 @@
     <Filter Include="Source Files\vulkan">
       <UniqueIdentifier>{e1c6febf-2b0b-48a7-8b5d-93cd40c809a6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\vulkan">
+      <UniqueIdentifier>{1e6361fc-4a5d-4b38-af51-840ca4756a20}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\glfw">
+      <UniqueIdentifier>{9fd8873a-36dd-488d-8866-c0f32834555f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\glfw">
+      <UniqueIdentifier>{9467d64e-a66b-4050-9b33-9ef9fcb39ddc}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="window.cpp">
-      <Filter>Source Files\initializers\glfw</Filter>
-    </ClCompile>
-    <ClCompile Include="queue_families.cpp">
-      <Filter>Source Files\initializers\vulkan\queue_families</Filter>
-    </ClCompile>
-    <ClCompile Include="physical_device.cpp">
-      <Filter>Source Files\initializers\vulkan\device\physical</Filter>
-    </ClCompile>
-    <ClCompile Include="logical_device.cpp">
-      <Filter>Source Files\initializers\vulkan\device\logical</Filter>
-    </ClCompile>
-    <ClCompile Include="swap_chain_support.cpp">
-      <Filter>Source Files\initializers\vulkan\swap_chains</Filter>
-    </ClCompile>
-    <ClCompile Include="swap_chains.cpp">
-      <Filter>Source Files\initializers\vulkan\swap_chains</Filter>
-    </ClCompile>
-    <ClCompile Include="image_views.cpp">
-      <Filter>Source Files\initializers\vulkan\image_views</Filter>
-    </ClCompile>
-    <ClCompile Include="debug_messenger.cpp">
-      <Filter>Source Files\initializers\vulkan\debug_messenger</Filter>
-    </ClCompile>
-    <ClCompile Include="extensions.cpp">
-      <Filter>Source Files\initializers\vulkan\extensions</Filter>
-    </ClCompile>
-    <ClCompile Include="validation_layers.cpp">
-      <Filter>Source Files\initializers\vulkan\validation_layers</Filter>
-    </ClCompile>
-    <ClCompile Include="instance.cpp">
-      <Filter>Source Files\initializers\vulkan\instance</Filter>
-    </ClCompile>
-    <ClCompile Include="surface.cpp">
-      <Filter>Source Files\initializers\vulkan\surface</Filter>
+      <Filter>Source Files\glfw</Filter>
     </ClCompile>
     <ClCompile Include="ioutils.cpp">
       <Filter>Source Files\utilities</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics_pipeline_states.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="shader_module.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="viewport.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics_pipeline_layout.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="render_passes.cpp">
-      <Filter>Source Files\initializers\vulkan\render_passes</Filter>
-    </ClCompile>
-    <ClCompile Include="graphics_pipeline.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="framebuffers.cpp">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClCompile>
-    <ClCompile Include="command_pool.cpp">
-      <Filter>Source Files\initializers\vulkan\commands</Filter>
     </ClCompile>
     <ClCompile Include="libraries\flecs\flecs.c">
       <Filter>Source Files\libraries</Filter>
@@ -195,76 +96,67 @@
     <ClCompile Include="ObjLoader.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
+    <ClCompile Include="command_pool.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="debug_messenger.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="extensions.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="framebuffers.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_pipeline.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_pipeline_layout.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="graphics_pipeline_states.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="image_views.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="instance.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="logical_device.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="physical_device.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="queue_families.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="render_passes.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="shader_module.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="surface.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="swap_chain_support.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="swap_chains.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="validation_layers.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="viewport.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="window.h">
-      <Filter>Source Files\initializers\glfw</Filter>
-    </ClInclude>
-    <ClInclude Include="defines.h">
-      <Filter>Source Files\initializers</Filter>
-    </ClInclude>
-    <ClInclude Include="queue_families.h">
-      <Filter>Source Files\initializers\vulkan\queue_families</Filter>
-    </ClInclude>
-    <ClInclude Include="physical_device.h">
-      <Filter>Source Files\initializers\vulkan\device\physical</Filter>
-    </ClInclude>
-    <ClInclude Include="logical_device.h">
-      <Filter>Source Files\initializers\vulkan\device\logical</Filter>
-    </ClInclude>
-    <ClInclude Include="swap_chains.h">
-      <Filter>Source Files\initializers\vulkan\swap_chains</Filter>
-    </ClInclude>
-    <ClInclude Include="swap_chain_support.h">
-      <Filter>Source Files\initializers\vulkan\swap_chains</Filter>
-    </ClInclude>
-    <ClInclude Include="image_views.h">
-      <Filter>Source Files\initializers\vulkan\image_views</Filter>
-    </ClInclude>
-    <ClInclude Include="debug_messenger.h">
-      <Filter>Source Files\initializers\vulkan\debug_messenger</Filter>
-    </ClInclude>
-    <ClInclude Include="extensions.h">
-      <Filter>Source Files\initializers\vulkan\extensions</Filter>
-    </ClInclude>
-    <ClInclude Include="validation_layers.h">
-      <Filter>Source Files\initializers\vulkan\validation_layers</Filter>
-    </ClInclude>
-    <ClInclude Include="instance.h">
-      <Filter>Source Files\initializers\vulkan\instance</Filter>
-    </ClInclude>
-    <ClInclude Include="surface.h">
-      <Filter>Source Files\initializers\vulkan\surface</Filter>
-    </ClInclude>
     <ClInclude Include="ioutils.h">
       <Filter>Source Files\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics_pipeline_states.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="shader_module.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="viewport.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics_pipeline_layout.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="render_passes.h">
-      <Filter>Source Files\initializers\vulkan\render_passes</Filter>
-    </ClInclude>
-    <ClInclude Include="graphics_pipeline.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="framebuffers.h">
-      <Filter>Source Files\initializers\vulkan\graphics</Filter>
-    </ClInclude>
-    <ClInclude Include="command_pool.h">
-      <Filter>Source Files\initializers\vulkan\commands</Filter>
-    </ClInclude>
-    <ClInclude Include="command_buffers.h">
-      <Filter>Source Files\initializers\vulkan\commands</Filter>
     </ClInclude>
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
@@ -295,6 +187,72 @@
     </ClInclude>
     <ClInclude Include="PipelineBuilder.h">
       <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="window.h">
+      <Filter>Header Files\glfw</Filter>
+    </ClInclude>
+    <ClInclude Include="validation_layers.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="swap_chains.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="swap_chain_support.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="surface.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="render_passes.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="queue_families.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="instance.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="image_views.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="viewport.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="shader_module.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_pipeline_states.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_pipeline_layout.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="graphics_pipeline.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="framebuffers.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="extensions.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="physical_device.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="logical_device.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="debug_messenger.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="command_pool.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="command_buffers.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="defines.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

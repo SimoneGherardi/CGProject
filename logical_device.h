@@ -10,6 +10,9 @@ extern VkDevice initializeLogicalDevice(
     const VkSurfaceKHR surface,
     const ValidationLayers validationLayers,
     const Extensions deviceExtensions,
+    VkDevice* device,
     VkQueue* graphicsQueue,
     VkQueue* presentationQueue
 );
+
+extern void cleanupLogicalDevice(const VkDevice device);

@@ -2785,7 +2785,7 @@ private:
 
         vkDeviceWaitIdle(device);
 
-        cleanupSwapChain();
+        cleanupSwapChain2();
 
         createSwapChain();
         createImageViews();
@@ -2800,8 +2800,8 @@ private:
         createCommandBuffers();
     }
 
-
-    void cleanupSwapChain() {
+    // TODO this function doesn't cleanup only swapchains
+    void cleanupSwapChain2() {
         vkDestroyImageView(device, colorImageView, nullptr);
         vkDestroyImage(device, colorImage, nullptr);
         vkFreeMemory(device, colorImageMemory, nullptr);
@@ -2832,7 +2832,7 @@ private:
             vkDestroyImageView(device, swapChainImageViews[i], nullptr);
         }
 
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
+        cleanupSwapChain(device, swapChain);
 
         for (size_t i = 0; i < swapChainImages.size() * Scene.size(); i++) {
             vkDestroyBuffer(device, uniformBuffers[i], nullptr);
@@ -2856,7 +2856,7 @@ private:
 
 
     void cleanup() {
-        cleanupSwapChain();
+        cleanupSwapChain2();
 
         for (size_t i = 0; i < Scene.size(); i++) {
             vkDestroySampler(device, Scene[i].TD.textureSampler, nullptr);

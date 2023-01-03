@@ -16,3 +16,8 @@ extern void initializeSwapChain(
 extern VkSurfaceFormatKHR getSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats);
 extern VkPresentModeKHR getSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
 extern VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window);
+
+extern void cleanupSwapChain(
+    const VkDevice device,
+    const VkSwapchainKHR swapChain
+);

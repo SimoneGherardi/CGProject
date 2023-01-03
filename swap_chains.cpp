@@ -115,3 +115,12 @@ VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow
         return actualExtent;
     }
 }
+
+
+void cleanupSwapChain(
+    const VkDevice device,
+    const VkSwapchainKHR swapChain
+)
+{
+    vkDestroySwapchainKHR(device, swapChain, nullptr);
+}

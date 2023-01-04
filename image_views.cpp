@@ -47,7 +47,7 @@ VkImageView initializeImageView(
     VkResult result = vkCreateImageView(device, &viewInfo, nullptr,
         &imageView);
     if (result != VK_SUCCESS) {
-        // TODO LOGGING PrintVkError(result);
+        PrintVkError(result);
         throw std::runtime_error("failed to create image view!");
     }
     return imageView;

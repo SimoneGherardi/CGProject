@@ -32,7 +32,7 @@ void initializeDescriptorSetLayout(
 	VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
 		nullptr, descriptorSetLayout);
 	if (result != VK_SUCCESS) {
-		// TODO PrintVkError(result);
+		PrintVkError(result);
 		throw std::runtime_error("failed to create SkyBox descriptor set layout!");
 	}
 }

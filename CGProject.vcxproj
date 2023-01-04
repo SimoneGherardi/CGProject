@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
+    <ClCompile Include="defines.cpp" />
     <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />

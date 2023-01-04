@@ -159,6 +159,9 @@
     <ClCompile Include="std_pipeline.cpp">
       <Filter>Source Files\pipeline</Filter>
     </ClCompile>
+    <ClCompile Include="defines.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ioutils.h">

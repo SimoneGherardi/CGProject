@@ -24,3 +24,10 @@
 #include <array>
 #include <unordered_map>
 #include <fstream>
+
+struct ErrorCode_t {
+    VkResult resultCode;
+    std::string meaning;
+};
+
+extern void PrintVkError(VkResult result);

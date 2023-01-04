@@ -161,6 +161,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
     <ClCompile Include="shader_module.cpp" />
+    <ClCompile Include="std_pipeline.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
@@ -195,6 +196,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
     <ClInclude Include="shader_module.h" />
+    <ClInclude Include="std_pipeline.h" />
     <ClInclude Include="surface.h" />
     <ClInclude Include="swap_chains.h" />
     <ClInclude Include="swap_chain_support.h" />

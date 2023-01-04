@@ -44,6 +44,8 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "image_views.h"
 #include "render_passes.h"
 #include "descriptor_set_layout.h"
+#include "graphics_pipeline_layout.h"
+#include "std_pipeline.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -243,8 +245,8 @@ private:
 
     // Phong pipeline
     VkDescriptorSetLayout phongDescriptorSetLayout;
-    VkPipelineLayout PhongPipelineLayout;
-    VkPipeline PhongPipeline;
+    VkPipelineLayout phongPipelineLayout;
+    VkPipeline phongPipeline;
     //// For the first uniform (per object)
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
@@ -258,8 +260,8 @@ private:
 
     //  Skybox pipeline
     VkDescriptorSetLayout skyBoxDescriptorSetLayout; // for skybox
-    VkPipelineLayout SkyBoxPipelineLayout;	// for skybox
-    VkPipeline SkyBoxPipeline;		// for skybox
+    VkPipelineLayout skyBoxPipelineLayout;	// for skybox
+    VkPipeline skyBoxPipeline;		// for skybox
     std::vector<VkBuffer> SkyBoxUniformBuffers;
     std::vector<VkDeviceMemory> SkyBoxUniformBuffersMemory;
     // to access uniforms in the pipeline
@@ -269,8 +271,8 @@ private:
 
     //  Text pipeline
     VkDescriptorSetLayout textDescriptorSetLayout;
-    VkPipelineLayout TextPipelineLayout;
-    VkPipeline TextPipeline;
+    VkPipelineLayout textPipelineLayout;
+    VkPipeline textPipeline;
     std::vector<VkBuffer> TextUniformBuffers;
     std::vector<VkDeviceMemory> TextUniformBuffersMemory;
     // to access uniforms in the pipeline
@@ -650,245 +652,72 @@ private:
     */
 
     void createPhongPipeline() {
-        createPipeline("BRDFVert.spv", "BRDFFrag.spv",
-            PhongPipelineLayout, PhongPipeline,
-            phongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
+        createPipeline(
+            "BRDFVert.spv",
+            "BRDFFrag.spv",
+            VK_COMPARE_OP_LESS,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE,
+            false,
+            &phongAndSkyBoxVertices,
+            &phongDescriptorSetLayout,
+            &phongPipelineLayout,
+            &phongPipeline
+        );
     }
 
     void createSkyBoxPipeline() {
-        createPipeline("SkyBoxVert.spv", "SkyBoxFrag.spv",
-            SkyBoxPipelineLayout, SkyBoxPipeline,
-            skyBoxDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
+        createPipeline(
+            "SkyBoxVert.spv",
+            "SkyBoxFrag.spv",
+            VK_COMPARE_OP_LESS_OR_EQUAL,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_BACK_BIT,
+            false,
+            &phongAndSkyBoxVertices,
+            &skyBoxDescriptorSetLayout,
+            &skyBoxPipelineLayout,
+            &skyBoxPipeline
+        );
     }
 
     void createTextPipeline() {
-        createPipeline("TextVert.spv", "TextFrag.spv",
-            TextPipelineLayout, TextPipeline,
-            textDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_NONE, true, textVertices);
+        createPipeline(
+            "TextVert.spv",
+            "TextFrag.spv",
+            VK_COMPARE_OP_LESS_OR_EQUAL,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE,
+            true,
+            &textVertices,
+            &textDescriptorSetLayout,
+            &textPipelineLayout,
+            &textPipeline
+        );
     }
 
-    void createPipeline(const char* VertexShaderName, const char* FragShaderName,
-        VkPipelineLayout& PipelineLayout,
-        VkPipeline& Pipeline,
-        VkDescriptorSetLayout& descriptorSetLayout,
-        VkCompareOp compareOp, VkPolygonMode polyModel,
-        VkCullModeFlagBits CM, bool transp,
-        VertexDescriptor& VD) {
-        auto vertShaderCode = readFile((SHADER_PATH + VertexShaderName).c_str());
-        auto fragShaderCode = readFile((SHADER_PATH + FragShaderName).c_str());
+    void createPipeline(
+        const std::string vertexShaderName,
+        const std::string fragShaderName,
+        const VkCompareOp compareOp,
+        const VkPolygonMode polyModel,
+        const VkCullModeFlagBits CM,
+        const bool transp,
+        VertexDescriptor* VD,
+        VkDescriptorSetLayout* descriptorSetLayout,
+        VkPipelineLayout* pipelineLayout,
+        VkPipeline* pipeline
+    ) {
+        auto vsPath = SHADER_PATH + vertexShaderName;
+        auto fsPath = SHADER_PATH + fragShaderName;
 
-        VkShaderModule vertShaderModule =
-            createShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule =
-            createShaderModule(fragShaderCode);
-
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-        vertShaderStageInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShaderModule;
-        vertShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-        fragShaderStageInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShaderModule;
-        fragShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] =
-        { vertShaderStageInfo, fragShaderStageInfo };
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        auto bindingDescription = VD.getBindingDescription();
-        auto attributeDescriptions = VD.getAttributeDescriptions();
-
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount =
-            static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputInfo.pVertexAttributeDescriptions =
-            attributeDescriptions.data();
-
-        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-        inputAssembly.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)swapChainExtent.width;
-        viewport.height = (float)swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
-
-        VkPipelineViewportStateCreateInfo viewportState{};
-        viewportState.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
-        viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
-
-        VkPipelineRasterizationStateCreateInfo rasterizer{};
-        rasterizer.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = polyModel;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = CM;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_FALSE;
-        rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-        rasterizer.depthBiasClamp = 0.0f; // Optional
-        rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-        VkPipelineMultisampleStateCreateInfo multisampling{};
-        multisampling.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.minSampleShading = .2f;
-        multisampling.rasterizationSamples = msaaSamples;
-        multisampling.minSampleShading = 1.0f; // Optional
-        multisampling.pSampleMask = nullptr; // Optional
-        multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-        multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
-        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT |
-            VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT |
-            VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = transp ? VK_TRUE : VK_FALSE;
-        colorBlendAttachment.srcColorBlendFactor =
-            transp ? VK_BLEND_FACTOR_SRC_ALPHA : VK_BLEND_FACTOR_ONE;
-        colorBlendAttachment.dstColorBlendFactor =
-            transp ? VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachment.colorBlendOp =
-            VK_BLEND_OP_ADD; // Optional
-        colorBlendAttachment.srcAlphaBlendFactor =
-            VK_BLEND_FACTOR_ONE; // Optional
-        colorBlendAttachment.dstAlphaBlendFactor =
-            VK_BLEND_FACTOR_ZERO; // Optional
-        colorBlendAttachment.alphaBlendOp =
-            VK_BLEND_OP_ADD; // Optional
-
-        VkPipelineColorBlendStateCreateInfo colorBlending{};
-        colorBlending.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlending.logicOpEnable = VK_FALSE;
-        colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
-        colorBlending.blendConstants[0] = 0.0f; // Optional
-        colorBlending.blendConstants[1] = 0.0f; // Optional
-        colorBlending.blendConstants[2] = 0.0f; // Optional
-        colorBlending.blendConstants[3] = 0.0f; // Optional
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-        pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-        VkResult result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
-            &PipelineLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create pipeline layout!");
-        }
-
-        VkPipelineDepthStencilStateCreateInfo depthStencil{};
-        depthStencil.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = compareOp;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
-        depthStencil.minDepthBounds = 0.0f; // Optional
-        depthStencil.maxDepthBounds = 1.0f; // Optional
-        depthStencil.stencilTestEnable = VK_FALSE;
-        depthStencil.front = {}; // Optional
-        depthStencil.back = {}; // Optional
-
-        VkGraphicsPipelineCreateInfo pipelineInfo{};
-        pipelineInfo.sType =
-            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = &depthStencil;
-        pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = nullptr; // Optional
-        pipelineInfo.layout = PipelineLayout;
-        pipelineInfo.renderPass = renderPass;
-        pipelineInfo.subpass = 0;
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-        pipelineInfo.basePipelineIndex = -1; // Optional
-
-        result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
-            &pipelineInfo, nullptr, &Pipeline);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create graphics pipeline!");
-        }
-
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
-    }
-
-    static std::vector<char> readFile(const std::string& filename) {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-        if (!file.is_open()) {
-            throw std::runtime_error("failed to open file!");
-        }
-
-        size_t fileSize = (size_t)file.tellg();
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
-
-    VkShaderModule createShaderModule(const std::vector<char>& code) {
-        VkShaderModuleCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-        VkShaderModule shaderModule;
-
-        VkResult result = vkCreateShaderModule(device, &createInfo, nullptr,
-            &shaderModule);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create shader module!");
-        }
-
-        return shaderModule;
+        initializeGraphicsPipelineLayout(device, 1, descriptorSetLayout, 0, nullptr, pipelineLayout);
+        initializeStdPipeline(
+            device, vsPath, fsPath, swapChainExtent,
+            msaaSamples, compareOp, polyModel,
+            CM, transp, *pipelineLayout, renderPass,
+            VD, pipeline
+        );
     }
 
     void createFramebuffers() {
@@ -2214,7 +2043,7 @@ private:
                 VK_SUBPASS_CONTENTS_INLINE);
 
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                PhongPipeline);
+                phongPipeline);
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
             VkBuffer vertexBuffers[] = { Scene[j].MD.vertexBuffer };
@@ -2224,7 +2053,7 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                PhongPipelineLayout, 0, 1,
+                phongPipelineLayout, 0, 1,
                 &PhongDescriptorSets[i + j * swapChainImages.size()],
                 0, nullptr);
 
@@ -2234,7 +2063,7 @@ private:
 
             // Draws the Skybox
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                SkyBoxPipeline);
+                skyBoxPipeline);
             VkBuffer vertexBuffers[] = { SkyBox[curText].MD.vertexBuffer };
             VkDeviceSize offsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
@@ -2242,7 +2071,7 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                SkyBoxPipelineLayout, 0, 1,
+                skyBoxPipelineLayout, 0, 1,
                 &SkyBoxDescriptorSets[i + curText * swapChainImages.size()],
                 0, nullptr);
             vkCmdDrawIndexed(commandBuffers[i],
@@ -2251,7 +2080,7 @@ private:
 
             // Draws the text
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                TextPipeline);
+                textPipeline);
             VkBuffer TvertexBuffers[] = { SText.MD.vertexBuffer };
             VkDeviceSize Toffsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, TvertexBuffers, Toffsets);
@@ -2259,7 +2088,7 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                TextPipelineLayout, 0, 1,
+                textPipelineLayout, 0, 1,
                 &TextDescriptorSets[i],
                 0, nullptr);
             vkCmdDrawIndexed(commandBuffers[i],
@@ -2615,14 +2444,14 @@ private:
         vkFreeCommandBuffers(device, commandPool,
             static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        vkDestroyPipeline(device, PhongPipeline, nullptr);
-        vkDestroyPipelineLayout(device, PhongPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, phongPipeline);
+        cleanupGraphicsPipelineLayout(device, phongPipelineLayout);
 
-        vkDestroyPipeline(device, SkyBoxPipeline, nullptr);
-        vkDestroyPipelineLayout(device, SkyBoxPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, skyBoxPipeline);
+        cleanupGraphicsPipelineLayout(device, skyBoxPipelineLayout);
 
-        vkDestroyPipeline(device, TextPipeline, nullptr);
-        vkDestroyPipelineLayout(device, TextPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, textPipeline);
+        cleanupGraphicsPipelineLayout(device, textPipelineLayout);
 
         cleanupRenderPass(device, renderPass);
 

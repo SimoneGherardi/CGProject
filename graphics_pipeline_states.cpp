@@ -110,7 +110,7 @@ VkPipelineMultisampleStateCreateInfo getPipelineMultisampleStateCreateInfo(
 }
 
 VkPipelineColorBlendAttachmentState getPipelineColorBlendAttachmentState(
-	const VkColorComponentFlags colorComponents,
+	const VkColorComponentFlags colorWriteMask,
 	const VkBool32 blendEnable,
 	const VkBlendFactor srcColorBlendFactor,
 	const VkBlendFactor dstColorBlendFactor,
@@ -121,7 +121,7 @@ VkPipelineColorBlendAttachmentState getPipelineColorBlendAttachmentState(
 )
 {
 	VkPipelineColorBlendAttachmentState colorBlendAttachment = {};
-	colorBlendAttachment.colorWriteMask = colorComponents;
+	colorBlendAttachment.colorWriteMask = colorWriteMask;
 	colorBlendAttachment.blendEnable = blendEnable;
 	colorBlendAttachment.srcColorBlendFactor = srcColorBlendFactor;
 	colorBlendAttachment.dstColorBlendFactor = dstColorBlendFactor;
@@ -154,4 +154,31 @@ VkPipelineColorBlendStateCreateInfo getPipelineColorBlendStateCreateInfo(
 	colorBlending.blendConstants[2] = blendConstant2;
 	colorBlending.blendConstants[3] = blendConstant3;
 	return colorBlending;
+}
+
+VkPipelineDepthStencilStateCreateInfo getPipelineDepthStencilStateCreateInfo(
+	const VkBool32 depthTestEnable,
+	const VkBool32 depthWriteEnable,
+	const VkCompareOp depthCompareOp,
+	const VkBool32 depthBoundsTestEnable,
+	const float minDepthBounds,
+	const float maxDepthBounds,
+	const VkBool32 stencilTestEnable,
+	const VkStencilOpState front,
+	const VkStencilOpState back
+)
+{
+	VkPipelineDepthStencilStateCreateInfo depthStencil{};
+	depthStencil.sType =
+		VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+	depthStencil.depthTestEnable = depthTestEnable;
+	depthStencil.depthWriteEnable = depthWriteEnable;
+	depthStencil.depthCompareOp = depthCompareOp;
+	depthStencil.depthBoundsTestEnable = depthBoundsTestEnable;
+	depthStencil.minDepthBounds = minDepthBounds; // Optional
+	depthStencil.maxDepthBounds = maxDepthBounds; // Optional
+	depthStencil.stencilTestEnable = stencilTestEnable;
+	depthStencil.front = front; // Optional
+	depthStencil.back = back; // Optional
+	return depthStencil;
 }

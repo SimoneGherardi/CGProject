@@ -11,6 +11,7 @@ void initializeCommandPool(
 	poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 	poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 	if (vkCreateCommandPool(device, &poolInfo, nullptr, commandPool) != VK_SUCCESS) {
+		//TODO PrintVkError(result)
 		throw std::runtime_error("failed to create command pool!");
 	}
 }

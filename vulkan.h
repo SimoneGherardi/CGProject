@@ -47,6 +47,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "graphics_pipeline_layout.h"
 #include "std_pipeline.h"
 #include "instance.h"
+#include "command_pool.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -638,17 +639,11 @@ private:
 
     void createCommandPool() {
         QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-        poolInfo.flags = 0; // Optional
-
-        VkResult result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create command pool!");
-        }
+        initializeCommandPool(
+            device,
+            queueFamilyIndices,
+            &commandPool
+        );
     }
 
     void createColorResources() {
@@ -2418,7 +2413,7 @@ private:
             vkDestroyFence(device, inFlightFences[i], nullptr);
         }
 
-        vkDestroyCommandPool(device, commandPool, nullptr);
+        cleanupCommandPool(device, commandPool);
 
         cleanupLogicalDevice(device);
 

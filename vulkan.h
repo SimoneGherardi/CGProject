@@ -41,6 +41,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "physical_device.h"
 #include "logical_device.h"
 #include "swap_chains.h"
+#include "image_views.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -544,38 +545,7 @@ private:
     }
 
     void createImageViews() {
-        swapChainImageViews.resize(swapChainImages.size());
-
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
-            swapChainImageViews[i] = createImageView(swapChainImages[i],
-                swapChainImageFormat,
-                VK_IMAGE_ASPECT_COLOR_BIT, 1,
-                VK_IMAGE_VIEW_TYPE_2D, 1);
-        }
-    }
-
-    VkImageView createImageView(VkImage image, VkFormat format,
-        VkImageAspectFlags aspectFlags,
-        uint32_t mipLevels, VkImageViewType type, int layerCount) {
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image;
-        viewInfo.viewType = type;
-        viewInfo.format = format;
-        viewInfo.subresourceRange.aspectMask = aspectFlags;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = mipLevels;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = layerCount;
-        VkImageView imageView;
-
-        VkResult result = vkCreateImageView(device, &viewInfo, nullptr,
-            &imageView);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create image view!");
-        }
-        return imageView;
+        initializeImageViews(device, swapChainImages, swapChainImageFormat, &swapChainImageViews);
     }
 
     void createRenderPass() {
@@ -1122,7 +1092,8 @@ private:
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             colorImage, colorImageMemory);
-        colorImageView = createImageView(colorImage, colorFormat,
+        colorImageView = initializeImageView(
+            device, colorImage, colorFormat,
             VK_IMAGE_ASPECT_COLOR_BIT, 1,
             VK_IMAGE_VIEW_TYPE_2D, 1);
     }
@@ -1135,7 +1106,8 @@ private:
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             depthImage, depthImageMemory);
-        depthImageView = createImageView(depthImage, depthFormat,
+        depthImageView = initializeImageView(
+            device, depthImage, depthFormat,
             VK_IMAGE_ASPECT_DEPTH_BIT, 1,
             VK_IMAGE_VIEW_TYPE_2D, 1);
 
@@ -1533,7 +1505,8 @@ private:
     }
 
     void createTextureImageView(TextureData& TD) {
-        TD.textureImageView = createImageView(TD.textureImage,
+        TD.textureImageView = initializeImageView(
+            device, TD.textureImage,
             VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_ASPECT_COLOR_BIT,
             TD.mipLevels,
@@ -1541,7 +1514,8 @@ private:
     }
 
     void createSkyBoxImageView(TextureData& TD) {
-        TD.textureImageView = createImageView(TD.textureImage,
+        TD.textureImageView = initializeImageView(
+            device, TD.textureImage,
             VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_ASPECT_COLOR_BIT,
             TD.mipLevels,
@@ -2802,11 +2776,11 @@ private:
 
     // TODO this function doesn't cleanup only swapchains
     void cleanupSwapChain2() {
-        vkDestroyImageView(device, colorImageView, nullptr);
+        cleanupImageView(device, colorImageView);
         vkDestroyImage(device, colorImage, nullptr);
         vkFreeMemory(device, colorImageMemory, nullptr);
 
-        vkDestroyImageView(device, depthImageView, nullptr);
+        cleanupImageView(device, depthImageView);
         vkDestroyImage(device, depthImage, nullptr);
         vkFreeMemory(device, depthImageMemory, nullptr);
 
@@ -2829,7 +2803,7 @@ private:
         vkDestroyRenderPass(device, renderPass, nullptr);
 
         for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+            cleanupImageView(device, swapChainImageViews[i]);
         }
 
         cleanupSwapChain(device, swapChain);
@@ -2860,7 +2834,7 @@ private:
 
         for (size_t i = 0; i < Scene.size(); i++) {
             vkDestroySampler(device, Scene[i].TD.textureSampler, nullptr);
-            vkDestroyImageView(device, Scene[i].TD.textureImageView, nullptr);
+            cleanupImageView(device, Scene[i].TD.textureImageView);
             vkDestroyImage(device, Scene[i].TD.textureImage, nullptr);
             vkFreeMemory(device, Scene[i].TD.textureImageMemory, nullptr);
 
@@ -2872,7 +2846,7 @@ private:
         }
         for (size_t i = 0; i < SkyBox.size(); i++) {
             vkDestroySampler(device, SkyBox[i].TD.textureSampler, nullptr);
-            vkDestroyImageView(device, SkyBox[i].TD.textureImageView, nullptr);
+            cleanupImageView(device, SkyBox[i].TD.textureImageView);
             vkDestroyImage(device, SkyBox[i].TD.textureImage, nullptr);
             vkFreeMemory(device, SkyBox[i].TD.textureImageMemory, nullptr);
 
@@ -2884,7 +2858,7 @@ private:
         }
 
         vkDestroySampler(device, SText.TD.textureSampler, nullptr);
-        vkDestroyImageView(device, SText.TD.textureImageView, nullptr);
+        cleanupImageView(device, SText.TD.textureImageView);
         vkDestroyImage(device, SText.TD.textureImage, nullptr);
         vkFreeMemory(device, SText.TD.textureImageMemory, nullptr);
 

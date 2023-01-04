@@ -52,3 +52,11 @@ VkImageView initializeImageView(
     }
     return imageView;
 }
+
+void cleanupImageView(
+    const VkDevice device,
+    const VkImageView imageView
+)
+{
+    vkDestroyImageView(device, imageView, nullptr);
+}

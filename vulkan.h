@@ -48,6 +48,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "std_pipeline.h"
 #include "instance.h"
 #include "command_pool.h"
+#include "framebuffers.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -617,23 +618,14 @@ private:
                 swapChainImageViews[i]
             };
 
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType =
-                VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount =
-                static_cast<uint32_t>(attachments.size());;
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            VkResult result = vkCreateFramebuffer(device, &framebufferInfo, nullptr,
-                &swapChainFramebuffers[i]);
-            if (result != VK_SUCCESS) {
-                PrintVkError(result);
-                throw std::runtime_error("failed to create framebuffer!");
-            }
+            initializeFrameBuffer(
+                device,
+                static_cast<uint32_t>(attachments.size()),
+                attachments.data(),
+                renderPass,
+                swapChainExtent,
+                &swapChainFramebuffers[i]
+            );
         }
     }
 
@@ -2319,8 +2311,9 @@ private:
         vkDestroyImage(device, depthImage, nullptr);
         vkFreeMemory(device, depthImageMemory, nullptr);
 
-        for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-            vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+        for (auto fb : swapChainFramebuffers)
+        {
+            cleanupFrameBuffer(device, fb);
         }
 
         vkFreeCommandBuffers(device, commandPool,

@@ -46,6 +46,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "descriptor_set_layout.h"
 #include "graphics_pipeline_layout.h"
 #include "std_pipeline.h"
+#include "instance.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -367,114 +368,18 @@ private:
    
 
     void createInstance() {
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "CGProject";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        createInfo.enabledExtensionCount = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-
-        createInfo.enabledLayerCount = 0;
-
-        uint32_t extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> extensionsPr(extensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
-            extensionsPr.data());
-
-        auto extensions = getRequiredExtensions();
-        createInfo.enabledExtensionCount =
-            static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
-#ifdef ENABLE_VALIDATION_LAYERS
-        if (!checkValidationLayerSupport()) {
-            throw std::runtime_error("validation layers requested, but not available!");
-        }
-
-        createInfo.enabledLayerCount =
-            static_cast<uint32_t>(validationLayers.size());
-        createInfo.ppEnabledLayerNames = validationLayers.data();
-
         auto debugCreateInfo = getDebugMessengerCreateInfo(
             debugCallback,
             DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
             DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
             nullptr
         );
-
-        createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
-            &debugCreateInfo;
-#else
-        createInfo.enabledLayerCount = 0;
-        createInfo.pNext = nullptr;
-#endif
-
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create instance!");
-        }
-    }
-
-    std::vector<const char*> getRequiredExtensions() {
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions =
-            glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        std::vector<const char*> extensions(glfwExtensions,
-            glfwExtensions + glfwExtensionCount);
-
-#ifdef ENABLE_VALIDATION_LAYERS
-        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-#endif
-        
-        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-        return extensions;
-    }
-
-    bool checkValidationLayerSupport() {
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount,
-            availableLayers.data());
-
-        for (const char* layerName : validationLayers) {
-            bool layerFound = false;
-
-            for (const auto& layerProperties : availableLayers) {
-                if (strcmp(layerName, layerProperties.layerName) == 0) {
-                    layerFound = true;
-                    break;
-                }
-            }
-
-            if (!layerFound) {
-                return false;
-            }
-        }
-
-        return true;
+        auto requiredExtensions = getRequiredExtensions();
+        auto appInfo = getApplicationInfo("CGProject", VK_MAKE_API_VERSION(0, 1, 0, 0));
+        auto createInfo = getInstanceCreateInfo(
+            &validationLayers, &requiredExtensions, &appInfo, &debugCreateInfo
+        );
+        initializeInstance(&createInfo, &instance);
     }
 
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
@@ -503,24 +408,6 @@ private:
     void pickPhysicalDevice() {
         auto devices = getPhysicalDevices(instance);
         physicalDevice = getOptimalPhysicalDevice(devices, surface, deviceExtensions);
-    }
-
-    VkSampleCountFlagBits getMaxUsableSampleCount() {
-        VkPhysicalDeviceProperties physicalDeviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
-
-        VkSampleCountFlags counts =
-            physicalDeviceProperties.limits.framebufferColorSampleCounts &
-            physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-
-        if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-        if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-        if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-        if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
-        if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
-        if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
-
-        return VK_SAMPLE_COUNT_1_BIT;
     }
 
     void createLogicalDevice() {
@@ -2541,7 +2428,7 @@ private:
 
         cleanupSurface(instance, surface);
 
-        vkDestroyInstance(instance, nullptr);
+        cleanupInstance(instance);
 
         cleanupWindow(window);
     }

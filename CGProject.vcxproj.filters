@@ -153,6 +153,9 @@
     <ClCompile Include="viewport.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="descriptor_set_layout.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ioutils.h">
@@ -253,6 +256,9 @@
     </ClInclude>
     <ClInclude Include="defines.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_set_layout.h">
+      <Filter>Header Files\vulkan</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

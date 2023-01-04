@@ -139,6 +139,7 @@
   <ItemGroup>
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
+    <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
     <ClCompile Include="GLTFLoader.cpp" />
@@ -174,6 +175,7 @@
     <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
+    <ClInclude Include="descriptor_set_layout.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
     <ClInclude Include="GLTFLoader.h" />

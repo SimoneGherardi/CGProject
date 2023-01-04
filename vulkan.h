@@ -43,6 +43,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "swap_chains.h"
 #include "image_views.h"
 #include "render_passes.h"
+#include "descriptor_set_layout.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -241,7 +242,7 @@ private:
     VertexDescriptor 	textVertices = VertexDescriptor(true, false, true, false, false);
 
     // Phong pipeline
-    VkDescriptorSetLayout PhongDescriptorSetLayout;
+    VkDescriptorSetLayout phongDescriptorSetLayout;
     VkPipelineLayout PhongPipelineLayout;
     VkPipeline PhongPipeline;
     //// For the first uniform (per object)
@@ -256,7 +257,7 @@ private:
     std::vector<SceneModel> Scene;
 
     //  Skybox pipeline
-    VkDescriptorSetLayout SkyBoxDescriptorSetLayout; // for skybox
+    VkDescriptorSetLayout skyBoxDescriptorSetLayout; // for skybox
     VkPipelineLayout SkyBoxPipelineLayout;	// for skybox
     VkPipeline SkyBoxPipeline;		// for skybox
     std::vector<VkBuffer> SkyBoxUniformBuffers;
@@ -267,7 +268,7 @@ private:
     std::vector<SceneModel> SkyBox;
 
     //  Text pipeline
-    VkDescriptorSetLayout TextDescriptorSetLayout;
+    VkDescriptorSetLayout textDescriptorSetLayout;
     VkPipelineLayout TextPipelineLayout;
     VkPipeline TextPipeline;
     std::vector<VkBuffer> TextUniformBuffers;
@@ -566,150 +567,72 @@ private:
     }
 
     void createPhongDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
-        globalUboLayoutBinding.binding = 2;
-        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        globalUboLayoutBinding.descriptorCount = 1;
-        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        globalUboLayoutBinding.pImmutableSamplers = nullptr;
+        auto globalUboLayoutBinding = getDescriptorSetLayoutBinding(
+            2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_ALL_GRAPHICS, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
-        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {
+            uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &PhongDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &phongDescriptorSetLayout
+        );
     }
 
     void createSkyBoxDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings =
-        { uboLayoutBinding, samplerLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+            uboLayoutBinding, samplerLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &SkyBoxDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create SkyBox descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &skyBoxDescriptorSetLayout
+        );
     }
 
     void createTextDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings =
-        { uboLayoutBinding, samplerLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+            uboLayoutBinding, samplerLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &TextDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create Text descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &textDescriptorSetLayout
+        );
     }
-
-    /*
-    void createWireframeDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
-        globalUboLayoutBinding.binding = 2;
-        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        globalUboLayoutBinding.descriptorCount = 1;
-        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        globalUboLayoutBinding.pImmutableSamplers = nullptr;
-
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
-        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &WireframeDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
-
-    }
-    */
 
     void createPipelines() {
         createPhongPipeline();
@@ -729,21 +652,21 @@ private:
     void createPhongPipeline() {
         createPipeline("BRDFVert.spv", "BRDFFrag.spv",
             PhongPipelineLayout, PhongPipeline,
-            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_FILL,
+            phongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
     }
 
     void createSkyBoxPipeline() {
         createPipeline("SkyBoxVert.spv", "SkyBoxFrag.spv",
             SkyBoxPipelineLayout, SkyBoxPipeline,
-            SkyBoxDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+            skyBoxDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
     }
 
     void createTextPipeline() {
         createPipeline("TextVert.spv", "TextFrag.spv",
             TextPipelineLayout, TextPipeline,
-            TextDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
+            textDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
             VK_CULL_MODE_NONE, true, textVertices);
     }
 
@@ -1993,7 +1916,7 @@ private:
 
     void createPhongDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
-            PhongDescriptorSetLayout);
+            phongDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2063,7 +1986,7 @@ private:
 
     void createSkyBoxDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * SkyBox.size(),
-            SkyBoxDescriptorSetLayout);
+            skyBoxDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2120,7 +2043,7 @@ private:
 
     void createTextDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(),
-            TextDescriptorSetLayout);
+            textDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2769,9 +2692,9 @@ private:
         vkDestroyBuffer(device, SText.MD.vertexBuffer, nullptr);
         vkFreeMemory(device, SText.MD.vertexBufferMemory, nullptr);
 
-        vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
-        vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
-        vkDestroyDescriptorSetLayout(device, TextDescriptorSetLayout, nullptr);
+        cleanupDescriptorSetLayout(device, phongDescriptorSetLayout);
+        cleanupDescriptorSetLayout(device, skyBoxDescriptorSetLayout);
+        cleanupDescriptorSetLayout(device, textDescriptorSetLayout);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);

@@ -195,6 +195,9 @@
     <ClCompile Include="ObjLoader.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
+    <ClCompile Include="assets.cpp">
+      <Filter>Source Files\storage</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="window.h">

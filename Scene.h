@@ -1,8 +1,9 @@
 #pragma once
 #include "assets.h"
+#include <vector>
 class Scene
 {
 public:
-	models referencedModels;
+	std::vector<Models> ReferencedModels;
 };
 

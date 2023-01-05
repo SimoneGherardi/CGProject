@@ -177,7 +177,7 @@ struct VertexDescriptor {
     }
 };
 
-struct ModelData {
+struct MeshData {
     VertexDescriptor* vertDesc;
     std::vector<float> vertices;
     std::vector<uint32_t> indices;
@@ -193,4 +193,9 @@ struct TextureData {
     VkImageView textureImageView;
     VkSampler textureSampler;
     uint32_t mipLevels;
+};
+
+struct ModelData {
+    MeshData model;
+    TextureData texture;
 };

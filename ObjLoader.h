@@ -2,9 +2,10 @@
 #include "Loader3D.h"
 #include <tiny_obj_loader.h>
 
-class ObjLoader : Loader3D
+class ObjLoader : public Loader3D
 {
 public:
-	void LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD);
+	using Loader3D::Loader3D;
+	void LoadMesh(const char* FName, ModelData& modelData);
 };
 

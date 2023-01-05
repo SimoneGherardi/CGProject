@@ -9,5 +9,5 @@ protected:
 	std::string baseBath;
 public:
 	Loader3D(std::string basePath);
-	virtual void LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) = 0;
+	virtual void LoadMesh(const char* FName, ModelData& modelData) = 0;
 };

@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="assets.cpp" />
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
     <ClCompile Include="extensions.cpp" />

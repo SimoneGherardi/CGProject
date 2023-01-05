@@ -1,6 +1,6 @@
 #include "GLTFLoader.h"
 
-void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
+void GLTFLoader::LoadMesh(const char* FName, ModelData& modelData)
 {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;

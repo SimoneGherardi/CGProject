@@ -33,12 +33,15 @@
 //    }
 //}
 
-void ObjLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
+void ObjLoader::LoadMesh(const char* FName, ModelData& modelData)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
     std::string warn, err;
+
+    MeshData MD = modelData.model;
+    VertexDescriptor VD = MD.vertDesc;
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err,
         (this->baseBath + FName).c_str()))

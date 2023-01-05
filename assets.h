@@ -1,6 +1,11 @@
 #pragma once
 #include <string>
-enum models {
+#include "Loader3D.h"
+#include "ThreeDimensionalDataTypes.h"
+enum Models {
 };
 
-std::string getModelPath(models model);
+std::string GetModelPath(Models model);
+ModelType GetModelType(Models model);
+std::string GetModelTexture(Models model);
+Loader3D GetModelLoader(Models model);

@@ -236,16 +236,6 @@ private:
     std::vector<VkDescriptorSet> TextDescriptorSets;
     SceneModel SText;
 
-    // Wireframe pipeline
-    //VkDescriptorSetLayout WireframeDescriptorSetLayout;
-    //VkPipelineLayout WireframePipelineLayout;
-    //VkPipeline WireframePipeline;
-    //std::vector<VkBuffer> WireframeUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
-    //std::vector<VkBuffer> WireframeGlobalUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
-
-
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
@@ -274,10 +264,20 @@ private:
     // Other global variables
     int curText = 0;
 
+    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+        auto app = reinterpret_cast<CGProject*>
+            (glfwGetWindowUserPointer(window));
+        app->framebufferResized = true;
+    }
 
-    
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
 
-    std::vector<VkDescriptorSet> WireframeDescriptorSets;
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
+    }
 
     void initWindow() {
         window = initializeWindow(
@@ -289,17 +289,11 @@ private:
         );
     }
 
-    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<CGProject*>
-            (glfwGetWindowUserPointer(window));
-        app->framebufferResized = true;
-    }
-
     void initVulkan() {
         createInstance();
 
 #ifdef ENABLE_VALIDATION_LAYERS
-        setupDebugMessenger();
+        createDebugMessenger();
 #endif
 
         createSurface();
@@ -338,16 +332,7 @@ private:
         initializeInstance(&createInfo, &instance);
     }
 
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-        return VK_FALSE;
-    }
-
-    void setupDebugMessenger() {
+    void createDebugMessenger() {
         auto createInfo = getDebugMessengerCreateInfo(
             debugCallback,
             DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
@@ -485,15 +470,6 @@ private:
         createTextPipeline();
     }
 
-    /*
-    void createWireframePipeline() {
-        createPipeline("WireframeVert.spv", "WireframeFrag.spv",
-            WireframePipelineLayout, WireframePipeline,
-            WireframeDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
-            VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
-    }
-    */
-
     void createPhongPipeline() {
         createPipeline(
             "BRDFVert.spv",
@@ -623,11 +599,7 @@ private:
             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
     }
 
-    bool hasStencilComponent(VkFormat format) {
-        return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
-            format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
+    // TODO move in library
     void createTextureImage(const char* FName, TextureData& TD) {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load((TEXTURE_PATH + FName).c_str(), &texWidth, &texHeight,
@@ -676,6 +648,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createCubicTextureImage(const char* const FName[6], TextureData& TD) {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels[6];
@@ -728,6 +701,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void generateMipmaps(VkImage image, VkFormat imageFormat,
         int32_t texWidth, int32_t texHeight,
         uint32_t mipLevels, int layerCount) {
@@ -816,6 +790,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
     void createSkyBoxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkImage& image,
         VkDeviceMemory& imageMemory) {
         VkImageCreateInfo imageInfo{};
@@ -856,6 +831,7 @@ private:
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
+    // TODO move in library
     void createImage(uint32_t width, uint32_t height, uint32_t mipLevels,
         VkSampleCountFlagBits numSamples, VkFormat format,
         VkImageTiling tiling, VkImageUsageFlags usage,
@@ -899,6 +875,7 @@ private:
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
+    // TODO move in library
     void transitionImageLayout(VkImage image, VkFormat format,
         VkImageLayout oldLayout, VkImageLayout newLayout,
         uint32_t mipLevels, int layersCount) {
@@ -964,6 +941,13 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
+    bool hasStencilComponent(VkFormat format) {
+        return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+            format == VK_FORMAT_D24_UNORM_S8_UINT;
+    }
+
+    // TODO move in library
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t
         width, uint32_t height, int layerCount) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
@@ -1003,6 +987,7 @@ private:
             VK_IMAGE_VIEW_TYPE_CUBE, 6);
     }
 
+    // TODO move in library
     void createTextureSampler(TextureData& TD) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1030,6 +1015,7 @@ private:
         }
     }
 
+    // TODO move in library
     void loadModels() {
         Scene.resize(SceneToLoad.size());
         int i = 0;
@@ -1043,6 +1029,7 @@ private:
         createTexts();
     }
 
+    // TODO move in library
     void loadModelWithTexture(const Model& M, int i) {
         loadMesh(M.ObjFile, M.type, Scene[i].MD, phongAndSkyBoxVertices);
         createVertexBuffer(Scene[i].MD);
@@ -1053,6 +1040,7 @@ private:
         createTextureSampler(Scene[i].TD);
     }
 
+    // TODO move in library
     void loadSkyBox() {
         int i = 0;
         SkyBox.resize(SkyBoxToLoad.size());
@@ -1069,6 +1057,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createTexts() {
         createTextMesh(SText.MD, textVertices);
         createVertexBuffer(SText.MD);
@@ -1079,6 +1068,7 @@ private:
         createTextureSampler(SText.TD);
     }
 
+    // TODO move in library
     void loadMesh(const char* FName, ModelType T, ModelData& MD, VertexDescriptor& VD) {
         switch (T) {
         case OBJ:
@@ -1090,6 +1080,7 @@ private:
         }
     }
 
+    // TODO move in library
     void loadObjMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -1141,6 +1132,7 @@ private:
             << ", I: " << MD.indices.size() << "\n";
     }
 
+    // TODO move in library
     void loadGLTFMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
         tinygltf::Model model;
         tinygltf::TinyGLTF loader;
@@ -1247,6 +1239,7 @@ private:
         //		throw std::runtime_error("Now We Stop Here!");			
     }
 
+    // TODO move in library
     void createTextMesh(ModelData& MD, VertexDescriptor& VD) {
         MD.vertDesc = &VD;
 
@@ -1334,6 +1327,7 @@ private:
             << ", I: " << MD.indices.size() << "\n";
     }
 
+    // TODO move in library
     void createVertexBuffer(ModelData& Md) {
         VkDeviceSize bufferSize = sizeof(Md.vertices[0]) * Md.vertices.size();
 
@@ -1360,6 +1354,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
         VkMemoryPropertyFlags properties,
         VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -1395,7 +1390,7 @@ private:
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
-
+    // TODO move in library
     uint32_t findMemoryType(uint32_t typeFilter,
         VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
@@ -1412,6 +1407,7 @@ private:
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
+    // TODO move in library
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -1423,6 +1419,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
     VkCommandBuffer beginSingleTimeCommands() {
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -1442,6 +1439,7 @@ private:
         return commandBuffer;
     }
 
+    // TODO move in library
     void endSingleTimeCommands(VkCommandBuffer commandBuffer) {
         vkEndCommandBuffer(commandBuffer);
 
@@ -1455,6 +1453,7 @@ private:
         vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
     }
 
+    // TODO move in library
     void createIndexBuffer(ModelData& Md) {
         VkDeviceSize bufferSize = sizeof(Md.indices[0]) * Md.indices.size();
 
@@ -1480,6 +1479,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -1530,6 +1530,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 9> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -1571,6 +1572,7 @@ private:
         createTextDescriptorSets();
     }
 
+    // TODO move in library
     void createPhongDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
             phongDescriptorSetLayout);
@@ -1641,6 +1643,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createSkyBoxDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * SkyBox.size(),
             skyBoxDescriptorSetLayout);
@@ -1698,6 +1701,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createTextDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(),
             textDescriptorSetLayout);
@@ -1751,80 +1755,7 @@ private:
         }
     }
 
-
-
-    /*
-    void createWireframeDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
-            WireframeDescriptorSetLayout);
-        VkDescriptorSetAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
-        allocInfo.pSetLayouts = layouts.data();
-
-        WireframeDescriptorSets.resize(swapChainImages.size() * Scene.size());
-
-        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
-            WireframeDescriptorSets.data());
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to allocate descriptor sets!");
-        }
-
-        for (size_t k = 0; k < swapChainImages.size(); k++) {
-            for (size_t j = 0; j < Scene.size(); j++) {
-                size_t i = j * swapChainImages.size() + k;
-
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffers[i];
-                bufferInfo.offset = 0;
-                bufferInfo.range = sizeof(UniformBufferObject);
-
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = Scene[j].TD.textureImageView;
-                imageInfo.sampler = Scene[j].TD.textureSampler;
-
-                VkDescriptorBufferInfo globalBufferInfo{};
-                globalBufferInfo.buffer = WireframeGlobalUniformBuffers[k];
-                globalBufferInfo.offset = 0;
-                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
-
-                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
-                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
-                descriptorWrites[0].dstBinding = 0;
-                descriptorWrites[0].dstArrayElement = 0;
-                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[0].descriptorCount = 1;
-                descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[1].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[1].dstBinding = 1;
-                descriptorWrites[1].dstArrayElement = 0;
-                descriptorWrites[1].descriptorType =
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                descriptorWrites[1].descriptorCount = 1;
-                descriptorWrites[1].pImageInfo = &imageInfo;
-
-                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[2].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[2].dstBinding = 2;
-                descriptorWrites[2].dstArrayElement = 0;
-                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[2].descriptorCount = 1;
-                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
-
-                vkUpdateDescriptorSets(device,
-                    static_cast<uint32_t>(descriptorWrites.size()),
-                    descriptorWrites.data(), 0, nullptr);
-            }
-        }
-    }
-    */
-
+    // TODO move in library
     void createCommandBuffers() {
         commandBuffers.resize(swapChainFramebuffers.size());
 
@@ -1929,6 +1860,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createSyncObjects() {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -2044,6 +1976,7 @@ private:
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
+    // TODO move in library
     void updateUniformBuffer(uint32_t currentImage) {
         static auto startTime = std::chrono::high_resolution_clock::now();
         static float lastTime = 0.0f;

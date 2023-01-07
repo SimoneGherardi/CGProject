@@ -26,29 +26,42 @@ layout(binding = 2) uniform GlobalUniformBufferObject {
 vec3 Lambert_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C) {
 	// Lambert Diffuse BRDF model
 	// in all BRDF parameters are:
-	// vec3 L : light direction
-	// vec3 N : normal vector
+	// vec3 L : light direction - d
+	// vec3 N : normal vector - n
+	// alpha between L and N
 	// vec3 V : view direction
 	// vec3 C : main color (diffuse color, or specular color)
-	
-	//C = std::clamp()
-	return C;
+	vec3 res = vec3(0,0,0);
+	res = C * clamp(dot(L, N), 0, 1);
+	return res;
 }
 
 vec3 Oren_Nayar_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, float sigma) {
 	// Directional light direction
 	// additional parameter:
 	// float sigma : roughness of the material
-
-	return C;
+	vec3 res = vec3(0,0,0);
+	float A = 1 - (0.5 * ((pow(sigma,2.0)) / (pow(sigma,2.0)+0.33)));
+	float B = 0.45 * ((pow(sigma,2.0)) / (pow(sigma,2.0)+0.09));
+	vec3 vi = normalize(L - dot(L,N)*N);
+	vec3 vr = normalize(V - dot(N,V)*N);
+	float G = max(0, dot(vi,vr));
+	float thetai = acos(dot(L, N));
+	float thetar = acos(dot(N,V));
+	float alpha = max(thetai, thetar);
+	float beta = min(thetai, thetar);
+	float f = B * sin(alpha) * tan(beta);
+	res = C * (A + G*f);
+	return res;
 }
 
 vec3 Phong_Specular_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, float gamma)  {
 	// Phong Specular BRDF model
 	// additional parameter:
 	// float gamma : exponent of the cosine term
-	
-	return vec3(0,0,0);
+	vec3 res = vec3(0,0,0);
+	res = C * pow(clamp(dot(V, -reflect(L,N)),0,1), gamma);
+	return res;
 }
 
 vec3 Toon_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, vec3 Cd, float thr) {
@@ -56,16 +69,24 @@ vec3 Toon_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, vec3 Cd, float thr) {
 	// additional parameters:
 	// vec3 Cd : color to be used in dark areas
 	// float thr : color threshold
-	
-	return C;
+	if (dot(L, N) < thr) {
+		return Cd;
+	}
+	vec3 res = vec3(0,0,0);
+	res = C * clamp(dot(L, N), 0, 1);
+	return res;
 }
 
 vec3 Toon_Specular_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, float thr)  {
 	// Directional light direction
 	// additional parameter:
 	// float thr : color threshold
-
-	return vec3(0,0,0);
+	if (dot(V, N) >= thr) {
+		return vec3(1,1,1);
+	}
+	vec3 res = vec3(0,0,0);
+	res = C * clamp(dot(V, -reflect(L,N)),0,1);
+	return res;
 }
 
 

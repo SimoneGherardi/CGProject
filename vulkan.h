@@ -79,6 +79,12 @@ const std::vector<const char*> deviceExtensions = {
     const bool Verbose = true;
 #endif
 
+// Total number of objects pipelines
+#define OBJ_PIPELINES 2
+#define OBJ_PIPELINE_PHONG 0
+#define OBJ_PIPELINE_WIREFRAME 1
+
+
 const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Ball15.png", "", "", {0,0.0, 0.0}, 1.0},
@@ -337,7 +343,9 @@ private:
     SceneModel SText;
 
     // Wireframe pipeline
-    VkPipeline WireframePipeline;
+    VkPipeline wireframePipeline;
+
+    
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
@@ -366,7 +374,9 @@ private:
 
     // Other global variables
     int curText = 0;
-    bool wireFrame = false;
+    // Current pipeline to be used
+    int curPipe = OBJ_PIPELINE_PHONG;
+    VkPipeline objectsPipeline;
 
     void initWindow() {
         glfwInit();
@@ -1124,7 +1134,7 @@ private:
     
     void createWireframePipeline() {
         createPipeline("BRDFVert.spv", "BRDFFrag.spv",
-            PhongPipelineLayout, WireframePipeline,
+            PhongPipelineLayout, wireframePipeline,
             PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
             VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
     }
@@ -2647,16 +2657,12 @@ private:
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo,
                 VK_SUBPASS_CONTENTS_INLINE);
 
-            // picking Pipeline depending on wireFrame value
-            if (!wireFrame) {
-                vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    PhongPipeline);
-            }
-            else {
-                vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    WireframePipeline);
-            }
-            
+            // select pipeline
+            setSelectedObjectsPipeline(curPipe);
+
+            vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
+                    getSelectedObjectsPipeline());
+
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
             VkBuffer vertexBuffers[] = { Scene[j].MD.vertexBuffer };
@@ -2852,6 +2858,14 @@ private:
             }
         }
 
+        if (glfwGetKey(window, GLFW_KEY_P)) {
+            if (time - debounce > 0.33) {
+                curPipe = (curPipe + 1) % OBJ_PIPELINES;
+                debounce = time;
+                framebufferResized = true;
+            }
+        }
+
         static bool useTexture = true;
         if (glfwGetKey(window, GLFW_KEY_T)) {
             if (time - debounce > 0.33) {
@@ -2973,11 +2987,9 @@ private:
 
         switch (curText) {
         case 0:
-            wireFrame = false;
             gubo.selector = glm::vec4(1.0f, 0.0f, 0.0f, 0.0f);
             break;
         case 1:
-            wireFrame = false;
             gubo.selector = glm::vec4(1.0f, 0.0f, 1.0f, 0.0f);
             gubo.lightColor0 = glm::vec3(0.3f, 0.3f, 0.3f);
             gubo.lightColor1 = glm::vec3(0.3f, 0.4f, 0.4f);
@@ -2989,17 +3001,14 @@ private:
             gubo.lightDir3 = glm::vec3(0.4830f, 0.8365f, -0.2588f);
             break;
         case 2:
-            wireFrame = false;
             gubo.selector = glm::vec4(0.0f, 0.0f, 0.0f, 0.0f);
             gubo.lightDir0 = glm::vec3(cos(glm::radians(135.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(135.0f)), cos(glm::radians(135.0f)) * sin(glm::radians(-60.0f)));
             break;
         case 3:
-            wireFrame = false;
             gubo.selector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
             gubo.lightDir0 = glm::vec3(cos(glm::radians(150.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(150.0f)), cos(glm::radians(150.0f)) * sin(glm::radians(-60.0f)));
             break;
         case 4:
-            wireFrame = true;
             break;
         }
         gubo.selector.w = useTexture ? 1.0 : 0.0;
@@ -3165,6 +3174,23 @@ private:
         glfwDestroyWindow(window);
 
         glfwTerminate();
+    }
+
+    VkPipeline getSelectedObjectsPipeline() {
+        return objectsPipeline;
+    }
+
+    void setSelectedObjectsPipeline(int selectedPipeline) {
+        switch (selectedPipeline) {
+        case OBJ_PIPELINE_PHONG:
+            objectsPipeline = PhongPipeline;
+            curPipe = OBJ_PIPELINE_PHONG;
+            break;
+        case OBJ_PIPELINE_WIREFRAME:
+            objectsPipeline = wireframePipeline;
+            curPipe = OBJ_PIPELINE_WIREFRAME;
+            break;
+        }
     }
 
 };

@@ -49,6 +49,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "instance.h"
 #include "command_pool.h"
 #include "framebuffers.h"
+#include "command_buffers.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -1421,27 +1422,15 @@ private:
 
     // TODO move in library
     VkCommandBuffer beginSingleTimeCommands() {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
-        allocInfo.commandBufferCount = 1;
-
         VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
+        initializeCommandBuffer(device, commandPool, 1, &commandBuffer);
+        beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr);
         return commandBuffer;
     }
 
     // TODO move in library
     void endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-        vkEndCommandBuffer(commandBuffer);
+        endCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -1450,7 +1439,7 @@ private:
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(graphicsQueue);
 
-        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+        cleanupCommandBuffer(device, commandPool, 1, &commandBuffer);
     }
 
     // TODO move in library
@@ -1758,30 +1747,10 @@ private:
     // TODO move in library
     void createCommandBuffers() {
         commandBuffers.resize(swapChainFramebuffers.size());
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
-
-        VkResult result = vkAllocateCommandBuffers(device, &allocInfo,
-            commandBuffers.data());
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to allocate command buffers!");
-        }
+        initializeCommandBuffer(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         for (size_t i = 0; i < commandBuffers.size(); i++) {
-            VkCommandBufferBeginInfo beginInfo{};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            beginInfo.flags = 0; // Optional
-            beginInfo.pInheritanceInfo = nullptr; // Optional
-
-            if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) !=
-                VK_SUCCESS) {
-                throw std::runtime_error("failed to begin recording command buffer!");
-            }
+            beginCommandBuffer(commandBuffers[i], 0, nullptr);
 
             VkRenderPassBeginInfo renderPassInfo{};
             renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -1854,9 +1823,7 @@ private:
                 static_cast<uint32_t>(SceneText[curText].len), 1, static_cast<uint32_t>(SceneText[curText].start), 0, 0);
 
             vkCmdEndRenderPass(commandBuffers[i]);
-            if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to record command buffer!");
-            }
+            endCommandBuffer(commandBuffers[i]);
         }
     }
 
@@ -2203,8 +2170,7 @@ private:
             cleanupFrameBuffer(device, fb);
         }
 
-        vkFreeCommandBuffers(device, commandPool,
-            static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+        cleanupCommandBuffer(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         cleanupGraphicsPipeline(device, phongPipeline);
         cleanupGraphicsPipelineLayout(device, phongPipelineLayout);

@@ -69,9 +69,12 @@ vec3 Toon_Diffuse_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, vec3 Cd, float thr) {
 	// additional parameters:
 	// vec3 Cd : color to be used in dark areas
 	// float thr : color threshold
-	if (dot(L, N) < thr) {
+	float dotProduct = dot(L, N);
+	if (dotProduct < thr) {
 		return Cd;
-	}
+	} else if (dotProduct < thr/1.2) {
+		return Cd/4;
+	} 
 	vec3 res = vec3(0,0,0);
 	res = C * clamp(dot(L, N), 0, 1);
 	return res;
@@ -81,7 +84,7 @@ vec3 Toon_Specular_BRDF(vec3 L, vec3 N, vec3 V, vec3 C, float thr)  {
 	// Directional light direction
 	// additional parameter:
 	// float thr : color threshold
-	if (dot(V, N) >= thr) {
+	if (dot(L, N) > thr) {
 		return vec3(1,1,1);
 	}
 	vec3 res = vec3(0,0,0);

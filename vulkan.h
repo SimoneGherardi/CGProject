@@ -89,7 +89,6 @@ const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Ball15.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "soccer_sph.png", "", "", {0,0.0, 0.0}, 1.0},
-    {"Sphere.obj", OBJ, "Moon.jpg", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Moon.jpg", "", "", {0,0.0, 0.0}, 1.0}
 };
 
@@ -103,8 +102,7 @@ const std::vector<SkyBoxModel> SkyBoxToLoad = {
     {"SkyBoxCube.obj", OBJ, {"sky1/posx.jpg", "sky1/negx.jpg", "sky1/posy.jpg", "sky1/negy.jpg", "sky1/posz.jpg", "sky1/negz.jpg"}},
     {"SkyBoxCube.obj", OBJ, {"sky2/posx.jpg", "sky2/negx.jpg", "sky2/posy.jpg", "sky2/negy.jpg", "sky2/posz.jpg", "sky2/negz.jpg"}},
     {"SkyBoxCube.obj", OBJ, {"sky3/ToonSkybox-2-1.png", "sky3/ToonSkybox-0-1.png", "sky3/ToonSkybox-1-0.png", "sky3/ToonSkybox-1-2.png", "sky3/ToonSkybox-1-1.png", "sky3/ToonSkybox-3-1.png"}},
-    {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}},
-    {"SkyBoxCube.obj", OBJ, {"sky3/ToonSkybox-2-1.png", "sky3/ToonSkybox-0-1.png", "sky3/ToonSkybox-1-0.png", "sky3/ToonSkybox-1-2.png", "sky3/ToonSkybox-1-1.png", "sky3/ToonSkybox-3-1.png"}}
+    {"SkyBoxCube.obj", OBJ, {"sky4/bkg1_right.png", "sky4/bkg1_left.png", "sky4/bkg1_top.png", "sky4/bkg1_bot.png", "sky4/bkg1_front.png", "sky4/bkg1_back.png"}}
 };
 
 struct SingleText {
@@ -118,8 +116,7 @@ std::vector<SingleText> SceneText = {
     {1, {"Lambert","","",""}, 0, 0},
     {1, {"Phong","","",""}, 0, 0},
     {1, {"Toon","","",""}, 0, 0},
-    {1, {"Oren Nayar","","",""}, 0, 0},
-    {1, {"Wireframe","","",""}, 0, 0} };
+    {1, {"Oren Nayar","","",""}, 0, 0} };
 
 namespace std {
     template<> struct hash<std::vector<float>> {
@@ -2658,10 +2655,10 @@ private:
                 VK_SUBPASS_CONTENTS_INLINE);
 
             // select pipeline
-            setSelectedObjectsPipeline(curPipe);
+            setObjectsPipeline(curPipe);
 
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                    getSelectedObjectsPipeline());
+                    getObjectsPipeline());
 
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
@@ -3008,8 +3005,6 @@ private:
             gubo.selector = glm::vec4(0.0f, 1.0f, 0.0f, 0.0f);
             gubo.lightDir0 = glm::vec3(cos(glm::radians(150.0f)) * cos(glm::radians(-60.0f)), sin(glm::radians(150.0f)), cos(glm::radians(150.0f)) * sin(glm::radians(-60.0f)));
             break;
-        case 4:
-            break;
         }
         gubo.selector.w = useTexture ? 1.0 : 0.0;
         void* data;
@@ -3176,21 +3171,20 @@ private:
         glfwTerminate();
     }
 
-    VkPipeline getSelectedObjectsPipeline() {
+    VkPipeline getObjectsPipeline() {
         return objectsPipeline;
     }
 
-    void setSelectedObjectsPipeline(int selectedPipeline) {
+    void setObjectsPipeline(int selectedPipeline) {
         switch (selectedPipeline) {
         case OBJ_PIPELINE_PHONG:
             objectsPipeline = PhongPipeline;
-            curPipe = OBJ_PIPELINE_PHONG;
             break;
         case OBJ_PIPELINE_WIREFRAME:
             objectsPipeline = wireframePipeline;
-            curPipe = OBJ_PIPELINE_WIREFRAME;
             break;
         }
+        curPipe = selectedPipeline;
     }
 
 };

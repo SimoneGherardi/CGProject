@@ -72,12 +72,18 @@ const std::vector<const char*> deviceExtensions = {
 };
 
 #ifdef NDEBUG
-const bool enableValidationLayers = false;
-const bool Verbose = false;
+    const bool enableValidationLayers = false;
+    const bool Verbose = false;
 #else
-const bool enableValidationLayers = true;
-const bool Verbose = true;
+    const bool enableValidationLayers = true;
+    const bool Verbose = true;
 #endif
+
+// Total number of objects pipelines
+#define OBJ_PIPELINES 2
+#define OBJ_PIPELINE_PHONG 0
+#define OBJ_PIPELINE_WIREFRAME 1
+
 
 const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
@@ -272,7 +278,6 @@ public:
     void run() {
         initWindow();
         initVulkan();
-        initApp();
         mainLoop();
         cleanup();
     }
@@ -335,14 +340,9 @@ private:
     SceneModel SText;
 
     // Wireframe pipeline
-    //VkDescriptorSetLayout WireframeDescriptorSetLayout;
-    //VkPipelineLayout WireframePipelineLayout;
-    //VkPipeline WireframePipeline;
-    //std::vector<VkBuffer> WireframeUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeUniformBuffersMemory;
-    //std::vector<VkBuffer> WireframeGlobalUniformBuffers;
-    //std::vector<VkDeviceMemory> WireframeGlobalUniformBuffersMemory;
+    VkPipeline wireframePipeline;
 
+    
 
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
@@ -371,11 +371,9 @@ private:
 
     // Other global variables
     int curText = 0;
-
-
-    
-
-    std::vector<VkDescriptorSet> WireframeDescriptorSets;
+    // Current pipeline to be used
+    int curPipe = OBJ_PIPELINE_PHONG;
+    VkPipeline objectsPipeline;
 
     void initWindow() {
         glfwInit();
@@ -1121,64 +1119,23 @@ private:
             throw std::runtime_error("failed to create Text descriptor set layout!");
         }
     }
-
-    /*
-    void createWireframeDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-
-        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
-        globalUboLayoutBinding.binding = 2;
-        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        globalUboLayoutBinding.descriptorCount = 1;
-        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        globalUboLayoutBinding.pImmutableSamplers = nullptr;
-
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
-        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
-
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &WireframeDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
-
-    }
-    */
+    
 
     void createPipelines() {
         createPhongPipeline();
+        createWireframePipeline();
         createSkyBoxPipeline();
         createTextPipeline();
     }
 
-    /*
+    
     void createWireframePipeline() {
-        createPipeline("WireframeVert.spv", "WireframeFrag.spv",
-            WireframePipelineLayout, WireframePipeline,
-            WireframeDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
+        createPipeline("BRDFVert.spv", "BRDFFrag.spv",
+            PhongPipelineLayout, wireframePipeline,
+            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
             VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
     }
-    */
+    
 
     void createPhongPipeline() {
         createPipeline("BRDFVert.spv", "BRDFFrag.spv",
@@ -2651,77 +2608,6 @@ private:
 
 
 
-    /*
-    void createWireframeDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
-            WireframeDescriptorSetLayout);
-        VkDescriptorSetAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
-        allocInfo.descriptorSetCount = static_cast<uint32_t>(swapChainImages.size() * Scene.size());
-        allocInfo.pSetLayouts = layouts.data();
-
-        WireframeDescriptorSets.resize(swapChainImages.size() * Scene.size());
-
-        VkResult result = vkAllocateDescriptorSets(device, &allocInfo,
-            WireframeDescriptorSets.data());
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to allocate descriptor sets!");
-        }
-
-        for (size_t k = 0; k < swapChainImages.size(); k++) {
-            for (size_t j = 0; j < Scene.size(); j++) {
-                size_t i = j * swapChainImages.size() + k;
-
-                VkDescriptorBufferInfo bufferInfo{};
-                bufferInfo.buffer = uniformBuffers[i];
-                bufferInfo.offset = 0;
-                bufferInfo.range = sizeof(UniformBufferObject);
-
-                VkDescriptorImageInfo imageInfo{};
-                imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                imageInfo.imageView = Scene[j].TD.textureImageView;
-                imageInfo.sampler = Scene[j].TD.textureSampler;
-
-                VkDescriptorBufferInfo globalBufferInfo{};
-                globalBufferInfo.buffer = WireframeGlobalUniformBuffers[k];
-                globalBufferInfo.offset = 0;
-                globalBufferInfo.range = sizeof(GlobalUniformBufferObject);
-
-                std::array<VkWriteDescriptorSet, 3> descriptorWrites{};
-                descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[0].dstSet = PhongDescriptorSets[i];
-                descriptorWrites[0].dstBinding = 0;
-                descriptorWrites[0].dstArrayElement = 0;
-                descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[0].descriptorCount = 1;
-                descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-                descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[1].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[1].dstBinding = 1;
-                descriptorWrites[1].dstArrayElement = 0;
-                descriptorWrites[1].descriptorType =
-                    VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                descriptorWrites[1].descriptorCount = 1;
-                descriptorWrites[1].pImageInfo = &imageInfo;
-
-                descriptorWrites[2].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                descriptorWrites[2].dstSet = WireframeDescriptorSets[i];
-                descriptorWrites[2].dstBinding = 2;
-                descriptorWrites[2].dstArrayElement = 0;
-                descriptorWrites[2].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                descriptorWrites[2].descriptorCount = 1;
-                descriptorWrites[2].pBufferInfo = &globalBufferInfo;
-
-                vkUpdateDescriptorSets(device,
-                    static_cast<uint32_t>(descriptorWrites.size()),
-                    descriptorWrites.data(), 0, nullptr);
-            }
-        }
-    }
-    */
 
     void createCommandBuffers() {
         commandBuffers.resize(swapChainFramebuffers.size());
@@ -2768,8 +2654,12 @@ private:
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo,
                 VK_SUBPASS_CONTENTS_INLINE);
 
+            // select pipeline
+            setObjectsPipeline(curPipe);
+
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                PhongPipeline);
+                    getObjectsPipeline());
+
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
             VkBuffer vertexBuffers[] = { Scene[j].MD.vertexBuffer };
@@ -2960,6 +2850,14 @@ private:
         if (glfwGetKey(window, GLFW_KEY_SPACE)) {
             if (time - debounce > 0.33) {
                 curText = (curText + 1) % SceneText.size();
+                debounce = time;
+                framebufferResized = true;
+            }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_P)) {
+            if (time - debounce > 0.33) {
+                curPipe = (curPipe + 1) % OBJ_PIPELINES;
                 debounce = time;
                 framebufferResized = true;
             }
@@ -3273,9 +3171,20 @@ private:
         glfwTerminate();
     }
 
+    VkPipeline getObjectsPipeline() {
+        return objectsPipeline;
+    }
 
-    void initApp() {
-        // This will not be needed in this assignment!
+    void setObjectsPipeline(int selectedPipeline) {
+        switch (selectedPipeline) {
+        case OBJ_PIPELINE_PHONG:
+            objectsPipeline = PhongPipeline;
+            break;
+        case OBJ_PIPELINE_WIREFRAME:
+            objectsPipeline = wireframePipeline;
+            break;
+        }
+        curPipe = selectedPipeline;
     }
 
 };

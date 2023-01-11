@@ -35,19 +35,19 @@ extern VkSubpassDependency getSubpassDependency(
 );
 
 extern void initializeRenderPass(
-    const VkPhysicalDevice& physicalDevice,
-    const VkDevice& device,
+    const VkPhysicalDevice physicalDevice,
+    const VkDevice device,
     const VkFormat format,
     const VkSampleCountFlagBits msaaSamples,
     VkRenderPass* renderPass
 );
 
-extern void cleanupRenderPass(const VkDevice& device, VkRenderPass& renderPass);
+extern void cleanupRenderPass(const VkDevice device, VkRenderPass renderPass);
 
-extern VkFormat findDepthFormat(const VkPhysicalDevice& physicalDevice);
+extern VkFormat findDepthFormat(const VkPhysicalDevice physicalDevice);
 
 extern VkFormat findSupportedFormat(
-    const VkPhysicalDevice& physicalDevice,
+    const VkPhysicalDevice physicalDevice,
     const std::vector<VkFormat> candidates,
     const VkImageTiling tiling,
     const VkFormatFeatureFlags features

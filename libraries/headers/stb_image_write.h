@@ -198,11 +198,13 @@ STBIWDEF void stbi_flip_vertically_on_write(int flip_boolean);
 
 #ifdef STB_IMAGE_WRITE_IMPLEMENTATION
 
-#ifndef _CRT_SECURE_NO_WARNINGS
-#define _CRT_SECURE_NO_WARNINGS
-#endif
-#ifndef _CRT_NONSTDC_NO_DEPRECATE
-#define _CRT_NONSTDC_NO_DEPRECATE
+#ifdef _WIN32
+   #ifndef _CRT_SECURE_NO_WARNINGS
+   #define _CRT_SECURE_NO_WARNINGS
+   #endif
+   #ifndef _CRT_NONSTDC_NO_DEPRECATE
+   #define _CRT_NONSTDC_NO_DEPRECATE
+   #endif
 #endif
 
 #ifndef STBI_WRITE_NO_STDIO

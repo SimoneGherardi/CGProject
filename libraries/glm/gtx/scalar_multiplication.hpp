@@ -19,7 +19,7 @@
 #if GLM_MESSAGES == GLM_ENABLE && !defined(GLM_EXT_INCLUDED)
 #	ifndef GLM_ENABLE_EXPERIMENTAL
 #		pragma message("GLM: GLM_GTX_scalar_multiplication is an experimental extension and may change in the future. Use #define GLM_ENABLE_EXPERIMENTAL before including it, if you really want to use it.")
-#	elif
+#	else
 #		pragma message("GLM: GLM_GTX_scalar_multiplication extension included")
 #	endif
 #endif
@@ -54,7 +54,7 @@ namespace glm
 	template<typename T> \
 	return_type_scalar_multiplication<T, Vec> \
 	operator/(Vec lh, T const& s){ \
-		return lh *= 1.0f / s; \
+		return lh *= 1.0f / static_cast<float>(s); \
 	}
 
 GLM_IMPLEMENT_SCAL_MULT(vec2)

@@ -25,7 +25,7 @@ VkPipelineInputAssemblyStateCreateInfo getPipelineInputAssemblyStateCreateInfo(c
 	return inputAssembly;
 }
 
-VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(const VkShaderModule& shaderModule, const VkShaderStageFlagBits stageFlag)
+VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(const VkShaderModule shaderModule, const VkShaderStageFlagBits stageFlag)
 {
 	VkPipelineShaderStageCreateInfo createInfo = {};
 	createInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -35,7 +35,7 @@ VkPipelineShaderStageCreateInfo getPipelineShaderStageCreateInfo(const VkShaderM
 	return createInfo;
 }
 
-VkPipelineDynamicStateCreateInfo getPipelineDynamicStateCreateInfo(const std::vector<VkDynamicState>& dynamicStates)
+VkPipelineDynamicStateCreateInfo getPipelineDynamicStateCreateInfo(const std::vector<VkDynamicState> dynamicStates)
 {
 	VkPipelineDynamicStateCreateInfo dynamicState = {};
 	dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;

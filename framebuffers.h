@@ -1,7 +1,16 @@
 #pragma once
 #include "defines.h"
 
-typedef std::vector<VkFramebuffer> Framebuffers;
+extern void initializeFrameBuffer(
+	const VkDevice device,
+	const uint32_t attachmentCount,
+	const VkImageView* attachments,
+	const VkRenderPass renderPass,
+	const VkExtent2D extent,
+	VkFramebuffer* frameBuffer
+);
 
-extern void initializeFrameBuffers(const VkDevice device, const VkExtent2D extent, const VkRenderPass renderPass, const std::vector<VkImageView> swapChainImages, Framebuffers framebuffers);
-extern void cleanupFrameBuffer(const VkDevice device, const Framebuffers framebuffers);
+extern void cleanupFrameBuffer(
+	const VkDevice device,
+	const VkFramebuffer framebuffer
+);

@@ -137,8 +137,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
+    <ClCompile Include="defines.cpp" />
+    <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
     <ClCompile Include="GLTFLoader.cpp" />
@@ -160,6 +163,7 @@
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
     <ClCompile Include="shader_module.cpp" />
+    <ClCompile Include="std_pipeline.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
@@ -174,6 +178,7 @@
     <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
+    <ClInclude Include="descriptor_set_layout.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
     <ClInclude Include="GLTFLoader.h" />
@@ -193,6 +198,7 @@
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
     <ClInclude Include="shader_module.h" />
+    <ClInclude Include="std_pipeline.h" />
     <ClInclude Include="surface.h" />
     <ClInclude Include="swap_chains.h" />
     <ClInclude Include="swap_chain_support.h" />

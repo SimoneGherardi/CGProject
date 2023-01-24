@@ -5,3 +5,8 @@ void initializeSurface(const VkInstance instance, GLFWwindow* window, VkSurfaceK
         throw std::runtime_error("failed to create window surface!");
     }
 }
+
+void cleanupSurface(const VkInstance instance, const VkSurfaceKHR surface)
+{
+    vkDestroySurfaceKHR(instance, surface, nullptr);
+}

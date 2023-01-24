@@ -61,6 +61,9 @@
     <Filter Include="Source Files\glfw">
       <UniqueIdentifier>{9467d64e-a66b-4050-9b33-9ef9fcb39ddc}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\utilities">
+      <UniqueIdentifier>{3cad1fd4-01a0-4bf8-9069-6ae6011a4814}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -153,11 +156,20 @@
     <ClCompile Include="viewport.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="descriptor_set_layout.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="std_pipeline.cpp">
+      <Filter>Source Files\pipeline</Filter>
+    </ClCompile>
+    <ClCompile Include="defines.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="command_buffers.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="ioutils.h">
-      <Filter>Source Files\utilities</Filter>
-    </ClInclude>
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
@@ -253,6 +265,15 @@
     </ClInclude>
     <ClInclude Include="defines.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_set_layout.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="std_pipeline.h">
+      <Filter>Header Files\pipeline</Filter>
+    </ClInclude>
+    <ClInclude Include="ioutils.h">
+      <Filter>Header Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

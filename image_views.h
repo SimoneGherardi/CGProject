@@ -17,3 +17,8 @@ extern VkImageView initializeImageView(
     const VkImageViewType type,
     const int layerCount
 );
+
+extern void cleanupImageView(
+    const VkDevice device,
+    const VkImageView imageView
+);

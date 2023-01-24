@@ -72,6 +72,13 @@ const std::vector<const char*> deviceExtensions = {
     #endif
 };
 
+
+// Total number of objects pipelines
+#define OBJ_PIPELINES 2
+#define OBJ_PIPELINE_PHONG 0
+#define OBJ_PIPELINE_WIREFRAME 1
+
+
 const std::vector<Model> SceneToLoad = {
     {"Sphere.obj", OBJ, "Plaster.png", "", "", {0,0.0, 0.0}, 1.0},
     {"Sphere.obj", OBJ, "Ball15.png", "", "", {0,0.0, 0.0}, 1.0},
@@ -237,6 +244,11 @@ private:
     std::vector<VkDescriptorSet> TextDescriptorSets;
     SceneModel SText;
 
+    // Wireframe pipeline
+    VkPipeline wireframePipeline;
+
+    
+
     std::vector<VkFramebuffer> swapChainFramebuffers;
     VkCommandPool commandPool;
     std::vector<VkCommandBuffer> commandBuffers;
@@ -264,6 +276,11 @@ private:
 
     // Other global variables
     int curText = 0;
+
+    // Current pipeline to be used
+    int curPipe = OBJ_PIPELINE_PHONG;
+    VkPipeline objectsPipeline;
+
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto app = reinterpret_cast<CGProject*>
@@ -467,9 +484,27 @@ private:
 
     void createPipelines() {
         createPhongPipeline();
+        createWireframePipeline();
         createSkyBoxPipeline();
         createTextPipeline();
     }
+
+    
+    void createWireframePipeline() {
+        createPipeline(
+            "BRDFVert.spv",
+            "BRDFFrag.spv",
+            VK_COMPARE_OP_LESS,
+            VK_POLYGON_MODE_LINE,
+            VK_CULL_MODE_NONE,
+            false,
+            &phongAndSkyBoxVertices,
+            &phongDescriptorSetLayout,
+            &phongPipelineLayout,
+            &wireframePipeline
+        );
+    }
+    
 
     void createPhongPipeline() {
         createPipeline(
@@ -1770,8 +1805,12 @@ private:
             vkCmdBeginRenderPass(commandBuffers[i], &renderPassInfo,
                 VK_SUBPASS_CONTENTS_INLINE);
 
+            // select pipeline
+            setObjectsPipeline(curPipe);
+
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                phongPipeline);
+                    getObjectsPipeline());
+
             //			for(int j = 0; j < Scene.size(); j++) {
             {int j = curText;
             VkBuffer vertexBuffers[] = { Scene[j].MD.vertexBuffer };
@@ -1962,6 +2001,14 @@ private:
         if (glfwGetKey(window, GLFW_KEY_SPACE)) {
             if (time - debounce > 0.33) {
                 curText = (curText + 1) % SceneText.size();
+                debounce = time;
+                framebufferResized = true;
+            }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_P)) {
+            if (time - debounce > 0.33) {
+                curPipe = (curPipe + 1) % OBJ_PIPELINES;
                 debounce = time;
                 framebufferResized = true;
             }
@@ -2272,6 +2319,22 @@ private:
         cleanupInstance(instance);
 
         cleanupWindow(window);
+    }
+
+    VkPipeline getObjectsPipeline() {
+        return objectsPipeline;
+    }
+
+    void setObjectsPipeline(int selectedPipeline) {
+        switch (selectedPipeline) {
+        case OBJ_PIPELINE_PHONG:
+            objectsPipeline = PhongPipeline;
+            break;
+        case OBJ_PIPELINE_WIREFRAME:
+            objectsPipeline = wireframePipeline;
+            break;
+        }
+        curPipe = selectedPipeline;
     }
 
 };

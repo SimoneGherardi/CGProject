@@ -168,13 +168,16 @@
     <ClCompile Include="command_buffers.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="cleanup_stack.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="surface_factory.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
-    </ClInclude>
-    <ClInclude Include="vulkan.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GLTFLoader.h">
       <Filter>Header Files\3d</Filter>
@@ -275,5 +278,20 @@
     <ClInclude Include="ioutils.h">
       <Filter>Header Files\utilities</Filter>
     </ClInclude>
+    <ClInclude Include="surface_factory.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="game_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="cleanup_stack.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vulkan.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="conventions.txt" />
   </ItemGroup>
 </Project>

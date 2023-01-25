@@ -9,3 +9,15 @@ public:
 		VkSurfaceKHR* surface
 	) = 0;
 };
+
+class GLFWSurfaceFactory : public SurfaceFactory
+{
+private:
+	GLFWwindow* _Window;
+public:
+	GLFWSurfaceFactory(GLFWwindow* window);
+	VkResult CreateSurface(
+		const VkInstance instance,
+		VkSurfaceKHR* surface
+	) override;
+};

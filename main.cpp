@@ -2,76 +2,41 @@
     #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
 #endif
 
-#include <flecs.h>
-#include "test.h"
+#include "game_engine.h"
+#include "window.h"
 
-#include <reactphysics3d/reactphysics3d.h>
-#include <flecs.h>
-#include "vulkan.h"
+const char* TITLE = "CG Project";
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
 
+GLFWwindow* Window;
+GameEngine ENGINE;
 
-using namespace reactphysics3d;
-
-int testPhysics()
+void onResize(GLFWwindow* window, int width, int height)
 {
-    PhysicsCommon physicsCommon;
-    
-    PhysicsWorld* world = physicsCommon.createPhysicsWorld();
-
-    Vector3 position(0, 20, 0);
-    Quaternion orientation = Quaternion::identity();
-    Transform transform(position, orientation);
-    RigidBody* body = world->createRigidBody(transform);
-
-    const decimal timeStep = 1.0f / 60.0f;
-
-    for (int i = 0; i < 20; i++) {
-
-        world->update(timeStep);
-
-        const Transform& transform = body->getTransform();
-        const Vector3& position = transform.getPosition();
-
-        std::cout << "Body Position: (" << position.x << ", " <<
-            position.y << ", " << position.z << ")" << std::endl;
-    }
-
-    return 0;
+    auto engine = reinterpret_cast<GameEngine*>(glfwGetWindowUserPointer(window));
+    // TODO engine resize
 }
 
-void testECS()
+void initialize()
 {
-    flecs::world world;
-    world.import<Test>();
+    GLFWSurfaceFactory* surfaceFactory = new GLFWSurfaceFactory(Window);
+    initializeWindow(TITLE, WIDTH, HEIGHT, &ENGINE, onResize, Window);
+    ENGINE.Initialize(TITLE, surfaceFactory);
+}
 
-    auto a = world.entity()
-        .set<Counter>({ 0 });
-    auto b = world.entity()
-        .set<Counter>({ 10 });
-    auto c = world.entity()
-        .set<Counter>({ 20 });
-    world.system<Counter>().kind(flecs::OnUpdate).iter([](flecs::iter it) {
-        printf("AAA\n");
-    });
-
-    world.progress();
-    world.progress();
-    world.progress();
-    world.progress();
-    world.progress();
+void cleanup()
+{
+    ENGINE.Cleanup();
+    cleanupWindow(Window);
 }
 
 int main()
 {
-    testPhysics();
-    
-    CGProject app;
-
-    testECS();
-
     try
     {
-        app.run();
+        initialize();
+        cleanup();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;

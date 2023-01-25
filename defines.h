@@ -30,4 +30,12 @@ struct ErrorCode_t {
     std::string meaning;
 };
 
+extern VKAPI_ATTR VkBool32 VKAPI_CALL DEBUG_CALLBACK(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData
+);
+
 extern void PrintVkError(VkResult result);
+
+extern void CheckVkResult(VkResult result);

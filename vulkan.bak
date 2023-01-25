@@ -2328,7 +2328,7 @@ private:
     void setObjectsPipeline(int selectedPipeline) {
         switch (selectedPipeline) {
         case OBJ_PIPELINE_PHONG:
-            objectsPipeline = PhongPipeline;
+            objectsPipeline = phongPipeline;
             break;
         case OBJ_PIPELINE_WIREFRAME:
             objectsPipeline = wireframePipeline;

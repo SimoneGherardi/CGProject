@@ -30,7 +30,8 @@ struct ErrorCode_t ErrorCodes[] = {
 
 };
 
-void PrintVkError(VkResult result) {
+void PrintVkError(VkResult result)
+{
     const int numErrorCodes = sizeof(ErrorCodes) / sizeof(struct ErrorCode_t);
     std::string meaning = "";
     for (int i = 0; i < numErrorCodes; i++) {
@@ -40,4 +41,21 @@ void PrintVkError(VkResult result) {
         }
     }
     std::cout << "Error: " << result << ", " << meaning << "\n";
+}
+
+void CheckVkResult(VkResult result)
+{
+    if (result != VK_SUCCESS) {
+        PrintVkError(result);
+        throw std::runtime_error("VkResult check failed");
+    }
+}
+
+VKAPI_ATTR VkBool32 VKAPI_CALL DEBUG_CALLBACK(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+
+    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    return VK_FALSE;
 }

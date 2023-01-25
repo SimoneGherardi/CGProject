@@ -29,10 +29,13 @@ VkInstanceCreateInfo getInstanceCreateInfo(
     VkDebugUtilsMessengerCreateInfoEXT* debugMessengerCreateInfo
 )
 {
-#ifdef ENABLE_VALIDATION_LAYERS
-    if (!checkValidationLayersSupport(*validationLayers))
-        throw std::runtime_error("validation layers requested, but not available!");
-#endif
+    bool validationLayersPresent = validationLayers->size() > 0;
+
+    if (validationLayersPresent)
+    {
+        if (!checkValidationLayersSupport(*validationLayers))
+            throw std::runtime_error("validation layers requested, but not available!");
+    }
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -41,14 +44,18 @@ VkInstanceCreateInfo getInstanceCreateInfo(
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions->size());
     createInfo.ppEnabledExtensionNames = extensions->data();
 
-#ifdef ENABLE_VALIDATION_LAYERS
+
+    if (validationLayersPresent)
+    {
         createInfo.enabledLayerCount = validationLayers->size();
         createInfo.ppEnabledLayerNames = validationLayers->data();
         createInfo.pNext = debugMessengerCreateInfo;
-#else
+    }
+    else
+    {
         createInfo.enabledLayerCount = 0;
         createInfo.pNext = nullptr;
-#endif
+    }
 
     return createInfo;
 }

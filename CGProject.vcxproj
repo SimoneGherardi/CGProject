@@ -200,14 +200,21 @@
     <ClInclude Include="shader_module.h" />
     <ClInclude Include="std_pipeline.h" />
     <ClInclude Include="surface.h" />
+    <ClInclude Include="surface_factory.h" />
     <ClInclude Include="swap_chains.h" />
     <ClInclude Include="swap_chain_support.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
     <ClInclude Include="viewport.h" />
-    <ClInclude Include="vulkan.h" />
+    <ClInclude Include="engine.h" />
     <ClInclude Include="window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vulkan.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="conventions.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

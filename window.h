@@ -1,13 +1,12 @@
 #pragma once
 #include "defines.h"
 
-extern void initializeWindow(
+extern GLFWwindow* initializeWindow(
     std::string const& title,
     const uint32_t width,
     const uint32_t height,
     void* pointer,
-    const GLFWframebuffersizefun resizeCallback,
-    GLFWwindow* window
+    const GLFWframebuffersizefun resizeCallback
 );
 
 extern void cleanupWindow(GLFWwindow* window);

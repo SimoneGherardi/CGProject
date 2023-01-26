@@ -13,9 +13,9 @@ public:
 class GLFWSurfaceFactory : public SurfaceFactory
 {
 private:
-	GLFWwindow* _Window;
+	GLFWwindow** _Window;
 public:
-	GLFWSurfaceFactory(GLFWwindow* window);
+	GLFWSurfaceFactory(GLFWwindow** window);
 	VkResult CreateSurface(
 		const VkInstance instance,
 		VkSurfaceKHR* surface

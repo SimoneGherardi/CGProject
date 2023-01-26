@@ -1,6 +1,6 @@
 #include "surface_factory.h"
 
-GLFWSurfaceFactory::GLFWSurfaceFactory(GLFWwindow* window)
+GLFWSurfaceFactory::GLFWSurfaceFactory(GLFWwindow** window)
 {
 	_Window = window;
 }
@@ -10,5 +10,5 @@ VkResult GLFWSurfaceFactory::CreateSurface(
 	VkSurfaceKHR* surface
 )
 {
-	return glfwCreateWindowSurface(instance, _Window, nullptr, surface);
+	return glfwCreateWindowSurface(instance, *_Window, nullptr, surface);
 }

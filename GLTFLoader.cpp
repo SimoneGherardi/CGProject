@@ -1,4 +1,8 @@
 #include "GLTFLoader.h"
+#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#define TINYGLTF_IMPLEMENTATION
+#include <tiny_gltf.h>
 
 void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
 {

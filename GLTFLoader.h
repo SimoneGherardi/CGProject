@@ -1,5 +1,4 @@
 #pragma once
-#include <tiny_gltf.h>
 
 #include "Loader3D.h"
 

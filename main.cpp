@@ -14,25 +14,32 @@ GameEngine ENGINE;
 
 void onResize(GLFWwindow* window, int width, int height)
 {
+    TRACESTART;
     auto engine = reinterpret_cast<GameEngine*>(glfwGetWindowUserPointer(window));
     // TODO engine resize
+    TRACEEND;
 }
 
 void initialize()
 {
-    GLFWSurfaceFactory* surfaceFactory = new GLFWSurfaceFactory(Window);
-    initializeWindow(TITLE, WIDTH, HEIGHT, &ENGINE, onResize, Window);
-    ENGINE.Initialize(TITLE, surfaceFactory);
+    TRACESTART;
+    GLFWSurfaceFactory* surfaceFactory = new GLFWSurfaceFactory(&Window);
+    Window = initializeWindow(TITLE, WIDTH, HEIGHT, &ENGINE, onResize);
+    ENGINE.Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
+    TRACEEND;
 }
 
 void cleanup()
 {
+    TRACESTART;
     ENGINE.Cleanup();
     cleanupWindow(Window);
+    TRACEEND;
 }
 
 int main()
 {
+    TRACESTART;
     try
     {
         initialize();
@@ -42,6 +49,7 @@ int main()
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
+    TRACEEND;
 
     return EXIT_SUCCESS;
 }

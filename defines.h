@@ -1,8 +1,14 @@
 #pragma once
 
 #ifdef NDEBUG
+#define LOGDBG(x)
+#define TRACESTART
+#define TRACEEND
 #else
 #define ENABLE_VALIDATION_LAYERS
+#define LOGDBG(x) std::cout << "[" << __FILE__ << "][" << __FUNCTION__ << "][" << __LINE__ << "] " << x << std::endl
+#define TRACESTART LOGDBG("TRACE START")
+#define TRACEEND LOGDBG("TRACE END")
 #endif
 
 #define GLFW_INCLUDE_VULKAN

@@ -11,6 +11,7 @@
 #include "swap_chain_info.h"
 #include "image_views.h"
 #include "render_passes.h"
+#include "command_pool.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -24,10 +25,14 @@ private:
 	VkSurfaceKHR _Surface;
 	VkPhysicalDevice _PhysicalDevice;
 	VkDevice _Device;
+
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
 	SwapchainInfo _Swapchain;
+
 	VkRenderPass _RenderPass;
+
+	VkCommandPool _CommandPool;
 
 	CleanupStack _CleanupStack;
 
@@ -150,6 +155,21 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializeCommandPool() {
+		TRACESTART;
+		auto queueFamilyIndices = findQueueFamilies(_PhysicalDevice, _Surface);
+		initializeCommandPool(
+			_Device,
+			queueFamilyIndices,
+			&_CommandPool
+		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up command pool");
+			cleanupCommandPool(_Device, _CommandPool);
+		});
+		TRACEEND;
+	}
+
 
 public:
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
@@ -164,6 +184,7 @@ public:
 		_InitializeLogicalDevice();
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();
+		_InitializeCommandPool();
 		TRACEEND;
 	}
 

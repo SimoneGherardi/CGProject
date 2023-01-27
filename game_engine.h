@@ -25,6 +25,9 @@ private:
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
 	Swapchain _Swapchain;
+	std::vector<VkImage>* _Images;
+	VkFormat* _Format;
+	VkExtent2D* _Extent;
 
 	CleanupStack _CleanupStack;
 
@@ -131,6 +134,19 @@ private:
 		TRACEEND;
 	}
 
+	// Initialize Swapchain details
+
+	void _InitializeSwapchainDetails() {
+		TRACESTART;
+		*_Images = _Swapchain.GetImages();
+		*_Format = _Swapchain.GetFormat();
+		*_Extent = _Swapchain.GetExtent();
+		TRACEEND;
+	}
+
+
+
+
 public:
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
 	{
@@ -143,6 +159,7 @@ public:
 		_InitializePhysicalDevice();
 		_InitializeLogicalDevice();
 		_InitializeSwapchain(windowSize);
+		_InitializeSwapchainDetails();
 		TRACEEND;
 	}
 

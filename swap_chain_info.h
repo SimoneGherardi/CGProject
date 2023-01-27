@@ -22,9 +22,9 @@ public:
         const VkSurfaceKHR surface
     );
     void Cleanup();
-    VkSwapchainKHR GetSwapchain();
-    std::vector<VkImage> GetImages();
-    std::vector<VkImageView> GetImagesViews();
-    VkFormat GetFormat();
-    VkExtent2D GetExtent();
+    VkSwapchainKHR GetSwapchain() const;
+    std::vector<VkImage> GetImages() const;
+    std::vector<VkImageView> GetImagesViews() const;
+    VkFormat GetFormat() const;
+    VkExtent2D GetExtent() const;
 };

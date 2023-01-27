@@ -177,6 +177,12 @@
     <ClCompile Include="swap_chain_info.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="render_target.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="image.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -291,6 +297,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="swap_chain_info.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="render_target.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="image.h">
       <Filter>Header Files\vulkan</Filter>
     </ClInclude>
   </ItemGroup>

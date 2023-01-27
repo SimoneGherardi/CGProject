@@ -12,6 +12,7 @@
 #include "image_views.h"
 #include "render_passes.h"
 #include "command_pool.h"
+#include "render_target.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -29,6 +30,8 @@ private:
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
 	SwapchainInfo _Swapchain;
+	RenderTarget colorRenderTarget;
+	RenderTarget depthRenderTarget;
 
 	VkRenderPass _RenderPass;
 
@@ -170,6 +173,41 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializeRenderTargets()
+	{
+		TRACESTART;
+		colorRenderTarget.Initialize(
+			_PhysicalDevice,
+			_Device,
+			_Swapchain.GetExtent(),
+			_Swapchain.GetFormat(),
+			1,
+			VK_SAMPLE_COUNT_2_BIT,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_IMAGE_ASPECT_COLOR_BIT
+		);
+		depthRenderTarget.Initialize(
+			_PhysicalDevice,
+			_Device,
+			_Swapchain.GetExtent(),
+			findDepthFormat(_PhysicalDevice),
+			1,
+			VK_SAMPLE_COUNT_2_BIT,
+			VK_IMAGE_TILING_OPTIMAL,
+			VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+			VK_IMAGE_ASPECT_DEPTH_BIT
+		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up render targets");
+			depthRenderTarget.Cleanup();
+			colorRenderTarget.Cleanup();
+		});
+		TRACEEND;
+	}
+
 
 public:
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
@@ -184,7 +222,10 @@ public:
 		_InitializeLogicalDevice();
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();
+		// descriptor set layouts
+		// pipeline
 		_InitializeCommandPool();
+		_InitializeRenderTargets();
 		TRACEEND;
 	}
 

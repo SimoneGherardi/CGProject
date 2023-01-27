@@ -149,6 +149,7 @@
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
+    <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="ioutils.cpp" />
@@ -161,6 +162,7 @@
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
     <ClCompile Include="render_passes.cpp" />
+    <ClCompile Include="render_target.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
     <ClCompile Include="shader_module.cpp" />
@@ -189,6 +191,7 @@
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
+    <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="instance.h" />
     <ClInclude Include="ioutils.h" />
@@ -199,6 +202,7 @@
     <ClInclude Include="PipelineBuilder.h" />
     <ClInclude Include="queue_families.h" />
     <ClInclude Include="render_passes.h" />
+    <ClInclude Include="render_target.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
     <ClInclude Include="shader_module.h" />

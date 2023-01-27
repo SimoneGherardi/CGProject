@@ -36,27 +36,27 @@ void SwapchainInfo::Cleanup()
     cleanupSwapChain(_Device, _Swapchain);
 }
 
-VkSwapchainKHR SwapchainInfo::GetSwapchain()
+VkSwapchainKHR SwapchainInfo::GetSwapchain() const
 {
     return _Swapchain;
 }
 
-std::vector<VkImage> SwapchainInfo::GetImages()
+std::vector<VkImage> SwapchainInfo::GetImages() const
 {
     return _Images;
 }
 
-std::vector<VkImageView> SwapchainInfo::GetImagesViews()
+std::vector<VkImageView> SwapchainInfo::GetImagesViews() const
 {
     return _ImageViews;
 }
 
-VkFormat SwapchainInfo::GetFormat()
+VkFormat SwapchainInfo::GetFormat() const
 {
     return _Format;
 }
 
-VkExtent2D SwapchainInfo::GetExtent()
+VkExtent2D SwapchainInfo::GetExtent() const
 {
     return _Extent;
 }

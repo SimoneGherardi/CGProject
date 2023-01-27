@@ -10,6 +10,7 @@
 #include "logical_device.h"
 #include "swap_chains.h"
 #include "image_views.h"
+#include "render_passes.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -26,11 +27,11 @@ private:
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
 	Swapchain _Swapchain;
-	std::vector<VkImage>* _Images;
-	VkFormat* _Format;
-	VkExtent2D* _Extent;
+	std::vector<VkImage> _Images;
+	VkFormat _Format;
+	VkExtent2D _Extent;
 	std::vector<VkImageView> _ImageViews;
-
+	VkRenderPass _RenderPass;
 
 	CleanupStack _CleanupStack;
 
@@ -141,9 +142,9 @@ private:
 
 	void _InitializeSwapchainDetails() {
 		TRACESTART;
-		*_Images = _Swapchain.GetImages();
-		*_Format = _Swapchain.GetFormat();
-		*_Extent = _Swapchain.GetExtent();
+		_Images = _Swapchain.GetImages();
+		_Format = _Swapchain.GetFormat();
+		_Extent = _Swapchain.GetExtent();
 		TRACEEND;
 	}
 
@@ -153,9 +154,23 @@ private:
 		TRACESTART;
 		initializeImageViews(
 			_Device,
-			*_Images,
-			*_Format,
+			_Images,
+			_Format,
 			&_ImageViews
+		);
+		TRACEEND;
+	}
+
+	// Initialize RenderPass
+
+	void _InitializeRenderPass() {
+		TRACESTART;
+		initializeRenderPass(
+			_PhysicalDevice,
+			_Device,
+			_Format,
+			VK_SAMPLE_COUNT_2_BIT,
+			&_RenderPass
 		);
 		TRACEEND;
 	}
@@ -175,6 +190,7 @@ public:
 		_InitializeSwapchain(windowSize);
 		_InitializeSwapchainDetails();
 		_InitializeImageViews();
+		_InitializeRenderPass();
 		TRACEEND;
 	}
 

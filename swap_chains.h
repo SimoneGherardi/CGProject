@@ -22,27 +22,3 @@ extern void cleanupSwapChain(
     const VkDevice device,
     const VkSwapchainKHR swapChain
 );
-
-class Swapchain
-{
-private:
-    VkDevice _Device;
-    VkSwapchainKHR _Swapchain;
-    std::vector<VkImage> _Images;
-    VkFormat _Format;
-    VkExtent2D _Extent;
-
-public:
-    void Initialize(
-        const int width,
-        const int height,
-        const VkPhysicalDevice physicalDevice,
-        const VkDevice device,
-        const VkSurfaceKHR surface
-    );
-    void Cleanup();
-    VkSwapchainKHR GetSwapchain();
-    std::vector<VkImage> GetImages();
-    VkFormat GetFormat();
-    VkExtent2D GetExtent();
-};

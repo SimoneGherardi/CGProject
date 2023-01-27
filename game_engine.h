@@ -8,7 +8,7 @@
 #include "cleanup_stack.h"
 #include "physical_device.h"
 #include "logical_device.h"
-#include "swap_chains.h"
+#include "swap_chain_info.h"
 #include "image_views.h"
 #include "render_passes.h"
 
@@ -26,11 +26,7 @@ private:
 	VkDevice _Device;
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
-	Swapchain _Swapchain;
-	std::vector<VkImage> _Images;
-	VkFormat _Format;
-	VkExtent2D _Extent;
-	std::vector<VkImageView> _ImageViews;
+	SwapchainInfo _Swapchain;
 	VkRenderPass _RenderPass;
 
 	CleanupStack _CleanupStack;
@@ -138,40 +134,19 @@ private:
 		TRACEEND;
 	}
 
-	// Initialize Swapchain details
-
-	void _InitializeSwapchainDetails() {
-		TRACESTART;
-		_Images = _Swapchain.GetImages();
-		_Format = _Swapchain.GetFormat();
-		_Extent = _Swapchain.GetExtent();
-		TRACEEND;
-	}
-
-	// Initialize Imageviews
-
-	void _InitializeImageViews() {
-		TRACESTART;
-		initializeImageViews(
-			_Device,
-			_Images,
-			_Format,
-			&_ImageViews
-		);
-		TRACEEND;
-	}
-
-	// Initialize RenderPass
-
 	void _InitializeRenderPass() {
 		TRACESTART;
 		initializeRenderPass(
 			_PhysicalDevice,
 			_Device,
-			_Format,
+			_Swapchain.GetFormat(),
 			VK_SAMPLE_COUNT_2_BIT,
 			&_RenderPass
 		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up render pass");
+			cleanupRenderPass(_Device, _RenderPass);
+		});
 		TRACEEND;
 	}
 
@@ -188,8 +163,6 @@ public:
 		_InitializePhysicalDevice();
 		_InitializeLogicalDevice();
 		_InitializeSwapchain(windowSize);
-		_InitializeSwapchainDetails();
-		_InitializeImageViews();
 		_InitializeRenderPass();
 		TRACEEND;
 	}

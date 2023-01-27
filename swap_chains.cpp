@@ -1,58 +1,5 @@
 #include "swap_chains.h"
 
-
-
-void Swapchain::Initialize(
-    const int width,
-    const int height,
-    const VkPhysicalDevice physicalDevice,
-    const VkDevice device,
-    const VkSurfaceKHR surface
-)
-{
-    _Device = device;
-    initializeSwapChain(
-        width, height,
-        physicalDevice,
-        _Device,
-        surface,
-        &_Swapchain,
-        &_Images,
-        &_Format,
-        &_Extent
-    );
-}
-
-void Swapchain::Cleanup()
-{
-    cleanupSwapChain(_Device, _Swapchain);
-}
-
-VkSwapchainKHR Swapchain::GetSwapchain()
-{
-    return _Swapchain;
-}
-
-std::vector<VkImage> Swapchain::GetImages()
-{
-    return _Images;
-}
-
-VkFormat Swapchain::GetFormat()
-{
-    return _Format;
-}
-
-VkExtent2D Swapchain::GetExtent()
-{
-    return _Extent;
-}
-
-
-
-
-
-
 void initializeSwapChain(
     const int width,
     const int height,

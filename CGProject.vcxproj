@@ -167,6 +167,7 @@
     <ClCompile Include="std_pipeline.cpp" />
     <ClCompile Include="surface.cpp" />
     <ClCompile Include="surface_factory.cpp" />
+    <ClCompile Include="swap_chain_info.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
     <ClCompile Include="test.cpp" />
@@ -205,6 +206,7 @@
     <ClInclude Include="surface.h" />
     <ClInclude Include="surface_factory.h" />
     <ClInclude Include="swap_chains.h" />
+    <ClInclude Include="swap_chain_info.h" />
     <ClInclude Include="swap_chain_support.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />

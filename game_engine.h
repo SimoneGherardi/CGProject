@@ -9,6 +9,7 @@
 #include "physical_device.h"
 #include "logical_device.h"
 #include "swap_chains.h"
+#include "image_views.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -28,6 +29,8 @@ private:
 	std::vector<VkImage>* _Images;
 	VkFormat* _Format;
 	VkExtent2D* _Extent;
+	std::vector<VkImageView> _ImageViews;
+
 
 	CleanupStack _CleanupStack;
 
@@ -144,7 +147,18 @@ private:
 		TRACEEND;
 	}
 
+	// Initialize Imageviews
 
+	void _InitializeImageViews() {
+		TRACESTART;
+		initializeImageViews(
+			_Device,
+			*_Images,
+			*_Format,
+			&_ImageViews
+		);
+		TRACEEND;
+	}
 
 
 public:
@@ -160,6 +174,7 @@ public:
 		_InitializeLogicalDevice();
 		_InitializeSwapchain(windowSize);
 		_InitializeSwapchainDetails();
+		_InitializeImageViews();
 		TRACEEND;
 	}
 

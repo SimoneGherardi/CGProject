@@ -7,6 +7,7 @@
 #endif
 #include <tiny_gltf.h>
 #include"asset_types.hpp"
+#include"loader.h"
 
 Texture GLTFLoader::loadTextureFromFile(const char* fileName) {
     Texture TexFromFile;
@@ -19,13 +20,13 @@ Texture GLTFLoader::loadTextureFromFile(const char* fileName) {
 }
 
 
-void GLTFLoader::loadMesh(const char* fName, ModelData& MD, VertexDescriptor& VD) {
+void GLTFLoader::loadMesh(const char* fileName, ModelData& MD, VertexDescriptor& VD) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
 
     if (!loader.LoadASCIIFromFile(&model, &warn, &err,
-        (this->baseBath + fName).c_str())) {
+        (this->baseBath + fileName).c_str())) {
         throw std::runtime_error(warn + err);
     }
 
@@ -120,7 +121,7 @@ void GLTFLoader::loadMesh(const char* fName, ModelData& MD, VertexDescriptor& VD
         }
     }
 
-    std::cout << fName << " (GLTF) -> V: " << MD.vertices.size()
+    std::cout << fileName << " (GLTF) -> V: " << MD.vertices.size()
         << ", I: " << MD.indices.size() << "\n";
     //		throw std::runtime_error("Now We Stop Here!");
 }

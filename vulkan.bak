@@ -50,6 +50,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #include "command_pool.h"
 #include "framebuffers.h"
 #include "command_buffers.h"
+#include "loader.h"
 
 // see above
 #pragma GCC diagnostic pop

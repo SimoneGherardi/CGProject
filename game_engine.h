@@ -13,6 +13,7 @@
 #include "render_passes.h"
 #include "command_pool.h"
 #include "render_target.h"
+#include "framebuffers.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -30,14 +31,18 @@ private:
 	VkQueue _GraphicsQueue;
 	VkQueue _PresentationQueue;
 	SwapchainInfo _Swapchain;
-	RenderTarget colorRenderTarget;
-	RenderTarget depthRenderTarget;
+	RenderTarget _ColorRenderTarget;
+	RenderTarget _DepthRenderTarget;
 
 	VkRenderPass _RenderPass;
 
 	VkCommandPool _CommandPool;
 
+	std::vector<VkFramebuffer> _SwapChainFramebuffers;
+
 	CleanupStack _CleanupStack;
+
+
 
 	const std::vector<const char*> _DeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME
@@ -176,7 +181,7 @@ private:
 	void _InitializeRenderTargets()
 	{
 		TRACESTART;
-		colorRenderTarget.Initialize(
+		_ColorRenderTarget.Initialize(
 			_PhysicalDevice,
 			_Device,
 			_Swapchain.GetExtent(),
@@ -188,7 +193,7 @@ private:
 			VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 			VK_IMAGE_ASPECT_COLOR_BIT
 		);
-		depthRenderTarget.Initialize(
+		_DepthRenderTarget.Initialize(
 			_PhysicalDevice,
 			_Device,
 			_Swapchain.GetExtent(),
@@ -202,12 +207,41 @@ private:
 		);
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up render targets");
-			depthRenderTarget.Cleanup();
-			colorRenderTarget.Cleanup();
+			_DepthRenderTarget.Cleanup();
+			_ColorRenderTarget.Cleanup();
 		});
 		TRACEEND;
 	}
 
+	void _InitializeFrameBuffer() {
+		TRACESTART;
+		_SwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
+		for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
+			std::array<VkImageView, 3> attachments = {
+				_ColorRenderTarget.GetImageView(),
+				_DepthRenderTarget.GetImageView(),
+				_Swapchain.GetImagesViews()[i]
+			};
+
+			initializeFrameBuffer(
+				_Device,
+				static_cast<uint32_t>(attachments.size()),
+				attachments.data(),
+				_RenderPass,
+				_Swapchain.GetExtent(),
+				&_SwapChainFramebuffers[i]
+			);
+
+			_CleanupStack.push([=]() {
+				LOGDBG("cleaning up framebuffer");
+				cleanupFrameBuffer(
+					_Device,
+					_SwapChainFramebuffers[i]
+				);
+			});
+		}
+		TRACEEND;
+	}
 
 public:
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
@@ -226,6 +260,7 @@ public:
 		// pipeline
 		_InitializeCommandPool();
 		_InitializeRenderTargets();
+
 		TRACEEND;
 	}
 

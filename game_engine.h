@@ -260,7 +260,7 @@ public:
 		// pipeline
 		_InitializeCommandPool();
 		_InitializeRenderTargets();
-
+		_InitializeFrameBuffer();
 		TRACEEND;
 	}
 

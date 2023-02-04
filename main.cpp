@@ -2,7 +2,7 @@
     #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
 #endif
 
-#include "game_engine.h"
+#include "rendering_engine.h"
 #include "window.h"
 
 const char* TITLE = "CG Project";
@@ -10,12 +10,12 @@ const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
 GLFWwindow* Window;
-GameEngine ENGINE;
+RenderingEngine ENGINE;
 
 void onResize(GLFWwindow* window, int width, int height)
 {
     TRACESTART;
-    auto engine = reinterpret_cast<GameEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = reinterpret_cast<RenderingEngine*>(glfwGetWindowUserPointer(window));
     // TODO engine resize
     TRACEEND;
 }

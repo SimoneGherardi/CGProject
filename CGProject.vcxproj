@@ -145,6 +145,7 @@
     <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
+    <ClCompile Include="game_engine.cpp" />
     <ClCompile Include="GLTFLoader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
@@ -157,8 +158,10 @@
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="movement.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="physical_device.cpp" />
+    <ClCompile Include="physics.cpp" />
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
     <ClCompile Include="render_passes.cpp" />
@@ -187,6 +190,7 @@
     <ClInclude Include="descriptor_set_layout.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
+    <ClInclude Include="game_engine.h" />
     <ClInclude Include="GLTFLoader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
@@ -199,7 +203,9 @@
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
+    <ClInclude Include="physics.h" />
     <ClInclude Include="PipelineBuilder.h" />
+    <ClInclude Include="movement.h" />
     <ClInclude Include="queue_families.h" />
     <ClInclude Include="render_passes.h" />
     <ClInclude Include="render_target.h" />
@@ -216,7 +222,7 @@
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
     <ClInclude Include="viewport.h" />
-    <ClInclude Include="game_engine.h" />
+    <ClInclude Include="rendering_engine.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>

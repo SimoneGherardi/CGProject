@@ -44,7 +44,8 @@ int main()
     try
     {
         initialize();
-        loadTextureFromFile("resources/models/gltf/untitled.gltf");
+        std::vector<Texture> AllTextures;
+        loadDataFromGLTF("resources/models/gltf/untitled.gltf", AllTextures);
         cleanup();
     }
     catch (const std::exception& e) {

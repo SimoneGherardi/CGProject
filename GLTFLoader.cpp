@@ -5,7 +5,7 @@
 #include <tiny_gltf.h>
 #include "common/asset_types.hpp"
 
-void loadTextureFromFile(const char* fileName) {
+void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -16,17 +16,15 @@ void loadTextureFromFile(const char* fileName) {
         return;
     };
 
-    //Texture* AllTextures = (Texture*)malloc(sizeof(Texture) * model.textures.size());
-    std::vector<Texture> AllTextures;
-
     for (int i = 0; i < model.textures.size(); i++)
     {
-        tinygltf::Image tmp = model.images[model.textures[i].source];
-        AllTextures[i].Width = tmp.width;
-        AllTextures[i].Height = tmp.height;
-        // from models.source get image?
-        // image fields in AllTextures[i]
+        tinygltf::Image TmpImage = model.images[model.textures[i].source];
+        Texture NewTexture((int32_t)TmpImage.width, (int32_t)TmpImage.height);
+        NewTexture.Pixels = (int32_t*)memcpy(NewTexture.Pixels, &TmpImage.image[0], TmpImage.image.size());
+        allTextures.push_back(NewTexture);
     }
+
+    return;
 
 }
 

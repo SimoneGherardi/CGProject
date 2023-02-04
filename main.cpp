@@ -4,6 +4,7 @@
 
 #include "game_engine.h"
 #include "window.h"
+#include "GLTFLoader.h"
 
 const char* TITLE = "CG Project";
 const uint32_t WIDTH = 800;
@@ -43,6 +44,7 @@ int main()
     try
     {
         initialize();
+        loadTextureFromFile("resources/models/gltf/untitled.gltf");
         cleanup();
     }
     catch (const std::exception& e) {

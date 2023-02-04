@@ -3,6 +3,32 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
 #include <tiny_gltf.h>
+#include "common/asset_types.hpp"
+
+void loadTextureFromFile(const char* fileName) {
+    tinygltf::Model model;
+    tinygltf::TinyGLTF loader;
+    std::string warn, err;
+    bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, fileName);
+
+    if (!ret) {
+        std::cerr << err << std::endl;
+        return;
+    };
+
+    //Texture* AllTextures = (Texture*)malloc(sizeof(Texture) * model.textures.size());
+    std::vector<Texture> AllTextures;
+
+    for (int i = 0; i < model.textures.size(); i++)
+    {
+        tinygltf::Image tmp = model.images[model.textures[i].source];
+        AllTextures[i].Width = tmp.width;
+        AllTextures[i].Height = tmp.height;
+        // from models.source get image?
+        // image fields in AllTextures[i]
+    }
+
+}
 
 void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
 {
@@ -110,3 +136,4 @@ void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD
         << ", I: " << MD.indices.size() << "\n";
     //		throw std::runtime_error("Now We Stop Here!");
 }
+

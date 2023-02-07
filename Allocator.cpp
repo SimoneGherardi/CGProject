@@ -28,6 +28,7 @@ StaticBufferAllocator::StaticBufferAllocator(
 {
     VkMemoryRequirements memoryRequirements = {};
     memoryRequirements.alignment = 16; // ?
+    memoryRequirements.memoryTypeBits = 
 
 	VkMemoryAllocateInfo memoryAllocateInfo = {};
 	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;

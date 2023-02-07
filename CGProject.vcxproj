@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
     <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
@@ -178,6 +179,7 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Allocator.h" />
     <ClInclude Include="assets.h" />
     <ClInclude Include="cleanup_stack.h" />
     <ClInclude Include="command_buffers.h" />
@@ -197,6 +199,7 @@
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
+    <ClInclude Include="MemoryReference.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
     <ClInclude Include="PipelineBuilder.h" />

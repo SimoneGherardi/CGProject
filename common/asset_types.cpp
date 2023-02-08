@@ -5,6 +5,7 @@
 Texture::Texture(int32_t width, int32_t height): Width(width), Height(height)
 {
     this->Pixels = (int32_t*)malloc(width * height * sizeof(int32_t));
+    this->Samplers = (int32_t*)malloc(4 * sizeof(int32_t));
 }
 
 Armature::Armature(int32_t boneCount, int32_t vertexCount): BoneCount(boneCount), VertexCount(vertexCount)

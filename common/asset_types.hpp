@@ -8,6 +8,22 @@ struct Texture {
     int32_t Height;
     //format always VK_FORMAT_R8G8B8A8_SRGB
     int32_t* Pixels; //always width * height big
+    // ordered data:
+    // [0]:magFilter [1]:minFilter [2]:wrapS [3]:wrapT
+    int32_t Samplers[4];
+};
+
+struct Material {
+    //int32_t diffuse;
+    //char roughness;
+    //char specular;
+    std::vector<double> baseColorFactor;
+    double specular;
+    double roughness;
+    // baseColorTexture in GLTF
+    Texture* albedo;
+    Texture* metallicRoughnessTexture;
+    Texture* normalMap;
 };
 
 struct Armature {

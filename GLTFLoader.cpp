@@ -5,7 +5,7 @@
 #include <tiny_gltf.h>
 #include "common/asset_types.hpp"
 
-void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures) {
+void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -16,16 +16,27 @@ void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures) {
         return;
     };
 
+    // loading textures
     for (int i = 0; i < model.textures.size(); i++)
     {
         tinygltf::Image TmpImage = model.images[model.textures[i].source];
         Texture NewTexture((int32_t)TmpImage.width, (int32_t)TmpImage.height);
         NewTexture.Pixels = (int32_t*)memcpy(NewTexture.Pixels, &TmpImage.image[0], TmpImage.image.size());
+        tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
+        NewTexture.Samplers[0] = (int32_t)TmpSampler.magFilter;
+        NewTexture.Samplers[1] = (int32_t)TmpSampler.minFilter;
+        NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
+        NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
         allTextures.push_back(NewTexture);
     }
 
+    // loading materials
+    for (int i = 0; i < model.materials.size(); i++) {
+        tinygltf::Material TmpMaterial = model.materials[i];
+        Material NewMaterial;
+        NewMaterial.albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
+    }
     return;
-
 }
 
 void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)

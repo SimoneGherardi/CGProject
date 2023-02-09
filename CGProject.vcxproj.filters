@@ -81,7 +81,7 @@
     <ClCompile Include="test.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="GLTFLoader.cpp">
+    <ClCompile Include="gltf_loader.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
     <ClCompile Include="Loader3D.cpp">
@@ -183,12 +183,15 @@
     <ClCompile Include="image.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="asset_types.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="GLTFLoader.h">
+    <ClInclude Include="gltf_loader.h">
       <Filter>Header Files\3d</Filter>
     </ClInclude>
     <ClInclude Include="Loader3D.h">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="image.h">
       <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_types.hpp">
+      <Filter>Header Files\3d</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -137,6 +137,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="asset_types.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
     <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
@@ -145,7 +146,7 @@
     <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
-    <ClCompile Include="GLTFLoader.cpp" />
+    <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
@@ -179,6 +180,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets.h" />
+    <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />
     <ClInclude Include="command_buffers.h" />
     <ClInclude Include="command_pool.h" />
@@ -187,7 +189,7 @@
     <ClInclude Include="descriptor_set_layout.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
-    <ClInclude Include="GLTFLoader.h" />
+    <ClInclude Include="gltf_loader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />

@@ -1,80 +1,52 @@
-#include<stb_image.h>
+#include "GLTFLoader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
-#ifndef STBI_INCLUDE_STB_IMAGE_H
-    #define STBI_INCLUDE_STB_IMAGE_H
-#endif
 #include <tiny_gltf.h>
 #include "asset_types.hpp"
-#include "loader.h"
-#include "tiny_gltf.h"
 
-/*
-struct CGMaterial {
-    //combination of all properties of all shaders
-    //examples
-    int_32 diffuse;
-    char roughness;
-    char specular;
-    CGTexture* albedo;
-    CGTexture* normalMap;
-}
-
-struct CGMesh {
-    vec3 vertices[VERTEX_COUNT];
-    int_32 indexes[VERTEX_COUNT * 3];
-    vec3 normals[VERTEX_COUNT];
-    vec2 uv[VERTEX_COUNT];
-    //E volendo
-    Armature rig;
-    Animation animations[ANIMATION_COUNT];
-    //Visto che questi ultimi 2 non sono puntatori può essere salvato tutto nello stesso file. Tecnicamente i rig e le animazioni si possono riusare tra modelli ma è utile quasi solamente per personaggi umani e noi ne dovremmo avere al massimo uno
-}
-*/
-
-CGTexture* CGGLTFLoader::loadTextureFromFile(const char* fileName) {
+void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures){
     tinygltf::Model model;
-    std::string err;
-    std::string warn;
-    bool ret = tinygltf::LoadASCIIFromFile(&model, &err, &warn, filename);
+    tinygltf::TinyGLTF loader;
+    std::string warn, err;
+    bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, fileName);
 
     if (!ret) {
         std::cerr << err << std::endl;
-        return 1;
-    }
+        return;
+    };
 
-    CGTexture* AllTextures = (CGTextures*)malloc(sizeof(CGTexture) * model.textures.size());
-
+    // loading textures
     for (int i = 0; i < model.textures.size(); i++)
     {
-        Image tmp = model.images[model.textures[i].source];
-        // from models.source get image?
-        // image fields in AllTextures[i]
+        tinygltf::Image TmpImage = model.images[model.textures[i].source];
+        Texture NewTexture((int32_t)TmpImage.width, (int32_t)TmpImage.height);
+        NewTexture.Pixels = (int32_t*)memcpy(NewTexture.Pixels, &TmpImage.image[0], TmpImage.image.size());
+        tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
+        NewTexture.Samplers[0] = (int32_t)TmpSampler.magFilter;
+        NewTexture.Samplers[1] = (int32_t)TmpSampler.minFilter;
+        NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
+        NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
+        allTextures.push_back(NewTexture);
     }
 
+    // loading materials
+    for (int i = 0; i < model.materials.size(); i++) {
+        tinygltf::Material TmpMaterial = model.materials[i];
+        Material NewMaterial;
+        NewMaterial.albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
+    }
+    return;
 }
 
-/*
-Texture GLTFLoader::loadTextureFromImage(const char* fileName) {
-    Texture TexFromImage;
-    int_32 channels;
-    TexFromImage.pixels = stbi_load(filename, TexFromImage.Width, TexFromImage.Height, &channels, 3);
-    if (!TexFromImage.Pixels) {
-        throw std::runtime_error("Failed to load texture image");
-    };
-    return TexFromImage;
-}
-*/
-
-
-void CGGLTFLoader::loadMesh(const char* fileName, ModelData& MD, VertexDescriptor& VD) {
+void GLTFLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
+{
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
 
     if (!loader.LoadASCIIFromFile(&model, &warn, &err,
-        (this->baseBath + fileName).c_str())) {
+        (this->baseBath + FName).c_str())) {
         throw std::runtime_error(warn + err);
     }
 
@@ -169,7 +141,8 @@ void CGGLTFLoader::loadMesh(const char* fileName, ModelData& MD, VertexDescripto
         }
     }
 
-    std::cout << fileName << " (GLTF) -> V: " << MD.vertices.size()
+    std::cout << FName << " (GLTF) -> V: " << MD.vertices.size()
         << ", I: " << MD.indices.size() << "\n";
     //		throw std::runtime_error("Now We Stop Here!");
 }
+

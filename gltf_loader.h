@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Loader3D.h"
-#include "common/asset_types.hpp"
+#include "asset_types.hpp"
 
 void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures);
 

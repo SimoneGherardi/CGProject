@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdint.h>
+#include <vector>
 
 struct Texture {
     Texture(int32_t width, int32_t height);

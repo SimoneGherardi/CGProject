@@ -7,13 +7,8 @@ Texture::Texture(int32_t width, int32_t height): Width(width), Height(height)
     this->Pixels = (int32_t*)malloc(width * height * sizeof(int32_t));
 }
 
-Armature::Armature(int32_t boneCount, int32_t vertexCount): BoneCount(boneCount), VertexCount(vertexCount)
+Armature::Armature(int32_t boneCount): BoneCount(BoneCount)
 {
-    this->AnimationWeights = (float**)malloc(boneCount * sizeof(float*));
-    for(size_t i = 0; i < boneCount; i++)
-    {
-        this->AnimationWeights[i] = (float*)malloc(vertexCount * sizeof(float));
-    }
     this->InvBindMatrices = (float**)malloc(boneCount * sizeof(float*));
     for(size_t i = 0; i < boneCount; i++)
     {
@@ -33,3 +28,13 @@ Animation::Animation(int32_t frameCount, int32_t boneCount): FrameCount(frameCou
         }
     }
 }
+
+/*
+Model::Model() {
+    this->AnimationWeights = (float**)malloc(boneCount * sizeof(float*));
+    for (size_t i = 0; i < boneCount; i++)
+    {
+        this->AnimationWeights[i] = (float*)malloc(vertexCount * sizeof(float));
+    }
+}
+*/

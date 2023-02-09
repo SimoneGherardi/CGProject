@@ -1,11 +1,13 @@
-#include "GLTFLoader.h"
+#include "gltf_loader.h"
 #define STB_IMAGE_IMPLEMENTATION
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
 #include <tiny_gltf.h>
 #include "asset_types.hpp"
 
-void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures){
+void loadDataFromGLTF(  const char* fileName,
+                        std::vector<Texture>& allTextures,
+                        std::vector<Material>& allMaterials){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -34,8 +36,26 @@ void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures){
     for (int i = 0; i < model.materials.size(); i++) {
         tinygltf::Material TmpMaterial = model.materials[i];
         Material NewMaterial;
-        NewMaterial.albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
+        NewMaterial.Roughness = TmpMaterial.pbrMetallicRoughness.roughnessFactor;
+        NewMaterial.Specular = TmpMaterial.pbrMetallicRoughness.metallicFactor;
+        NewMaterial.BaseColorFactor = TmpMaterial.pbrMetallicRoughness.baseColorFactor;
+        NewMaterial.Albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
+        NewMaterial.NormalMap = &allTextures[TmpMaterial.normalTexture.index];
+        NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
+        NewMaterial.OcclusionTexture = &allTextures[TmpMaterial.occlusionTexture.index];
+        NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
+        allMaterials.push_back(NewMaterial);
     }
+
+    // loading armatures
+    for (int i = 0; i < model.skins.size(); i++) {
+        tinygltf::Skin TmpSkin = model.skins[i];
+        Armature NewArmature(TmpSkin.joints.size());
+    }
+
+
+
+
     return;
 }
 

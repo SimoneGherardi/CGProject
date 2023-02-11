@@ -6,4 +6,5 @@ class MemoryReference
 public:
 	VkBuffer Buffer;
 	uint32_t Offset;
+	VkDeviceMemory Memory;
 };

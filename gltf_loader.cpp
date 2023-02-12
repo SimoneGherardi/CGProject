@@ -5,9 +5,81 @@
 #include <tiny_gltf.h>
 #include "asset_types.hpp"
 
+unsigned int getAccessorComponentsNumber(int type) {
+    switch (type) {
+    case TINYGLTF_TYPE_SCALAR:
+        return 1;
+        break;
+    case TINYGLTF_TYPE_VEC2:
+        return 2;
+        break;
+    case TINYGLTF_TYPE_VEC3:
+        return 3;
+        break;
+    case TINYGLTF_TYPE_VEC4:
+        return 4;
+        break;
+    case TINYGLTF_TYPE_MAT2:
+        return 4;
+        break;
+    case TINYGLTF_TYPE_MAT3:
+        return 9;
+        break;
+    case TINYGLTF_TYPE_MAT4:
+        return 16;
+        break;
+    }
+}
+
+unsigned int getAccessorComponentsDimension(int componentType) {
+    switch (componentType) {
+    case TINYGLTF_COMPONENT_TYPE_BYTE:
+        return sizeof(char);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_BYTE:
+        return sizeof(unsigned char);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_SHORT:
+        return sizeof(short);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_SHORT:
+        return sizeof(unsigned short);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_INT:
+        return sizeof(int);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_UNSIGNED_INT:
+        return sizeof(unsigned int);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_FLOAT:
+        return sizeof(float);
+        break;
+    case TINYGLTF_COMPONENT_TYPE_DOUBLE:
+        return sizeof(double);
+        break;
+    }
+}
+
+char* readAccessor(tinygltf::Model model, int accessorIndex) {
+    tinygltf::Accessor TmpAccessor = model.accessors[accessorIndex];
+    const unsigned int ComponentsNumber = getAccessorComponentsNumber(TmpAccessor.type);                   // number of components of a single data to be copied (scalar=1, vec2=2, mat4=16 ecc)
+    const unsigned int ComponentDimension = getAccessorComponentsDimension(TmpAccessor.componentType);     // dimension of the singular component (int, float ecc)
+    const unsigned int OneElementSize = ComponentDimension * ComponentsNumber;
+    char* RetPointer = (char*)malloc(OneElementSize * TmpAccessor.count);
+    tinygltf::BufferView TmpBufferView = model.bufferViews[TmpAccessor.bufferView];
+    tinygltf::Buffer TmpBuffer = model.buffers[TmpBufferView.buffer];
+    const unsigned int Offset = TmpBufferView.byteOffset + TmpAccessor.byteOffset;
+    for (int i = 0; i < ComponentsNumber; i++) {
+        const unsigned int BufferIndex = Offset + TmpBufferView.byteStride * i;
+        memcpy(RetPointer+i*OneElementSize, TmpBuffer.data.data() + BufferIndex, OneElementSize);
+    }
+    return RetPointer;
+}
+
 void loadDataFromGLTF(  const char* fileName,
                         std::vector<Texture>& allTextures,
-                        std::vector<Material>& allMaterials){
+                        std::vector<Material>& allMaterials,
+                        std::vector<Armature>& allArmatures){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -36,14 +108,36 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.materials.size(); i++) {
         tinygltf::Material TmpMaterial = model.materials[i];
         Material NewMaterial;
+        // define texture indeces
+        int AlbedoIndex = TmpMaterial.pbrMetallicRoughness.baseColorTexture.index;
+        int NormalIndex = TmpMaterial.normalTexture.index;
+        int OcclusionIndex = TmpMaterial.occlusionTexture.index;
+
         NewMaterial.Roughness = TmpMaterial.pbrMetallicRoughness.roughnessFactor;
         NewMaterial.Specular = TmpMaterial.pbrMetallicRoughness.metallicFactor;
         NewMaterial.BaseColorFactor = TmpMaterial.pbrMetallicRoughness.baseColorFactor;
-        NewMaterial.Albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
-        NewMaterial.NormalMap = &allTextures[TmpMaterial.normalTexture.index];
-        NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
-        NewMaterial.OcclusionTexture = &allTextures[TmpMaterial.occlusionTexture.index];
-        NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
+        if (AlbedoIndex != -1) {
+            NewMaterial.Albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
+        } else {
+            NewMaterial.Albedo = NULL;
+        }
+        if (NormalIndex != -1) {
+            NewMaterial.NormalMap = &allTextures[NormalIndex];
+            NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
+        }
+        else {
+            NewMaterial.NormalMap = NULL;
+            NewMaterial.NormalScale = -1;
+        }
+        if (OcclusionIndex != -1) {
+            NewMaterial.OcclusionTexture = &allTextures[OcclusionIndex];
+            NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
+        }
+        else {
+            NewMaterial.OcclusionTexture = NULL;
+            NewMaterial.OcclusionStrength = -1;
+        }
+        
         allMaterials.push_back(NewMaterial);
     }
 
@@ -51,6 +145,11 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
         Armature NewArmature(TmpSkin.joints.size());
+        for (int i = 0; i < NewArmature.BoneCount; i++) {
+            NewArmature.InvBindMatrices = (float**)readAccessor(model, TmpSkin.inverseBindMatrices);
+        }  
+        allArmatures.push_back(NewArmature);
+
     }
 
 

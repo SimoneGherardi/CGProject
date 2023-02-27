@@ -44,3 +44,5 @@ extern uint32_t findMemoryType(
 	VkMemoryPropertyFlags properties,
 	VkDeviceSize minimumHeapSize
 );
+
+VkDeviceMemory AllocateMemorySnippet(VkPhysicalDevice physicalDevice, VkDevice device, int32_t size);

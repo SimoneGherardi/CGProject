@@ -71,8 +71,10 @@ char* readAccessor(tinygltf::Model model, int accessorIndex) {
     const unsigned int Offset = TmpBufferView.byteOffset + TmpAccessor.byteOffset;
     for (int i = 0; i < ComponentsNumber; i++) {
         const unsigned int BufferIndex = Offset + TmpBufferView.byteStride * i;
-        memcpy(RetPointer+i*OneElementSize, TmpBuffer.data.data() + BufferIndex, OneElementSize);
+        memcpy(RetPointer+(i*OneElementSize), TmpBuffer.data.data() + BufferIndex, OneElementSize);
     }
+    float* Test;
+    Test = (float*)RetPointer;
     return RetPointer;
 }
 
@@ -145,9 +147,12 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
         Armature NewArmature(TmpSkin.joints.size());
-        for (int i = 0; i < NewArmature.BoneCount; i++) {
-            NewArmature.InvBindMatrices = (float**)readAccessor(model, TmpSkin.inverseBindMatrices);
-        }  
+        char* TmpAccessorMemory = readAccessor(model, TmpSkin.inverseBindMatrices);
+        //NewArmature.InvBindMatrices = (float**)malloc(NewArmature.BoneCount);
+        for (int j = 0; j < NewArmature.BoneCount; j++) {
+            //NewArmature.InvBindMatrices[i] = (float*)malloc(16 * sizeof(float));
+            memcpy(NewArmature.InvBindMatrices[j], TmpAccessorMemory + (j * 16 * sizeof(float)), 16 * sizeof(float));
+        }
         allArmatures.push_back(NewArmature);
 
     }

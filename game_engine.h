@@ -257,20 +257,13 @@ public:
 		_InitializeLogicalDevice();
 
 		//Test per maso
-		VkDeviceMemory a = AllocateMemorySnippet(this->_PhysicalDevice, this->_Device, 1024);
-		VkBuffer ab;
-		VkBufferCreateInfo bufferCreateInfo = {};
-		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-		bufferCreateInfo.pNext = NULL;
-		bufferCreateInfo.flags = 0;
-		bufferCreateInfo.size = 256;
-		//Qui dipende che devi farci, non dai bit che hai messo prima, ovvio che se dici che lo usi per un transfer e poi di là ci hai messo
-		//che è visibile solo al device serve il giusto. Puoi usarlo per spostare roba all'interno del device, non serve a noi.
-		bufferCreateInfo.usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE; //Per ora non ci serve, dipende se più queue accedono, comunque non serve al nostro esempio
-		bufferCreateInfo.queueFamilyIndexCount = 0;
-		bufferCreateInfo.pQueueFamilyIndices = NULL;
-		VkResult res = vkCreateBuffer(this->_Device, &bufferCreateInfo, NULL, &ab);
+		Allocator *a = new StaticBufferAllocator(this->_PhysicalDevice, this->_Device, 1024);
+		BufferAllocationInfo_T af = {};
+		af.Count = 256;
+		af.ItemSize = 1;
+		af.Usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+		std::vector<BufferAllocationInfo_T> v = { af };
+		a->Allocate(v);
 		//Fine test per maso
 
 		_InitializeSwapchain(windowSize);

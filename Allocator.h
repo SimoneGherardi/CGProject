@@ -14,7 +14,7 @@ class Allocator
 private:
 	std::map<void*, const MemoryReference*> _Allocations;
 public:
-	virtual std::vector<MemoryReference> Allocate(std::vector<std::vector<BufferAllocationInfo_T>> data) = 0;
+	virtual std::vector<MemoryReference> Allocate(std::vector<BufferAllocationInfo_T> data) = 0;
 	// void Update(std::vector<void>);
 	// void Move(void* oldPosition, void* newPosition);
 	// void AddReference(void* position, void* copiedPosition);
@@ -45,4 +45,4 @@ extern uint32_t findMemoryType(
 	VkDeviceSize minimumHeapSize
 );
 
-VkDeviceMemory AllocateMemorySnippet(VkPhysicalDevice physicalDevice, VkDevice device, int32_t size);
+// extern VkDeviceMemory AllocateMemorySnippet(VkPhysicalDevice physicalDevice, VkDevice device, int32_t size);

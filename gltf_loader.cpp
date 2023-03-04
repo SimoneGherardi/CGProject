@@ -60,28 +60,43 @@ unsigned int getAccessorComponentsDimension(int componentType) {
     }
 }
 
-char* readAccessor(tinygltf::Model model, int accessorIndex) {
+char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count) {
+    // returns char* of the data defined by the the accessor of index accessorIndex. count is filled with the number of elements of TmpAccessor.type type contained in the accessor
     tinygltf::Accessor TmpAccessor = model.accessors[accessorIndex];
     const unsigned int ComponentsNumber = getAccessorComponentsNumber(TmpAccessor.type);                   // number of components of a single data to be copied (scalar=1, vec2=2, mat4=16 ecc)
     const unsigned int ComponentDimension = getAccessorComponentsDimension(TmpAccessor.componentType);     // dimension of the singular component (int, float ecc)
     const unsigned int OneElementSize = ComponentDimension * ComponentsNumber;
+    count = TmpAccessor.count;
     char* RetPointer = (char*)malloc(OneElementSize * TmpAccessor.count);
     tinygltf::BufferView TmpBufferView = model.bufferViews[TmpAccessor.bufferView];
     tinygltf::Buffer TmpBuffer = model.buffers[TmpBufferView.buffer];
     const unsigned int Offset = TmpBufferView.byteOffset + TmpAccessor.byteOffset;
-    for (int i = 0; i < ComponentsNumber; i++) {
+    for (int i = 0; i < count; i++) {
         const unsigned int BufferIndex = Offset + TmpBufferView.byteStride * i;
         memcpy(RetPointer+(i*OneElementSize), TmpBuffer.data.data() + BufferIndex, OneElementSize);
     }
-    float* Test;
-    Test = (float*)RetPointer;
     return RetPointer;
+}
+
+void accessorToFloatArrays(char* accessor, int count, int dim,  float** arrays) {
+    // from accessor obtain #count of arrays of dimension dim in arrays
+    for (int j = 0; j < count; j++) {
+        memcpy(arrays[j], accessor + (j * dim * sizeof(float)), dim * sizeof(float));
+    }
+    return;
+}
+
+void accessorToFloatArray(char* accessor, int count, float* values) {
+    // from accessor obtain #count of values in values
+    memcpy(values, accessor, (count * sizeof(float)));
+    return;
 }
 
 void loadDataFromGLTF(  const char* fileName,
                         std::vector<Texture>& allTextures,
                         std::vector<Material>& allMaterials,
-                        std::vector<Armature>& allArmatures){
+                        std::vector<Armature>& allArmatures,
+                        std::vector<Animation>& allAnimations){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -147,14 +162,39 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
         Armature NewArmature(TmpSkin.joints.size());
-        char* TmpAccessorMemory = readAccessor(model, TmpSkin.inverseBindMatrices);
-        //NewArmature.InvBindMatrices = (float**)malloc(NewArmature.BoneCount);
-        for (int j = 0; j < NewArmature.BoneCount; j++) {
-            //NewArmature.InvBindMatrices[i] = (float*)malloc(16 * sizeof(float));
-            memcpy(NewArmature.InvBindMatrices[j], TmpAccessorMemory + (j * 16 * sizeof(float)), 16 * sizeof(float));
-        }
+        int32_t BoneCount = 0;
+        accessorToFloatArrays(readAccessor(model, TmpSkin.inverseBindMatrices, BoneCount), BoneCount, 16, NewArmature.InvBindMatrices);
         allArmatures.push_back(NewArmature);
+    }
 
+    // loading animation
+    for (int i = 0; i < model.animations.size(); i++) {
+        tinygltf::Animation TmpAnimation = model.animations[i];
+        Animation NewAnimation;
+        for (int i = 0; i < TmpAnimation.channels.size(); i++) {
+            AnimationChannel NewAnimationChannel(TmpAnimation.channels[i]);
+            tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[i].sampler];
+            // TmpAccessor needed to evaluate the number of elements in "input" and "output"
+            int32_t KeyFrameCount = 0;
+            // loading "input"
+            char* TmpAccessor = readAccessor(model, TmpAnimation.samplers[TmpAnimation.channels[i].sampler].input, KeyFrameCount);
+            accessorToFloatArray(TmpAccessor, KeyFrameCount, NewAnimationChannel.Input);
+            // loading "interpolation"
+            if (TmpAnimationSampler.interpolation == "STEP") {
+                NewAnimationChannel.Interpolation = INTERPOLATION_STEP;
+            }
+            else if (TmpAnimationSampler.interpolation == "LINEAR") {
+                NewAnimationChannel.Interpolation = INTERPOLATION_LINEAR;
+            }
+            else if (TmpAnimationSampler.interpolation == "CUBICSPLINE") {
+                NewAnimationChannel.Interpolation = INTERPOLATION_CUBICSPLINE;
+            }
+            // loading "output"
+            TmpAccessor = readAccessor(model, TmpAnimation.samplers[TmpAnimation.channels[i].sampler].output, KeyFrameCount);            
+            accessorToFloatArrays(TmpAccessor, KeyFrameCount, NewAnimationChannel.OutputDim, NewAnimationChannel.Output);
+            NewAnimation.Channels.push_back(NewAnimationChannel);
+        }
+        allAnimations.push_back(NewAnimation);
     }
 
 

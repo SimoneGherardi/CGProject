@@ -1,7 +1,17 @@
 #pragma once
 
 #include <stdint.h>
+#include <tiny_gltf.h>
 #include <vector>
+#include <string>
+
+#define PATH_TRANSLATION 0
+#define PATH_ROTATION 1
+#define PATH_SCALE 2
+#define PATH_WEIGHTS 3
+#define INTERPOLATION_STEP 0
+#define INTERPOLATION_LINEAR 1
+#define INTERPOLATION_CUBICSPLINE 2
 
 struct Texture {
     Texture(int32_t width, int32_t height);
@@ -38,6 +48,24 @@ struct Animation {
     int32_t BoneCount;
     float*** JoinMatrices;
 };
+
+
+struct AnimationChannel {
+    AnimationChannel(tinygltf::AnimationChannel gltfChannel);
+    int32_t Node;                   // index of the node to animate
+    int32_t Path;                   // property to animate or weights; 0: translation, 1: rotation, 2: scale, 3: weights 
+    int32_t Sampler;                // sampler index
+    float* Input;                   // instants in ms of the keyframes
+    int32_t Interpolation;          // 0: step, 1: linear, 2: spheric linear, 3: cubic spline
+    int32_t OutputDim;              // depending on the property to animate, it is the dimension of the elements in output: PATH_TRANSLATION: 3, PATH_ROTATION: 4, PATH_SCALE: 3, PATH_WEIGHTS: 1
+    float** Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar
+};
+
+struct Animation {
+    std::vector<AnimationChannel> Channels;
+};
+
+
 
 /*
 struct Mesh {

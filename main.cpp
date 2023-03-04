@@ -47,7 +47,8 @@ int main()
         std::vector<Texture> AllTextures;
         std::vector<Material> AllMaterials;
         std::vector<Armature> AllArmatures;
-        loadDataFromGLTF("resources/models/gltf/untitled.gltf", AllTextures, AllMaterials, AllArmatures);
+        std::vector<Animation> AllAnimations;
+        loadDataFromGLTF("resources/models/gltf/untitled.gltf", AllTextures, AllMaterials, AllArmatures, AllAnimations);
         cleanup();
     }
     catch (const std::exception& e) {

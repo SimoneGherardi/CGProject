@@ -16,17 +16,29 @@ Armature::Armature(int32_t boneCount): BoneCount(boneCount)
     }
 }
 
-Animation::Animation(int32_t frameCount, int32_t boneCount): FrameCount(frameCount), BoneCount(boneCount)
+AnimationChannel::AnimationChannel(tinygltf::AnimationChannel gltfChannel)
 {
-    this->JoinMatrices = (float***)malloc(frameCount * sizeof(float**));
-    for(size_t i = 0; i < frameCount; i++)
-    {
-        this->JoinMatrices[i] = (float**)malloc(boneCount * sizeof(float*));
-        for(size_t j = 0; j < boneCount; j++)
-        {
-            this->JoinMatrices[i][j] = (float*)malloc(16 * sizeof(float));
-        }
+    this->Node = gltfChannel.target_node;
+    if (gltfChannel.target_path == "translation") {
+        this->Path = PATH_TRANSLATION;
+        this->OutputDim = 3;
     }
+    else if (gltfChannel.target_path == "rotation") {
+        this->Path = PATH_ROTATION;
+        this->OutputDim = 4;
+    }
+    else if (gltfChannel.target_path == "scale") {
+        this->Path = PATH_SCALE;
+        this->OutputDim = 3;
+    }
+    else if (gltfChannel.target_path == "weights") {
+        this->Path = PATH_WEIGHTS;
+        this->OutputDim = 1;
+    }
+    this->Sampler = gltfChannel.sampler;
+    this->Input = NULL;
+    this->Interpolation = -1;
+    this->Output = NULL;
 }
 
 /*

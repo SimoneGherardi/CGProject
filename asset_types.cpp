@@ -35,7 +35,6 @@ AnimationChannel::AnimationChannel(tinygltf::AnimationChannel gltfChannel)
         this->Path = PATH_WEIGHTS;
         this->OutputDim = 1;
     }
-    this->Sampler = gltfChannel.sampler;
     this->Input = NULL;
     this->Interpolation = -1;
     this->Output = NULL;

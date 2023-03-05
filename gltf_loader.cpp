@@ -171,13 +171,14 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
         Animation NewAnimation;
-        for (int i = 0; i < TmpAnimation.channels.size(); i++) {
-            AnimationChannel NewAnimationChannel(TmpAnimation.channels[i]);
-            tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[i].sampler];
+        for (int j = 0; j < TmpAnimation.channels.size(); j++) {
+            AnimationChannel NewAnimationChannel(TmpAnimation.channels[j]);
+            tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             int32_t KeyFrameCount = 0;
             // loading "input"
-            char* TmpAccessor = readAccessor(model, TmpAnimation.samplers[TmpAnimation.channels[i].sampler].input, KeyFrameCount);
+            char* TmpAccessor = readAccessor(model, TmpAnimationSampler.input, KeyFrameCount);
+            NewAnimationChannel.Input = (float*)malloc(KeyFrameCount * sizeof(float));
             accessorToFloatArray(TmpAccessor, KeyFrameCount, NewAnimationChannel.Input);
             // loading "interpolation"
             if (TmpAnimationSampler.interpolation == "STEP") {
@@ -190,7 +191,11 @@ void loadDataFromGLTF(  const char* fileName,
                 NewAnimationChannel.Interpolation = INTERPOLATION_CUBICSPLINE;
             }
             // loading "output"
-            TmpAccessor = readAccessor(model, TmpAnimation.samplers[TmpAnimation.channels[i].sampler].output, KeyFrameCount);            
+            TmpAccessor = readAccessor(model, TmpAnimationSampler.output, KeyFrameCount);
+            NewAnimationChannel.Output = (float**)malloc(KeyFrameCount * sizeof(float*));
+            for (int k = 0; k < KeyFrameCount; k++) {
+                NewAnimationChannel.Output[k] = (float*)malloc(NewAnimationChannel.OutputDim * sizeof(float));
+            }
             accessorToFloatArrays(TmpAccessor, KeyFrameCount, NewAnimationChannel.OutputDim, NewAnimationChannel.Output);
             NewAnimation.Channels.push_back(NewAnimationChannel);
         }

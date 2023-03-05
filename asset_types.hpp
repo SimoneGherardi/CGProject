@@ -42,19 +42,12 @@ struct Armature {
     float** InvBindMatrices; // bone index, 16 floats matrix
 };
 
-struct Animation {
-    Animation(int32_t frameCount, int32_t boneCount);
-    int32_t FrameCount;
-    int32_t BoneCount;
-    float*** JoinMatrices;
-};
 
 
 struct AnimationChannel {
     AnimationChannel(tinygltf::AnimationChannel gltfChannel);
     int32_t Node;                   // index of the node to animate
     int32_t Path;                   // property to animate or weights; 0: translation, 1: rotation, 2: scale, 3: weights 
-    int32_t Sampler;                // sampler index
     float* Input;                   // instants in ms of the keyframes
     int32_t Interpolation;          // 0: step, 1: linear, 2: spheric linear, 3: cubic spline
     int32_t OutputDim;              // depending on the property to animate, it is the dimension of the elements in output: PATH_TRANSLATION: 3, PATH_ROTATION: 4, PATH_SCALE: 3, PATH_WEIGHTS: 1

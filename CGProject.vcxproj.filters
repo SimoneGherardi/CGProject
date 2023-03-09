@@ -192,6 +192,15 @@
     <ClCompile Include="Allocator.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
+    <ClCompile Include="StaticBufferAllocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="DynamicBufferAllocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryReference.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -318,6 +327,12 @@
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
     <ClInclude Include="MemoryReference.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="StaticBufferAllocator.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="DynamicBufferAllocator.h">
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
   </ItemGroup>

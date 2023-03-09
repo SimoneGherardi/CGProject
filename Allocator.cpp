@@ -1,6 +1,6 @@
 #include "Allocator.h"
 
-uint32_t findMemoryType(
+const uint32_t findMemoryType(
 	VkPhysicalDevice physicalDevice,
 	VkMemoryPropertyFlags properties,
 	VkDeviceSize minimumHeapSize
@@ -21,35 +21,14 @@ uint32_t findMemoryType(
 	}
 }
 
-StaticBufferAllocator::StaticBufferAllocator(
-	const VkPhysicalDevice physicalDevice,
+const VkDeviceSize allocateBuffer(
+	MemoryReference* reference,
 	const VkDevice device,
-	const VkDeviceSize size
+	const BufferAllocationInfo_T bufferAllocationInfo,
+	const VkDeviceMemory deviceMemory,
+	const VkDeviceSize memoryOffset
 )
 {
-	_Device = device;
-
-	VkMemoryAllocateInfo memoryAllocateInfo = {};
-	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-	memoryAllocateInfo.allocationSize = size;
-	memoryAllocateInfo.pNext = nullptr;
-    memoryAllocateInfo.memoryTypeIndex = findMemoryType(
-        physicalDevice,
-        VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-		size
-    );
-
-	CheckVkResult(vkAllocateMemory(
-		device,
-		&memoryAllocateInfo,
-		nullptr,
-		&_DeviceMemory
-	));
-}
-
-MemoryReference StaticBufferAllocator::_Allocate(const BufferAllocationInfo_T bufferAllocationInfo)
-{
-	MemoryReference reference = {};
 	// populate buffer info
 	VkBufferCreateInfo bufferInfo = {};
 	bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -59,34 +38,43 @@ MemoryReference StaticBufferAllocator::_Allocate(const BufferAllocationInfo_T bu
 	// create buffer
 	CheckVkResult(
 		vkCreateBuffer(
-			_Device,
+			device,
 			&bufferInfo,
 			nullptr,
-			&(reference.Buffer)
+			&(reference->Buffer)
 		)
 	);
 	// bind buffer memory
 	CheckVkResult(
 		vkBindBufferMemory(
-			_Device,
-			reference.Buffer,
-			_DeviceMemory,
-			_MemoryOffset
+			device,
+			reference->Buffer,
+			deviceMemory,
+			memoryOffset
 		)
 	);
 	// set references and update offst
-	reference.Offset = _MemoryOffset;
-	reference.Memory = _DeviceMemory;
-	_MemoryOffset += bufferAllocationInfo.Size();
+	reference->Offset = memoryOffset;
+	reference->Memory = deviceMemory;
+	const VkDeviceSize newMemoryOffset = memoryOffset + bufferAllocationInfo.Size();
+	return newMemoryOffset;
+}
+
+const MemoryReference* Allocator::Allocate(const BufferAllocationInfo_T bufferAllocationInfo)
+{
+	MemoryReference* reference = new MemoryReference();
+	reference->Id = _Counter++;
+	InnerAllocate(reference, bufferAllocationInfo);
+	_Allocations[reference->Id] = reference;
 	return reference;
 }
 
-std::vector<MemoryReference> StaticBufferAllocator::Allocate(std::vector<BufferAllocationInfo_T> data)
+const std::vector<const MemoryReference*> Allocator::Allocate(std::vector<const BufferAllocationInfo_T> data)
 {
-	std::vector<MemoryReference> references;
-	for (BufferAllocationInfo_T &info : data)
+	std::vector<const MemoryReference*> references;
+	for (const BufferAllocationInfo_T& info : data)
 	{
-		auto tmp = _Allocate(info);
+		auto tmp = Allocate(info);
 		references.push_back(tmp);
 	}
 	return references;

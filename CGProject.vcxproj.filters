@@ -192,13 +192,16 @@
     <ClCompile Include="Allocator.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
-    <ClCompile Include="StaticBufferAllocator.cpp">
-      <Filter>Source Files\allocator</Filter>
-    </ClCompile>
-    <ClCompile Include="DynamicBufferAllocator.cpp">
-      <Filter>Source Files\allocator</Filter>
-    </ClCompile>
     <ClCompile Include="MemoryReference.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="ImmediateCommandBuffer.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanStructs.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceMemory.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
   </ItemGroup>
@@ -326,13 +329,16 @@
     <ClInclude Include="Allocator.h">
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
+    <ClInclude Include="ImmediateCommandBuffer.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanStructs.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceMemory.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
     <ClInclude Include="MemoryReference.h">
-      <Filter>Header Files\allocator</Filter>
-    </ClInclude>
-    <ClInclude Include="StaticBufferAllocator.h">
-      <Filter>Header Files\allocator</Filter>
-    </ClInclude>
-    <ClInclude Include="DynamicBufferAllocator.h">
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
   </ItemGroup>

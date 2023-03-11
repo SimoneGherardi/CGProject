@@ -1,15 +1,25 @@
 #pragma once
 #include "defines.h"
 
-typedef size_t MemoryReferenceId;
-
-class MemoryReference
+struct BufferMemoryReference
 {
-private:
-	bool Freed = false;
 public:
-	MemoryReferenceId Id;
-	VkBuffer Buffer;
-	uint32_t Offset;
 	VkDeviceMemory Memory;
+	VkDeviceSize Size;
+	VkDeviceSize Offset;
+	VkBuffer Buffer;
+	VkBufferUsageFlags Usage;
+
+	static BufferMemoryReference Allocate(
+		const VulkanContext context,
+		const VkDeviceMemory deviceMemory,
+		const VkDeviceSize size,
+		const VkBufferUsageFlags usage,
+		const VkDeviceSize memoryOffset
+	);
+
+	static void Cleanup(
+		const VulkanContext context,
+		const BufferMemoryReference reference
+	);
 };

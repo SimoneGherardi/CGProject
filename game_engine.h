@@ -256,15 +256,14 @@ public:
 		_InitializePhysicalDevice();
 		_InitializeLogicalDevice();
 
-		//Test per maso
-		Allocator *a = new StaticBufferAllocator(this->_PhysicalDevice, this->_Device, 1024);
-		BufferAllocationInfo_T af = {};
-		af.Count = 256;
-		af.ItemSize = 1;
-		af.Usage = VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
-		std::vector<BufferAllocationInfo_T> v = { af };
-		a->Allocate(v);
-		//Fine test per maso
+		//Test
+		const uint32_t arr1[] = { 1,2,3,4,5,6,7,8 };
+		const uint32_t arr2[] = { 10,20,30,40 };
+		const VulkanContext context = { _PhysicalDevice, _Device, _GraphicsQueue, _PresentationQueue };
+		Allocator* a = new Allocator(context, 4);
+		auto x = a->AllocateAndSet((void*) arr2, sizeof(uint32_t) * 4, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		auto y = a->AllocateAndSet((void*) arr1, sizeof(uint32_t) * 8, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		//Fine test
 
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();

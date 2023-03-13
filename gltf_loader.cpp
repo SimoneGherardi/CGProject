@@ -102,6 +102,12 @@ void accessorToFloatArray(char* accessor, int count, float* values) {
     return;
 }
 
+void accessorToUnsignedShortScalar(char* accessor, int count, unsigned short* values) {
+    // from accessor obtain #count of values in values
+    memcpy(values, accessor, (count * sizeof(unsigned short)));
+    return;
+}
+
 void loadDataFromGLTF(  const char* fileName,
                         std::vector<Texture>& allTextures,
                         std::vector<Material>& allMaterials,
@@ -148,6 +154,18 @@ void loadDataFromGLTF(  const char* fileName,
             NewPrimitive.PositionsNum = TmpAccessor.count;
             NewPrimitive.Positions = allocateDoubleFloatPointer(NewPrimitive.PositionsNum, 3);
             accessorToFloatArrays(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3, NewPrimitive.Positions);
+            // TmpAccessor for normals of the vertex
+            TmpAccessor = model.accessors[TmpPrimitive.attributes["NORMAL"]];
+            // float VEC3
+            // Numbers of normals is the same as positions
+            NewPrimitive.Normals = allocateDoubleFloatPointer(NewPrimitive.PositionsNum, 3);
+            accessorToFloatArrays(readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3, NewPrimitive.Normals);
+            // TmpAccessor for indeces of the vertex
+            TmpAccessor = model.accessors[TmpPrimitive.indices];
+            // unsigned short SCALAR
+            NewPrimitive.IndicesNum = TmpAccessor.count;
+            NewPrimitive.Indices = (unsigned short*)malloc(NewPrimitive.IndicesNum * sizeof(unsigned short));
+            accessorToUnsignedShortScalar(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum, NewPrimitive.Indices);
             
         }
     }

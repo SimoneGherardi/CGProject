@@ -93,6 +93,7 @@ struct Primitive {
     int32_t MaterialId;
     float** Positions;
     float** Normals;
+    unsigned short* Indices;
 };
 
 

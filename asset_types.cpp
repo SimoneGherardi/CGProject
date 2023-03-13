@@ -1,13 +1,17 @@
 #include "asset_types.hpp"
 #include <stdlib.h>
 
+Node::Node(int32_t id): Id(id)
+{
 
-Texture::Texture(int32_t width, int32_t height): Width(width), Height(height)
+}
+
+Texture::Texture(int32_t id, int32_t width, int32_t height): Id(id), Width(width), Height(height)
 {
     this->Pixels = (int32_t*)malloc(width * height * sizeof(int32_t));
 }
 
-Armature::Armature(int32_t boneCount): BoneCount(boneCount)
+Armature::Armature(int32_t id, int32_t boneCount): Id(id), BoneCount(boneCount)
 {
     this->InvBindMatrices = (float**)malloc(boneCount * sizeof(float*));
     for(size_t i = 0; i < boneCount; i++)
@@ -16,7 +20,17 @@ Armature::Armature(int32_t boneCount): BoneCount(boneCount)
     }
 }
 
-AnimationChannel::AnimationChannel(tinygltf::AnimationChannel gltfChannel)
+Material::Material(int32_t id) : Id(id)
+{
+
+}
+
+Animation::Animation(int32_t id) : Id(id)
+{
+
+}
+
+AnimationChannel::AnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel): Id(id)
 {
     this->Node = gltfChannel.target_node;
     if (gltfChannel.target_path == "translation") {
@@ -38,6 +52,13 @@ AnimationChannel::AnimationChannel(tinygltf::AnimationChannel gltfChannel)
     this->Input = NULL;
     this->Interpolation = -1;
     this->Output = NULL;
+}
+
+Primitive::Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive) : MeshId(meshId), Id(id)
+{
+    this->Id = id;
+    this->MaterialId = primitive.material;
+    
 }
 
 /*

@@ -60,10 +60,20 @@ unsigned int getAccessorComponentsDimension(int componentType) {
     }
 }
 
+float** allocateDoubleFloatPointer(int32_t count, int32_t componentCount) {
+    // allocates memory for a matrix structure
+    // pointer points to #count float*, each of these points to #componentCount float elements
+    float** Pointer = (float**)malloc(count * sizeof(float*));
+    for (int k = 0; k < count; k++) {
+        Pointer[k] = (float*)malloc(componentCount * sizeof(float));
+    }
+    return Pointer;
+}
+
 char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count) {
     // returns char* of the data defined by the the accessor of index accessorIndex. count is filled with the number of elements of TmpAccessor.type type contained in the accessor
     tinygltf::Accessor TmpAccessor = model.accessors[accessorIndex];
-    const unsigned int ComponentsNumber = getAccessorComponentsNumber(TmpAccessor.type);                   // number of components of a single data to be copied (scalar=1, vec2=2, mat4=16 ecc)
+    const unsigned int ComponentsNumber = getAccessorComponentsNumber(TmpAccessor.type);                   // number of components of a single data to be copied (scalar->1, vec2->2, mat4->16 ecc)
     const unsigned int ComponentDimension = getAccessorComponentsDimension(TmpAccessor.componentType);     // dimension of the singular component (int, float ecc)
     const unsigned int OneElementSize = ComponentDimension * ComponentsNumber;
     count = TmpAccessor.count;
@@ -107,11 +117,47 @@ void loadDataFromGLTF(  const char* fileName,
         return;
     };
 
+    // loading nodes
+    for (int i = 0; i < model.nodes.size(); i++) {
+        tinygltf::Node TmpNode = model.nodes[i];
+        tinygltf::Mesh TmpMesh;
+        tinygltf::Skin TmpSkin;
+        Node NewNode(i);
+        NewNode.Id = i;
+        if (TmpNode.mesh != -1)
+        {
+            TmpMesh = model.meshes[TmpNode.mesh];
+        }
+        if (TmpNode.skin != -1)
+        {
+            TmpSkin = model.skins[TmpNode.skin];
+        }
+
+    }
+
+    // loading meshes
+    for (int i = 0; i < model.meshes.size(); i++) {
+        tinygltf::Mesh TmpMesh = model.meshes[i];
+        // loading primitives 
+        for (int j = 0; j < TmpMesh.primitives.size(); j++) {
+            tinygltf::Primitive TmpPrimitive = TmpMesh.primitives[j];
+            Primitive NewPrimitive(i, j, TmpPrimitive);
+            // TmpAccessor for positions of the Vertex
+            tinygltf::Accessor TmpAccessor = model.accessors[TmpPrimitive.attributes["POSITION"]];
+            // float VEC3
+            NewPrimitive.PositionsNum = TmpAccessor.count;
+            NewPrimitive.Positions = allocateDoubleFloatPointer(NewPrimitive.PositionsNum, 3);
+            accessorToFloatArrays(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3, NewPrimitive.Positions);
+            
+        }
+    }
+
     // loading textures
     for (int i = 0; i < model.textures.size(); i++)
     {
         tinygltf::Image TmpImage = model.images[model.textures[i].source];
-        Texture NewTexture((int32_t)TmpImage.width, (int32_t)TmpImage.height);
+        Texture NewTexture(i, (int32_t)TmpImage.width, (int32_t)TmpImage.height);
+        NewTexture.Id = i;
         NewTexture.Pixels = (int32_t*)memcpy(NewTexture.Pixels, &TmpImage.image[0], TmpImage.image.size());
         tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
         NewTexture.Samplers[0] = (int32_t)TmpSampler.magFilter;
@@ -124,7 +170,8 @@ void loadDataFromGLTF(  const char* fileName,
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
         tinygltf::Material TmpMaterial = model.materials[i];
-        Material NewMaterial;
+        Material NewMaterial(i);
+        NewMaterial.Id = i;
         // define texture indeces
         int AlbedoIndex = TmpMaterial.pbrMetallicRoughness.baseColorTexture.index;
         int NormalIndex = TmpMaterial.normalTexture.index;
@@ -161,7 +208,8 @@ void loadDataFromGLTF(  const char* fileName,
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
-        Armature NewArmature(TmpSkin.joints.size());
+        Armature NewArmature(TmpSkin.joints.size(), i);
+
         int32_t BoneCount = 0;
         accessorToFloatArrays(readAccessor(model, TmpSkin.inverseBindMatrices, BoneCount), BoneCount, 16, NewArmature.InvBindMatrices);
         allArmatures.push_back(NewArmature);
@@ -170,9 +218,9 @@ void loadDataFromGLTF(  const char* fileName,
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
-        Animation NewAnimation;
+        Animation NewAnimation(i);
         for (int j = 0; j < TmpAnimation.channels.size(); j++) {
-            AnimationChannel NewAnimationChannel(TmpAnimation.channels[j]);
+            AnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
             tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             int32_t KeyFrameCount = 0;

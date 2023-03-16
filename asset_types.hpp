@@ -27,9 +27,9 @@ struct GLTFModel {
     std::vector<double> Translation;    // length must be 0 or 3
 };
 
-struct Primitive {
+struct GLTFPrimitive {
     // Objects or parts of objects of the same material
-    Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
+    GLTFPrimitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
     int32_t MeshId;
     int32_t Id;
     int32_t PositionsNum;
@@ -41,8 +41,8 @@ struct Primitive {
 };
 
 
-struct Texture {
-    Texture(int32_t id, int32_t width, int32_t height);
+struct GLTFTexture {
+    GLTFTexture(int32_t id, int32_t width, int32_t height);
     int32_t Id;
     int32_t Width;
     int32_t Height;
@@ -53,8 +53,8 @@ struct Texture {
     std::vector<unsigned char> Pixels; // always width * height * 4 byte big
 };
 
-struct Material {
-    Material(int32_t id);
+struct GLTFMaterial {
+    GLTFMaterial(int32_t id);
     int32_t Id;
     double Roughness; // pbrMetallicRoughness.roughnessFactor in GLTF
     double Specular; // pbrMetallicRoughness.metallicFactor in GLTF
@@ -67,15 +67,15 @@ struct Material {
     // no emissive texture
 };
 
-struct Armature {
-    Armature(int32_t id, int32_t boneCount);
+struct GLTFArmature {
+    GLTFArmature(int32_t id, int32_t boneCount);
     int32_t Id;
     int32_t BoneCount;
     std::vector<std::vector<float>> InvBindMatrices; // bone index, 16 floats matrix, dim = BoneCount * 16
 };
 
-struct AnimationChannel {
-    AnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel);
+struct GLTFAnimationChannel {
+    GLTFAnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel);
     int32_t Id;
     int32_t Node;                   // index of the node to animate
     int32_t Path;                   // property to animate or weights; 0: translation, 1: rotation, 2: scale, 3: weights 
@@ -86,9 +86,9 @@ struct AnimationChannel {
     std::vector<std::vector<float>> Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar
 };
 
-struct Animation {
-    Animation(int32_t id);
+struct GLTFAnimation {
+    GLTFAnimation(int32_t id);
     int32_t Id;
-    std::vector<AnimationChannel> Channels;
+    std::vector<int32_t> Channels;
 };
 

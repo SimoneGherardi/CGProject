@@ -44,10 +44,10 @@ int main()
     try
     {
         initialize();
-        std::vector<Texture> AllTextures;
-        std::vector<Material> AllMaterials;
-        std::vector<Armature> AllArmatures;
-        std::vector<Animation> AllAnimations;
+        std::vector<GLTFTexture> AllTextures;
+        std::vector<GLTFMaterial> AllMaterials;
+        std::vector<GLTFArmature> AllArmatures;
+        std::vector<GLTFAnimation> AllAnimations;
         loadDataFromGLTF("resources/models/gltf/untitled.gltf", AllTextures, AllMaterials, AllArmatures, AllAnimations);
         cleanup();
     }

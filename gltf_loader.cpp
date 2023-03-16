@@ -5,6 +5,7 @@
 #include <tiny_gltf.h>
 #include "asset_types.hpp"
 
+
 unsigned int getAccessorComponentsNumber(int type) {
     switch (type) {
     case TINYGLTF_TYPE_SCALAR:
@@ -113,12 +114,15 @@ std::vector<std::vector<float>> dataToFloatVectorVectors(char* data, int count, 
     return vecVec;
 }
 
+char* uShortVectorToData(std::vector<unsigned short>) {
+
+}
 
 void loadDataFromGLTF(  const char* fileName,
-                        std::vector<Texture>& allTextures,
-                        std::vector<Material>& allMaterials,
-                        std::vector<Armature>& allArmatures,
-                        std::vector<Animation>& allAnimations){
+                        std::vector<GLTFTexture>& allTextures,
+                        std::vector<GLTFMaterial>& allMaterials,
+                        std::vector<GLTFArmature>& allArmatures,
+                        std::vector<GLTFAnimation>& allAnimations){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -150,7 +154,7 @@ void loadDataFromGLTF(  const char* fileName,
         // loading primitives 
         for (int j = 0; j < TmpMesh.primitives.size(); j++) {
             tinygltf::Primitive TmpPrimitive = TmpMesh.primitives[j];
-            Primitive NewPrimitive(i, j, TmpPrimitive);
+            GLTFPrimitive NewPrimitive(i, j, TmpPrimitive);
             // TmpAccessor for positions of the Vertex
             tinygltf::Accessor TmpAccessor = model.accessors[TmpPrimitive.attributes["POSITION"]];
             // float VEC3
@@ -173,7 +177,7 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.textures.size(); i++)
     {
         tinygltf::Image TmpImage = model.images[model.textures[i].source];
-        Texture NewTexture(i, (int32_t)TmpImage.width, (int32_t)TmpImage.height);
+        GLTFTexture NewTexture(i, (int32_t)TmpImage.width, (int32_t)TmpImage.height);
         NewTexture.Id = i;
         NewTexture.Pixels = TmpImage.image;
         tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
@@ -182,12 +186,13 @@ void loadDataFromGLTF(  const char* fileName,
         NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
         NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
         allTextures.push_back(NewTexture);
+        
     };
 
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
         tinygltf::Material TmpMaterial = model.materials[i];
-        Material NewMaterial(i);
+        GLTFMaterial NewMaterial(i);
         NewMaterial.Id = i;
         // define texture indeces
         NewMaterial.AlbedoInd = TmpMaterial.pbrMetallicRoughness.baseColorTexture.index;
@@ -215,7 +220,7 @@ void loadDataFromGLTF(  const char* fileName,
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
-        Armature NewArmature(i, TmpSkin.joints.size());
+        GLTFArmature NewArmature(i, TmpSkin.joints.size());
         NewArmature.InvBindMatrices = dataToFloatVectorVectors(readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount), NewArmature.BoneCount, 16);
         allArmatures.push_back(NewArmature);
     };
@@ -223,9 +228,9 @@ void loadDataFromGLTF(  const char* fileName,
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
-        Animation NewAnimation(i);
+        GLTFAnimation NewAnimation(i);
         for (int j = 0; j < TmpAnimation.channels.size(); j++) {
-            AnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
+            GLTFAnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
             tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             // loading "input"
@@ -242,7 +247,7 @@ void loadDataFromGLTF(  const char* fileName,
             }
             // loading "output"
             NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
-            NewAnimation.Channels.push_back(NewAnimationChannel);
+            NewAnimation.Channels.push_back(NewAnimationChannel.Id);
         }
         allAnimations.push_back(NewAnimation);
     };

@@ -13,16 +13,31 @@
 #define INTERPOLATION_LINEAR 1
 #define INTERPOLATION_CUBICSPLINE 2
 
-struct Node {
+struct GLTFModel {
     // Objects composed of all the Primitives parts
-    Node(int32_t id);
+    GLTFModel(int32_t id);
     int32_t Id;
-    std::vector<int> Children;
+    std::vector<int32_t> Children;      // Nodes Id
+    int32_t PrimitivesNum;
+    std::vector<int32_t> Primitives;    // Primitives Id
+    int32_t ArmatureInd;
     // For the animations
     std::vector<double> Rotation;       // length must be 0 or 4
     std::vector<double> Scale;          // length must be 0 or 3
     std::vector<double> Translation;    // length must be 0 or 3
-    //std::vector<Primitive> Primitives;
+};
+
+struct Primitive {
+    // Objects or parts of objects of the same material
+    Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
+    int32_t MeshId;
+    int32_t Id;
+    int32_t PositionsNum;
+    int32_t IndicesNum;
+    int32_t MaterialId;
+    std::vector<std::vector<float>> Positions;
+    std::vector<std::vector<float>> Normals;
+    std::vector<unsigned short> Indices;
 };
 
 
@@ -35,19 +50,19 @@ struct Texture {
     // [0]:magFilter [1]:minFilter [2]:wrapS [3]:wrapT
     int32_t Samplers[4];
     //format always VK_FORMAT_R8G8B8A8_SRGB
-    int32_t* Pixels; // always width * height * 4 byte big
+    std::vector<unsigned char> Pixels; // always width * height * 4 byte big
 };
 
 struct Material {
     Material(int32_t id);
     int32_t Id;
-    double Roughness;
+    double Roughness; // pbrMetallicRoughness.roughnessFactor in GLTF
     double Specular; // pbrMetallicRoughness.metallicFactor in GLTF
     std::vector<double> BaseColorFactor;
-    Texture* Albedo; // baseColorTexture in GLTF
-    Texture* NormalMap; // normalTexture in GLTF
+    int32_t AlbedoInd; // baseColorTexture in GLTF - Texture index
+    int32_t NormalMapInd; // normalTexture in GLTF - Texture index
     double NormalScale;
-    Texture* OcclusionTexture;
+    int32_t OcclusionInd; // Texture index
     double OcclusionStrength;
     // no emissive texture
 };
@@ -56,15 +71,8 @@ struct Armature {
     Armature(int32_t id, int32_t boneCount);
     int32_t Id;
     int32_t BoneCount;
-    float** InvBindMatrices; // bone index, 16 floats matrix
+    std::vector<std::vector<float>> InvBindMatrices; // bone index, 16 floats matrix, dim = BoneCount * 16
 };
-
-struct Mesh {
-    Mesh(int32_t id);
-    int32_t Id;
-};
-
-
 
 struct AnimationChannel {
     AnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel);
@@ -73,8 +81,9 @@ struct AnimationChannel {
     int32_t Path;                   // property to animate or weights; 0: translation, 1: rotation, 2: scale, 3: weights 
     int32_t Interpolation;          // 0: step, 1: linear, 2: spheric linear, 3: cubic spline
     int32_t OutputDim;              // depending on the property to animate, it is the dimension of the elements in output: PATH_TRANSLATION: 3, PATH_ROTATION: 4, PATH_SCALE: 3, PATH_WEIGHTS: 1
-    float* Input;                   // instants in ms of the keyframes
-    float** Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar
+    int32_t KeyFrameCount;
+    std::vector<float> Input;                   // instants in ms of the keyframes
+    std::vector<std::vector<float>> Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar
 };
 
 struct Animation {
@@ -83,33 +92,3 @@ struct Animation {
     std::vector<AnimationChannel> Channels;
 };
 
-struct Primitive {
-    // Objects or parts of objects of the same material
-    Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
-    int32_t MeshId;
-    int32_t Id;
-    int32_t PositionsNum;
-    int32_t IndicesNum;
-    int32_t MaterialId;
-    float** Positions;
-    float** Normals;
-    unsigned short* Indices;
-};
-
-
-
-/*
-struct Mesh {
-    // vertici
-    // indici
-};
-*/
-
-
-/*
-struct Model {
-    // uno per nodo
-    int32_t VertexCount;
-    float** AnimationWeights; //bone index, vertex index
-};
-*/

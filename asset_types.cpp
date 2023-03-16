@@ -1,23 +1,20 @@
 #include "asset_types.hpp"
 #include <stdlib.h>
 
-Node::Node(int32_t id): Id(id)
+GLTFModel::GLTFModel(int32_t id): Id(id)
 {
-
+    this->PrimitivesNum = -1;
+    this->ArmatureInd = -1;
 }
 
 Texture::Texture(int32_t id, int32_t width, int32_t height): Id(id), Width(width), Height(height)
 {
-    this->Pixels = (int32_t*)malloc(width * height * sizeof(int32_t));
+
 }
 
 Armature::Armature(int32_t id, int32_t boneCount): Id(id), BoneCount(boneCount)
 {
-    this->InvBindMatrices = (float**)malloc(boneCount * sizeof(float*));
-    for(size_t i = 0; i < boneCount; i++)
-    {
-        this->InvBindMatrices[i] = (float*)malloc(16 * sizeof(float));
-    }
+    
 }
 
 Material::Material(int32_t id) : Id(id)
@@ -49,9 +46,7 @@ AnimationChannel::AnimationChannel(int32_t id, tinygltf::AnimationChannel gltfCh
         this->Path = PATH_WEIGHTS;
         this->OutputDim = 1;
     }
-    this->Input = NULL;
     this->Interpolation = -1;
-    this->Output = NULL;
 }
 
 Primitive::Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive) : MeshId(meshId), Id(id)
@@ -60,13 +55,3 @@ Primitive::Primitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive) 
     this->MaterialId = primitive.material;
     
 }
-
-/*
-Model::Model() {
-    this->AnimationWeights = (float**)malloc(boneCount * sizeof(float*));
-    for (size_t i = 0; i < boneCount; i++)
-    {
-        this->AnimationWeights[i] = (float*)malloc(vertexCount * sizeof(float));
-    }
-}
-*/

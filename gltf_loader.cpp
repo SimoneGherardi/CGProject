@@ -60,16 +60,6 @@ unsigned int getAccessorComponentsDimension(int componentType) {
     }
 }
 
-float** allocateDoubleFloatPointer(int32_t count, int32_t componentCount) {
-    // allocates memory for a matrix structure
-    // pointer points to #count float*, each of these points to #componentCount float elements
-    float** Pointer = (float**)malloc(count * sizeof(float*));
-    for (int k = 0; k < count; k++) {
-        Pointer[k] = (float*)malloc(componentCount * sizeof(float));
-    }
-    return Pointer;
-}
-
 char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count) {
     // returns char* of the data defined by the the accessor of index accessorIndex. count is filled with the number of elements of TmpAccessor.type type contained in the accessor
     tinygltf::Accessor TmpAccessor = model.accessors[accessorIndex];
@@ -79,6 +69,10 @@ char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count)
     count = TmpAccessor.count;
     char* RetPointer = (char*)malloc(OneElementSize * TmpAccessor.count);
     tinygltf::BufferView TmpBufferView = model.bufferViews[TmpAccessor.bufferView];
+    if (TmpBufferView.byteStride == 0) {
+        // When byteStride is not defined, it is equal to che actual size of the element
+        TmpBufferView.byteStride = OneElementSize;
+    }
     tinygltf::Buffer TmpBuffer = model.buffers[TmpBufferView.buffer];
     const unsigned int Offset = TmpBufferView.byteOffset + TmpAccessor.byteOffset;
     for (int i = 0; i < count; i++) {
@@ -88,25 +82,37 @@ char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count)
     return RetPointer;
 }
 
-void accessorToFloatArrays(char* accessor, int count, int dim,  float** arrays) {
-    // from accessor obtain #count of arrays of dimension dim in arrays
-    for (int j = 0; j < count; j++) {
-        memcpy(arrays[j], accessor + (j * dim * sizeof(float)), dim * sizeof(float));
+std::vector<float> dataToFloatVector(char* data, int dim) {
+    // split data in a single float vector of dimension dim
+    std::vector<float> vec;
+    for (int i = 0; i < dim; i++) {
+        float Tmp;
+        memcpy(&Tmp, data + i*sizeof(float), (sizeof(float)));
+        vec.push_back(Tmp);
     }
-    return;
+    return vec;
 }
 
-void accessorToFloatArray(char* accessor, int count, float* values) {
-    // from accessor obtain #count of values in values
-    memcpy(values, accessor, (count * sizeof(float)));
-    return;
+std::vector<unsigned short> dataToUShortVector(char* data, int dim) {
+    // split data in a single float vector of dimension dim
+    std::vector<unsigned short> vec;
+    for (int i = 0; i < dim; i++) {
+        unsigned short Tmp;
+        memcpy(&Tmp, data + i * sizeof(unsigned short), (sizeof(unsigned short)));
+        vec.push_back(Tmp);
+    }
+    return vec;
 }
 
-void accessorToUnsignedShortScalar(char* accessor, int count, unsigned short* values) {
-    // from accessor obtain #count of values in values
-    memcpy(values, accessor, (count * sizeof(unsigned short)));
-    return;
+std::vector<std::vector<float>> dataToFloatVectorVectors(char* data, int count, int dim) {
+    // split data into a vector of count vectors of dimension dim
+    std::vector<std::vector<float>> vecVec;
+    for (int i = 0; i < count; i++) {
+        vecVec.push_back(dataToFloatVector(data + i * sizeof(float) * dim, dim));
+    }
+    return vecVec;
 }
+
 
 void loadDataFromGLTF(  const char* fileName,
                         std::vector<Texture>& allTextures,
@@ -128,18 +134,15 @@ void loadDataFromGLTF(  const char* fileName,
         tinygltf::Node TmpNode = model.nodes[i];
         tinygltf::Mesh TmpMesh;
         tinygltf::Skin TmpSkin;
-        Node NewNode(i);
-        NewNode.Id = i;
-        if (TmpNode.mesh != -1)
-        {
-            TmpMesh = model.meshes[TmpNode.mesh];
-        }
-        if (TmpNode.skin != -1)
-        {
-            TmpSkin = model.skins[TmpNode.skin];
-        }
-
-    }
+        GLTFModel NewModel(i);
+        NewModel.Id = i;
+        NewModel.PrimitivesNum = TmpMesh.primitives.size();
+        NewModel.ArmatureInd = TmpNode.skin;
+        NewModel.Children = (std::vector<int32_t>)TmpNode.children;
+        NewModel.Rotation = TmpNode.rotation;
+        NewModel.Scale = TmpNode.scale;
+        NewModel.Translation = TmpNode.translation;
+    };
 
     // loading meshes
     for (int i = 0; i < model.meshes.size(); i++) {
@@ -152,23 +155,19 @@ void loadDataFromGLTF(  const char* fileName,
             tinygltf::Accessor TmpAccessor = model.accessors[TmpPrimitive.attributes["POSITION"]];
             // float VEC3
             NewPrimitive.PositionsNum = TmpAccessor.count;
-            NewPrimitive.Positions = allocateDoubleFloatPointer(NewPrimitive.PositionsNum, 3);
-            accessorToFloatArrays(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3, NewPrimitive.Positions);
+            NewPrimitive.Positions = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
             // TmpAccessor for normals of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.attributes["NORMAL"]];
             // float VEC3
             // Numbers of normals is the same as positions
-            NewPrimitive.Normals = allocateDoubleFloatPointer(NewPrimitive.PositionsNum, 3);
-            accessorToFloatArrays(readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3, NewPrimitive.Normals);
+            NewPrimitive.Normals = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
             // TmpAccessor for indeces of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.indices];
             // unsigned short SCALAR
             NewPrimitive.IndicesNum = TmpAccessor.count;
-            NewPrimitive.Indices = (unsigned short*)malloc(NewPrimitive.IndicesNum * sizeof(unsigned short));
-            accessorToUnsignedShortScalar(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum, NewPrimitive.Indices);
-            
-        }
-    }
+            NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
+        };
+    };
 
     // loading textures
     for (int i = 0; i < model.textures.size(); i++)
@@ -176,14 +175,14 @@ void loadDataFromGLTF(  const char* fileName,
         tinygltf::Image TmpImage = model.images[model.textures[i].source];
         Texture NewTexture(i, (int32_t)TmpImage.width, (int32_t)TmpImage.height);
         NewTexture.Id = i;
-        NewTexture.Pixels = (int32_t*)memcpy(NewTexture.Pixels, &TmpImage.image[0], TmpImage.image.size());
+        NewTexture.Pixels = TmpImage.image;
         tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
         NewTexture.Samplers[0] = (int32_t)TmpSampler.magFilter;
         NewTexture.Samplers[1] = (int32_t)TmpSampler.minFilter;
         NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
         NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
         allTextures.push_back(NewTexture);
-    }
+    };
 
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
@@ -191,47 +190,35 @@ void loadDataFromGLTF(  const char* fileName,
         Material NewMaterial(i);
         NewMaterial.Id = i;
         // define texture indeces
-        int AlbedoIndex = TmpMaterial.pbrMetallicRoughness.baseColorTexture.index;
-        int NormalIndex = TmpMaterial.normalTexture.index;
-        int OcclusionIndex = TmpMaterial.occlusionTexture.index;
-
+        NewMaterial.AlbedoInd = TmpMaterial.pbrMetallicRoughness.baseColorTexture.index;
+        NewMaterial.NormalMapInd = TmpMaterial.normalTexture.index;
+        NewMaterial.OcclusionInd = TmpMaterial.occlusionTexture.index;
         NewMaterial.Roughness = TmpMaterial.pbrMetallicRoughness.roughnessFactor;
         NewMaterial.Specular = TmpMaterial.pbrMetallicRoughness.metallicFactor;
         NewMaterial.BaseColorFactor = TmpMaterial.pbrMetallicRoughness.baseColorFactor;
-        if (AlbedoIndex != -1) {
-            NewMaterial.Albedo = &allTextures[TmpMaterial.pbrMetallicRoughness.baseColorTexture.index];
-        } else {
-            NewMaterial.Albedo = NULL;
-        }
-        if (NormalIndex != -1) {
-            NewMaterial.NormalMap = &allTextures[NormalIndex];
+        if (NewMaterial.NormalMapInd != -1) {
             NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
         }
         else {
-            NewMaterial.NormalMap = NULL;
             NewMaterial.NormalScale = -1;
         }
-        if (OcclusionIndex != -1) {
-            NewMaterial.OcclusionTexture = &allTextures[OcclusionIndex];
+
+        if (NewMaterial.OcclusionInd != -1) {
             NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
         }
         else {
-            NewMaterial.OcclusionTexture = NULL;
             NewMaterial.OcclusionStrength = -1;
         }
-        
         allMaterials.push_back(NewMaterial);
-    }
+    };
 
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
-        Armature NewArmature(TmpSkin.joints.size(), i);
-
-        int32_t BoneCount = 0;
-        accessorToFloatArrays(readAccessor(model, TmpSkin.inverseBindMatrices, BoneCount), BoneCount, 16, NewArmature.InvBindMatrices);
+        Armature NewArmature(i, TmpSkin.joints.size());
+        NewArmature.InvBindMatrices = dataToFloatVectorVectors(readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount), NewArmature.BoneCount, 16);
         allArmatures.push_back(NewArmature);
-    }
+    };
 
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
@@ -241,11 +228,8 @@ void loadDataFromGLTF(  const char* fileName,
             AnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
             tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
-            int32_t KeyFrameCount = 0;
             // loading "input"
-            char* TmpAccessor = readAccessor(model, TmpAnimationSampler.input, KeyFrameCount);
-            NewAnimationChannel.Input = (float*)malloc(KeyFrameCount * sizeof(float));
-            accessorToFloatArray(TmpAccessor, KeyFrameCount, NewAnimationChannel.Input);
+            NewAnimationChannel.Input = dataToFloatVector(readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount);
             // loading "interpolation"
             if (TmpAnimationSampler.interpolation == "STEP") {
                 NewAnimationChannel.Interpolation = INTERPOLATION_STEP;
@@ -257,19 +241,11 @@ void loadDataFromGLTF(  const char* fileName,
                 NewAnimationChannel.Interpolation = INTERPOLATION_CUBICSPLINE;
             }
             // loading "output"
-            TmpAccessor = readAccessor(model, TmpAnimationSampler.output, KeyFrameCount);
-            NewAnimationChannel.Output = (float**)malloc(KeyFrameCount * sizeof(float*));
-            for (int k = 0; k < KeyFrameCount; k++) {
-                NewAnimationChannel.Output[k] = (float*)malloc(NewAnimationChannel.OutputDim * sizeof(float));
-            }
-            accessorToFloatArrays(TmpAccessor, KeyFrameCount, NewAnimationChannel.OutputDim, NewAnimationChannel.Output);
+            NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
             NewAnimation.Channels.push_back(NewAnimationChannel);
         }
         allAnimations.push_back(NewAnimation);
-    }
-
-
-
+    };
 
     return;
 }

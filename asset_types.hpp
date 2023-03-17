@@ -56,13 +56,13 @@ struct GLTFTexture {
 struct GLTFMaterial {
     GLTFMaterial(int32_t id);
     int32_t Id;
-    double Roughness; // pbrMetallicRoughness.roughnessFactor in GLTF
-    double Specular; // pbrMetallicRoughness.metallicFactor in GLTF
+    double Roughness;                       // pbrMetallicRoughness.roughnessFactor in GLTF
+    double Specular;                        // pbrMetallicRoughness.metallicFactor in GLTF
     std::vector<double> BaseColorFactor;
-    int32_t AlbedoInd; // baseColorTexture in GLTF - Texture index
-    int32_t NormalMapInd; // normalTexture in GLTF - Texture index
+    int32_t AlbedoInd;                      // baseColorTexture in GLTF - Texture index
+    int32_t NormalMapInd;                   // normalTexture in GLTF - Texture index
     double NormalScale;
-    int32_t OcclusionInd; // Texture index
+    int32_t OcclusionInd;                   // Texture index
     double OcclusionStrength;
     // no emissive texture
 };

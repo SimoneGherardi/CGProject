@@ -3,7 +3,7 @@
 #include "Loader3D.h"
 #include "asset_types.hpp"
 
-void loadDataFromGLTF(const char* fileName, std::vector<Texture>& allTextures, std::vector<Material>& allMaterial, std::vector<Armature>& allArmatures, std::vector<Animation>& allAnimations);
+void loadDataFromGLTF(const char* fileName, std::vector<GLTFTexture>& allTextures, std::vector<GLTFMaterial>& allMaterial, std::vector<GLTFArmature>& allArmatures, std::vector<GLTFAnimation>& allAnimations);
 
 class GLTFLoader : Loader3D
 {

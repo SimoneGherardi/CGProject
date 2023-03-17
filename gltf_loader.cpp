@@ -3,6 +3,9 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #define TINYGLTF_IMPLEMENTATION
 #include <tiny_gltf.h>
+#include <sys/stat.h>
+#include <filesystem>
+#include <errno.h>
 #include "asset_types.hpp"
 
 
@@ -114,8 +117,59 @@ std::vector<std::vector<float>> dataToFloatVectorVectors(char* data, int count, 
     return vecVec;
 }
 
-char* uShortVectorToData(std::vector<unsigned short>) {
+std::string createGLTFDirectories(std::string dirname) {
+    struct stat sb;
+    std::string DirectoryName = "./resources/models/gltf/" + dirname;
+    int ret = stat(DirectoryName.c_str(), &sb);
+    int tmp = errno;
+    if (stat(DirectoryName.c_str(), &sb) != 0)
+    {
+        //tmp = CreateDirectory((LPCWSTR)DirectoryName.c_str(), NULL);
+        std::filesystem::create_directory(DirectoryName);
+    };
+    return DirectoryName;
+}
 
+void saveToFile(std::string filename, char* toFile, int32_t size) {
+    std::ofstream Outfile;
+    Outfile.open(filename, std::ios::binary | std::ios::out);
+    Outfile.write(toFile, size);
+    Outfile.close();
+    return;
+}
+
+
+void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, char* invBM){
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFArmature");
+    // Evaluate dimension of object
+    int32_t GLTFArmatureSize = (sizeof(int32_t) * 2) + (armature.BoneCount * 4 * sizeof(float));
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(armature.Id) + ".armature";
+    char* ToFile = (char*)malloc(GLTFArmatureSize);
+    memcpy(ToFile, &armature.Id, sizeof(int32_t));
+    memcpy(ToFile + sizeof(int32_t), &armature.BoneCount, sizeof(int32_t));
+    memcpy(ToFile + (2 * sizeof(int32_t)), invBM, armature.BoneCount * sizeof(float) * 4);
+    saveToFile(BinaryFileName, ToFile, GLTFArmatureSize);
+}
+
+void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFTexture");
+    // Evaluate dimension of object
+    int32_t GLTFTextureSize = sizeof(int32_t) * 7 + (texture.Pixels.size() * sizeof(unsigned char));
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(texture.Id) + ".texture";
+    char* ToFile = (char*)malloc(GLTFTextureSize);
+    memcpy(ToFile, &texture.Id, sizeof(int32_t));
+    memcpy(ToFile + (1 * sizeof(int32_t)), &texture.Width, sizeof(int32_t));
+    memcpy(ToFile + (2 * sizeof(int32_t)), &texture.Height, sizeof(int32_t));
+    for (int32_t i = 0; i < 4; i++) {
+        memcpy(ToFile + ((3 + i) * sizeof(int32_t)), texture.Samplers + i, sizeof(int32_t));
+    }
+    // The elements of a vector are stored contiguously 
+    memcpy(ToFile + ((7) * sizeof(int32_t)), reinterpret_cast<char*> (&texture.Pixels[0]), sizeof(int32_t));
+    saveToFile(BinaryFileName, ToFile, GLTFTextureSize);
 }
 
 void loadDataFromGLTF(  const char* fileName,
@@ -185,6 +239,8 @@ void loadDataFromGLTF(  const char* fileName,
         NewTexture.Samplers[1] = (int32_t)TmpSampler.minFilter;
         NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
         NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
+
+        saveGLTFTextureToBinFile(model.textures[i].name, NewTexture);
         allTextures.push_back(NewTexture);
         
     };
@@ -214,6 +270,8 @@ void loadDataFromGLTF(  const char* fileName,
         else {
             NewMaterial.OcclusionStrength = -1;
         }
+
+
         allMaterials.push_back(NewMaterial);
     };
 
@@ -221,7 +279,10 @@ void loadDataFromGLTF(  const char* fileName,
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
         GLTFArmature NewArmature(i, TmpSkin.joints.size());
-        NewArmature.InvBindMatrices = dataToFloatVectorVectors(readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount), NewArmature.BoneCount, 16);
+        char* AccessorData = readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount);
+        NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
+        
+        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature, AccessorData);
         allArmatures.push_back(NewArmature);
     };
 

@@ -297,6 +297,57 @@ void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
     saveToFile(BinaryFileName, ToFile, GLTFPrimitiveSize);
 }
 
+
+void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFModel");
+    // Evaluate dimension of object
+    int32_t GLTFModelSize = (sizeof(int32_t) * (4 + model.PrimitivesNum + model.ChildrenNum)) + (10 * sizeof(double));
+    if (model.ChildrenNum != 0) {
+        GLTFModelSize += model.ChildrenNum * sizeof(int32_t);
+    }
+    if (model.PrimitivesNum == 0) {
+        GLTFModelSize += model.PrimitivesNum * sizeof(int32_t);
+    }
+
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(model.Id) + ".model";
+    char* ToFile = (char*)malloc(GLTFModelSize);
+    int32_t Offset = 0;
+    // int32_t Id;
+    memcpy(ToFile, &model.Id, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t ChildrenNum;
+    memcpy(ToFile, &model.ChildrenNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t PrimitivesNum;
+    memcpy(ToFile + Offset, &model.PrimitivesNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t ArmatureInd;
+    memcpy(ToFile + Offset, &model.ArmatureInd, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    if (model.ChildrenNum != 0) {
+        // std::vector<int32_t> Children;
+        memcpy(ToFile + Offset, (reinterpret_cast<int32_t*> (&model.Children[0])), model.ChildrenNum * sizeof(int32_t));
+        Offset += model.ChildrenNum * sizeof(int32_t);
+    }
+    if (model.PrimitivesNum != 0) {
+        // std::vector<int32_t> Primitives;
+        memcpy(ToFile + Offset, (reinterpret_cast<int32_t*> (&model.Primitives[0])), model.PrimitivesNum * sizeof(int32_t));
+        Offset += model.PrimitivesNum * sizeof(int32_t);
+    }
+    // std::vector<double> Rotation
+    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), 4 * sizeof(double));
+    Offset += 4 * sizeof(double);
+    // std::vector<double> Scale
+    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Scale[0])), 3 * sizeof(double));
+    Offset += 3 * sizeof(double);
+    // std::vector<double> Translation
+    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Translation[0])), 3 * sizeof(double));
+    
+    saveToFile(BinaryFileName, ToFile, GLTFModelSize);
+}
+
 void loadDataFromGLTF(  const char* fileName,
                         std::vector<GLTFTexture>& allTextures,
                         std::vector<GLTFMaterial>& allMaterials,
@@ -315,23 +366,30 @@ void loadDataFromGLTF(  const char* fileName,
     // loading nodes
     for (int i = 0; i < model.nodes.size(); i++) {
         tinygltf::Node TmpNode = model.nodes[i];
-        tinygltf::Mesh TmpMesh;
-        tinygltf::Skin TmpSkin;
-        GLTFModel NewModel(i);
-        NewModel.Id = i;
-        NewModel.PrimitivesNum = TmpMesh.primitives.size();
-        NewModel.ArmatureInd = TmpNode.skin;
-        NewModel.Children = (std::vector<int32_t>)TmpNode.children;
-        NewModel.Rotation = TmpNode.rotation;
-        NewModel.Scale = TmpNode.scale;
-        NewModel.Translation = TmpNode.translation;
+
+        if (TmpNode.mesh != -1) {
+            tinygltf::Mesh TmpMesh = model.meshes[TmpNode.mesh];
+            tinygltf::Skin TmpSkin;
+            GLTFModel NewModel(i);
+            NewModel.Id = i;
+            NewModel.PrimitivesNum = TmpMesh.primitives.size();
+            NewModel.ChildrenNum = TmpNode.children.size();
+            NewModel.ArmatureInd = TmpNode.skin;
+            NewModel.Children = (std::vector<int32_t>)TmpNode.children;
+            NewModel.Rotation = TmpNode.rotation;
+            NewModel.Scale = TmpNode.scale;
+            NewModel.Translation = TmpNode.translation;
+            for (int j = 0; j < TmpMesh.primitives.size(); j++) {
+                NewModel.Primitives.push_back(j);
+            }
+            // saveGLTFModelToBinFile(TmpNode.name, NewModel);
+        }
+        
     };
 
-    // loading models
+    // loading primitives
     for (int i = 0; i < model.meshes.size(); i++) {
         tinygltf::Mesh TmpMesh = model.meshes[i];
-        GLTFModel NewModel(i);
-
         // loading primitives 
         for (int j = 0; j < TmpMesh.primitives.size(); j++) {
             tinygltf::Primitive TmpPrimitive = TmpMesh.primitives[j];

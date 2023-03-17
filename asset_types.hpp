@@ -17,10 +17,11 @@ struct GLTFModel {
     // Objects composed of all the Primitives parts
     GLTFModel(int32_t id);
     int32_t Id;
-    std::vector<int32_t> Children;      // Nodes Id
+    int32_t ChildrenNum;
     int32_t PrimitivesNum;
-    std::vector<int32_t> Primitives;    // Primitives Id
     int32_t ArmatureInd;
+    std::vector<int32_t> Children;      // Nodes Id
+    std::vector<int32_t> Primitives;    // Primitives Id
     // For the animations
     std::vector<double> Rotation;       // length must be 0 or 4
     std::vector<double> Scale;          // length must be 0 or 3

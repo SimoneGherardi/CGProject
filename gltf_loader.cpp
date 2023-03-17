@@ -233,24 +233,68 @@ void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId
     // Save to file
     std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(animationId) + "_" + std::to_string(animationChannel.Id) + ".animationChannel";
     char* ToFile = (char*)malloc(GLTFAnimationChannelSize);
+    int32_t Offset = 0;
     // int32_t Id;
     memcpy(ToFile, &animationChannel.Id, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t Node;
-    memcpy(ToFile + (1 * sizeof(int32_t)), &animationChannel.Node, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.Node, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t Path;
-    memcpy(ToFile + (2 * sizeof(int32_t)), &animationChannel.Path, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.Path, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t Interpolation;
-    memcpy(ToFile + (3 * sizeof(int32_t)), &animationChannel.Interpolation, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.Interpolation, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t OutputDim;
-    memcpy(ToFile + (4 * sizeof(int32_t)), &animationChannel.OutputDim, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.OutputDim, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t KeyFrameCount;
-    memcpy(ToFile + (5 * sizeof(int32_t)), &animationChannel.KeyFrameCount, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.KeyFrameCount, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // std::vector<float> Input;
-    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<float*> (&animationChannel.Input[0])), animationChannel.Input.size() * sizeof(float));
+    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Input[0])), animationChannel.Input.size() * sizeof(float));
+    Offset += animationChannel.Input.size() * sizeof(float);
     // std::vector<std::vector<float>> Output;
-    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<float*> (&animationChannel.Output[0])), (animationChannel.OutputDim * animationChannel.Output.size()) * sizeof(float));
+    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Output[0])), (animationChannel.OutputDim * animationChannel.Output.size()) * sizeof(float));
 
     saveToFile(BinaryFileName, ToFile, GLTFAnimationChannelSize);
+}
+
+void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFPrimitive");
+    // Evaluate dimension of object
+    int32_t GLTFPrimitiveSize = (sizeof(int32_t) * 5) + (sizeof(float) * 3 * (primitive.PositionsNum * 2)) + (sizeof(unsigned short) * primitive.IndicesNum);
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(primitive.Id) + ".primitive";
+    char* ToFile = (char*)malloc(GLTFPrimitiveSize);
+    int32_t Offset = 0;
+    // int32_t MeshId;
+    memcpy(ToFile, &primitive.MeshId, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Id;
+    memcpy(ToFile, &primitive.Id, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t PositionsNum;
+    memcpy(ToFile + Offset, &primitive.PositionsNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t IndicesNum;
+    memcpy(ToFile + Offset, &primitive.IndicesNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t MaterialId;
+    memcpy(ToFile + Offset, &primitive.MaterialId, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // std::vector<std::vector<float>> Positions;
+    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&primitive.Positions[0])), primitive.PositionsNum * 3 * sizeof(float));
+    Offset += primitive.PositionsNum * 3 * sizeof(float);
+    // std::vector<std::vector<float>> Normals;
+    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&primitive.Normals[0])), primitive.PositionsNum * 3 * sizeof(float));
+    Offset += primitive.PositionsNum * 3 * sizeof(float);
+    // std::vector<unsigned short> Indices;
+    memcpy(ToFile + Offset, (reinterpret_cast<unsigned short*> (&primitive.Indices[0])), primitive.IndicesNum * sizeof(unsigned short));
+
+    saveToFile(BinaryFileName, ToFile, GLTFPrimitiveSize);
 }
 
 void loadDataFromGLTF(  const char* fileName,
@@ -283,9 +327,11 @@ void loadDataFromGLTF(  const char* fileName,
         NewModel.Translation = TmpNode.translation;
     };
 
-    // loading meshes
+    // loading models
     for (int i = 0; i < model.meshes.size(); i++) {
         tinygltf::Mesh TmpMesh = model.meshes[i];
+        GLTFModel NewModel(i);
+
         // loading primitives 
         for (int j = 0; j < TmpMesh.primitives.size(); j++) {
             tinygltf::Primitive TmpPrimitive = TmpMesh.primitives[j];
@@ -305,6 +351,8 @@ void loadDataFromGLTF(  const char* fileName,
             // unsigned short SCALAR
             NewPrimitive.IndicesNum = TmpAccessor.count;
             NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
+        
+            saveGLTFPrimitiveToBinFile(TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };
 

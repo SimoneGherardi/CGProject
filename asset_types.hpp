@@ -40,7 +40,6 @@ struct GLTFPrimitive {
     std::vector<unsigned short> Indices;
 };
 
-
 struct GLTFTexture {
     GLTFTexture(int32_t id, int32_t width, int32_t height);
     int32_t Id;

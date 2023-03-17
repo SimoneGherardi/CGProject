@@ -147,8 +147,11 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, char
     // Save to file
     std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(armature.Id) + ".armature";
     char* ToFile = (char*)malloc(GLTFArmatureSize);
+    // int32_t Id;
     memcpy(ToFile, &armature.Id, sizeof(int32_t));
+    // int32_t BoneCount;
     memcpy(ToFile + sizeof(int32_t), &armature.BoneCount, sizeof(int32_t));
+    // std::vector<std::vector<float>> InvBindMatrices;
     memcpy(ToFile + (2 * sizeof(int32_t)), invBM, armature.BoneCount * sizeof(float) * 4);
     saveToFile(BinaryFileName, ToFile, GLTFArmatureSize);
 }
@@ -157,19 +160,52 @@ void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFTexture");
     // Evaluate dimension of object
-    int32_t GLTFTextureSize = sizeof(int32_t) * 7 + (texture.Pixels.size() * sizeof(unsigned char));
+    int32_t GLTFTextureSize = (sizeof(int32_t) * 7) + (texture.Pixels.size() * sizeof(unsigned char));
     // Save to file
     std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(texture.Id) + ".texture";
     char* ToFile = (char*)malloc(GLTFTextureSize);
+    // int32_t Id;
     memcpy(ToFile, &texture.Id, sizeof(int32_t));
+    // int32_t Width;
     memcpy(ToFile + (1 * sizeof(int32_t)), &texture.Width, sizeof(int32_t));
+    // int32_t Height;
     memcpy(ToFile + (2 * sizeof(int32_t)), &texture.Height, sizeof(int32_t));
-    for (int32_t i = 0; i < 4; i++) {
-        memcpy(ToFile + ((3 + i) * sizeof(int32_t)), texture.Samplers + i, sizeof(int32_t));
-    }
+    // int32_t Samplers[4];
+    memcpy(ToFile + (3) * sizeof(int32_t), texture.Samplers, 4 * sizeof(int32_t));
     // The elements of a vector are stored contiguously 
     memcpy(ToFile + ((7) * sizeof(int32_t)), reinterpret_cast<char*> (&texture.Pixels[0]), sizeof(int32_t));
     saveToFile(BinaryFileName, ToFile, GLTFTextureSize);
+}
+
+void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFMaterial");
+    // Evaluate dimension of object
+    int32_t GLTFMaterialSize = (sizeof(int32_t) * 4) + (sizeof(double) * 8);
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(material.Id) + ".material";
+    char* ToFile = (char*)malloc(GLTFMaterialSize);
+    // int32_t Id;
+    memcpy(ToFile, &material.Id, sizeof(int32_t));
+    // double Roughness;
+    memcpy(ToFile + (1 * sizeof(int32_t)), &material.Roughness, sizeof(double));
+    // double Specular;
+    memcpy(ToFile + (1 * sizeof(int32_t)) + (1 * sizeof(double)), &material.Specular, sizeof(double));
+    // std::vector<double> BaseColorFactor;
+    // The elements of a vector are stored contiguously 
+    memcpy(ToFile + (1 * sizeof(int32_t)) + (2 * sizeof(double)), (reinterpret_cast<double*> (&material.BaseColorFactor[0])), material.BaseColorFactor.size() * sizeof(double));
+    // int32_t AlbedoInd;
+    memcpy(ToFile + (1 * sizeof(int32_t)) + (6 * sizeof(double)), &material.AlbedoInd, sizeof(int32_t));
+    // int32_t NormalMapInd;
+    memcpy(ToFile + (2 * sizeof(int32_t)) + (6 * sizeof(double)), &material.NormalMapInd, sizeof(int32_t));
+    // double NormalScale;
+    memcpy(ToFile + (3 * sizeof(int32_t)) + (6 * sizeof(double)), &material.NormalScale, sizeof(double));
+    // int32_t OcclusionInd;
+    memcpy(ToFile + (3 * sizeof(int32_t)) + (7 * sizeof(double)), &material.OcclusionInd, sizeof(int32_t));
+    // double OcclusionStrength;
+    memcpy(ToFile + (4 * sizeof(int32_t)) + (7 * sizeof(double)), &material.OcclusionStrength, sizeof(double));
+    
+    saveToFile(BinaryFileName, ToFile, GLTFMaterialSize);
 }
 
 void loadDataFromGLTF(  const char* fileName,
@@ -272,6 +308,7 @@ void loadDataFromGLTF(  const char* fileName,
         }
 
 
+        saveGLTFMaterialToBinFile(TmpMaterial.name, NewMaterial);
         allMaterials.push_back(NewMaterial);
     };
 

@@ -139,7 +139,7 @@ void saveToFile(std::string filename, char* toFile, int32_t size) {
 }
 
 
-void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, char* invBM){
+void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature){
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFArmature");
     // Evaluate dimension of object
@@ -152,7 +152,7 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, char
     // int32_t BoneCount;
     memcpy(ToFile + sizeof(int32_t), &armature.BoneCount, sizeof(int32_t));
     // std::vector<std::vector<float>> InvBindMatrices;
-    memcpy(ToFile + (2 * sizeof(int32_t)), invBM, armature.BoneCount * sizeof(float) * 4);
+    memcpy(ToFile + (2 * sizeof(int32_t)), (reinterpret_cast<float*> (&armature.InvBindMatrices[0])), armature.BoneCount * sizeof(float) * 4);
     saveToFile(BinaryFileName, ToFile, GLTFArmatureSize);
 }
 
@@ -206,6 +206,51 @@ void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
     memcpy(ToFile + (4 * sizeof(int32_t)) + (7 * sizeof(double)), &material.OcclusionStrength, sizeof(double));
     
     saveToFile(BinaryFileName, ToFile, GLTFMaterialSize);
+}
+
+void saveGLTFAnimationToBinFile(std::string filename, GLTFAnimation animation) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFAnimation");
+    // Evaluate dimension of object
+    int32_t GLTFAnimationSize = sizeof(int32_t) * (1 + animation.Channels.size());
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(animation.Id) + ".animation";
+    char* ToFile = (char*)malloc(GLTFAnimationSize);
+    // int32_t Id;
+    memcpy(ToFile, &animation.Id, sizeof(int32_t));
+    // std::vector<int32_t> Channels;
+    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<int32_t*> (&animation.Channels[0])), animation.Channels.size() * sizeof(int32_t));
+    
+
+    saveToFile(BinaryFileName, ToFile, GLTFAnimationSize);
+}
+
+void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId, GLTFAnimationChannel animationChannel) {
+    // Create directory
+    std::string DirName = createGLTFDirectories("GLTFAnimationChannel");
+    // Evaluate dimension of object
+    int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 6) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
+    // Save to file
+    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(animationId) + "_" + std::to_string(animationChannel.Id) + ".animationChannel";
+    char* ToFile = (char*)malloc(GLTFAnimationChannelSize);
+    // int32_t Id;
+    memcpy(ToFile, &animationChannel.Id, sizeof(int32_t));
+    // int32_t Node;
+    memcpy(ToFile + (1 * sizeof(int32_t)), &animationChannel.Node, sizeof(int32_t));
+    // int32_t Path;
+    memcpy(ToFile + (2 * sizeof(int32_t)), &animationChannel.Path, sizeof(int32_t));
+    // int32_t Interpolation;
+    memcpy(ToFile + (3 * sizeof(int32_t)), &animationChannel.Interpolation, sizeof(int32_t));
+    // int32_t OutputDim;
+    memcpy(ToFile + (4 * sizeof(int32_t)), &animationChannel.OutputDim, sizeof(int32_t));
+    // int32_t KeyFrameCount;
+    memcpy(ToFile + (5 * sizeof(int32_t)), &animationChannel.KeyFrameCount, sizeof(int32_t));
+    // std::vector<float> Input;
+    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<float*> (&animationChannel.Input[0])), animationChannel.Input.size() * sizeof(float));
+    // std::vector<std::vector<float>> Output;
+    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<float*> (&animationChannel.Output[0])), (animationChannel.OutputDim * animationChannel.Output.size()) * sizeof(float));
+
+    saveToFile(BinaryFileName, ToFile, GLTFAnimationChannelSize);
 }
 
 void loadDataFromGLTF(  const char* fileName,
@@ -319,7 +364,7 @@ void loadDataFromGLTF(  const char* fileName,
         char* AccessorData = readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount);
         NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
         
-        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature, AccessorData);
+        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature);
         allArmatures.push_back(NewArmature);
     };
 
@@ -345,8 +390,12 @@ void loadDataFromGLTF(  const char* fileName,
             }
             // loading "output"
             NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
+            
+            saveGLTFAnimationChannelToBinFile("AnimationChannel", NewAnimation.Id, NewAnimationChannel);
             NewAnimation.Channels.push_back(NewAnimationChannel.Id);
         }
+        
+        saveGLTFAnimationToBinFile(TmpAnimation.name, NewAnimation);
         allAnimations.push_back(NewAnimation);
     };
 

@@ -145,7 +145,8 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature){
     // Evaluate dimension of object
     int32_t GLTFArmatureSize = (sizeof(int32_t) * 2) + (armature.BoneCount * 4 * sizeof(float));
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(armature.Id) + ".armature";
+    // #ArmatureId_ArmatureName.armature
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(armature.Id) + "_" + filename + ".armature";
     char* ToFile = (char*)malloc(GLTFArmatureSize);
     // int32_t Id;
     memcpy(ToFile, &armature.Id, sizeof(int32_t));
@@ -162,7 +163,8 @@ void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
     // Evaluate dimension of object
     int32_t GLTFTextureSize = (sizeof(int32_t) * 7) + (texture.Pixels.size() * sizeof(unsigned char));
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(texture.Id) + ".texture";
+    // #TextureId_TextureName.texture
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(texture.Id) + "_" + filename + ".texture";
     char* ToFile = (char*)malloc(GLTFTextureSize);
     // int32_t Id;
     memcpy(ToFile, &texture.Id, sizeof(int32_t));
@@ -183,7 +185,8 @@ void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
     // Evaluate dimension of object
     int32_t GLTFMaterialSize = (sizeof(int32_t) * 4) + (sizeof(double) * 8);
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(material.Id) + ".material";
+    // #MaterialId_MaterialName.material
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(material.Id) + "_" + filename + ".material";
     char* ToFile = (char*)malloc(GLTFMaterialSize);
     // int32_t Id;
     memcpy(ToFile, &material.Id, sizeof(int32_t));
@@ -214,7 +217,8 @@ void saveGLTFAnimationToBinFile(std::string filename, GLTFAnimation animation) {
     // Evaluate dimension of object
     int32_t GLTFAnimationSize = sizeof(int32_t) * (1 + animation.Channels.size());
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(animation.Id) + ".animation";
+    // #AnimationId_"AnimationName".animation
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animation.Id) + "_" + filename + ".animation";
     char* ToFile = (char*)malloc(GLTFAnimationSize);
     // int32_t Id;
     memcpy(ToFile, &animation.Id, sizeof(int32_t));
@@ -231,7 +235,8 @@ void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId
     // Evaluate dimension of object
     int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 6) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(animationId) + "_" + std::to_string(animationChannel.Id) + ".animationChannel";
+    // #AnimationId_#AnimationChannelId_"AnimationChannel".animationChannel
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animationId) + "_" + "0000" + std::to_string(animationChannel.Id) + "_" + filename + ".animationChannel";
     char* ToFile = (char*)malloc(GLTFAnimationChannelSize);
     int32_t Offset = 0;
     // int32_t Id;
@@ -267,7 +272,8 @@ void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
     // Evaluate dimension of object
     int32_t GLTFPrimitiveSize = (sizeof(int32_t) * 5) + (sizeof(float) * 3 * (primitive.PositionsNum * 2)) + (sizeof(unsigned short) * primitive.IndicesNum);
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(primitive.Id) + ".primitive";
+    // #PrimitiveId_MeshName_"primitive".primitive
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(primitive.Id) + "_" + filename + ".primitive";
     char* ToFile = (char*)malloc(GLTFPrimitiveSize);
     int32_t Offset = 0;
     // int32_t MeshId;
@@ -297,21 +303,30 @@ void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
     saveToFile(BinaryFileName, ToFile, GLTFPrimitiveSize);
 }
 
-
 void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFModel");
     // Evaluate dimension of object
-    int32_t GLTFModelSize = (sizeof(int32_t) * (4 + model.PrimitivesNum + model.ChildrenNum)) + (10 * sizeof(double));
+    int32_t GLTFModelSize = (sizeof(int32_t) * 4);
     if (model.ChildrenNum != 0) {
         GLTFModelSize += model.ChildrenNum * sizeof(int32_t);
     }
-    if (model.PrimitivesNum == 0) {
+    if (model.PrimitivesNum != 0) {
         GLTFModelSize += model.PrimitivesNum * sizeof(int32_t);
+    }
+    if (model.Rotation.size() != 0) {
+        GLTFModelSize += 4 * sizeof(double);
+    }
+    if (model.Scale.size() != 0) {
+        GLTFModelSize += 3 * sizeof(double);
+    }
+    if (model.Translation.size() != 0) {
+        GLTFModelSize += 3 * sizeof(double);
     }
 
     // Save to file
-    std::string BinaryFileName = DirName + "/" + filename + "_" + std::to_string(model.Id) + ".model";
+    // #ModelId_GLTFNodeName.model
+    std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(model.Id) + "_" + filename + ".model";
     char* ToFile = (char*)malloc(GLTFModelSize);
     int32_t Offset = 0;
     // int32_t Id;
@@ -336,14 +351,23 @@ void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
         memcpy(ToFile + Offset, (reinterpret_cast<int32_t*> (&model.Primitives[0])), model.PrimitivesNum * sizeof(int32_t));
         Offset += model.PrimitivesNum * sizeof(int32_t);
     }
-    // std::vector<double> Rotation
-    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), 4 * sizeof(double));
-    Offset += 4 * sizeof(double);
-    // std::vector<double> Scale
-    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Scale[0])), 3 * sizeof(double));
-    Offset += 3 * sizeof(double);
-    // std::vector<double> Translation
-    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Translation[0])), 3 * sizeof(double));
+    if (model.Rotation.size() != 0) {
+        // std::vector<double> Rotation
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), 4 * sizeof(double));
+        Offset += 4 * sizeof(double);
+    }
+    if (model.Scale.size() != 0) {
+        // std::vector<double> Scale
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Scale[0])), 3 * sizeof(double));
+        Offset += 3 * sizeof(double);
+    }
+    if (model.Translation.size() != 0) {
+        // std::vector<double> Translation
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Translation[0])), 3 * sizeof(double));
+        Offset += 3 * sizeof(double);
+    }
+    
+    
     
     saveToFile(BinaryFileName, ToFile, GLTFModelSize);
 }
@@ -366,25 +390,27 @@ void loadDataFromGLTF(  const char* fileName,
     // loading nodes
     for (int i = 0; i < model.nodes.size(); i++) {
         tinygltf::Node TmpNode = model.nodes[i];
-
+        tinygltf::Skin TmpSkin;
+        GLTFModel NewModel(i);
+        NewModel.Id = i;
+        
+        NewModel.ChildrenNum = TmpNode.children.size();
+        NewModel.ArmatureInd = TmpNode.skin;
+        NewModel.Children = (std::vector<int32_t>)TmpNode.children;
+        NewModel.Rotation = TmpNode.rotation;
+        NewModel.Scale = TmpNode.scale;
+        NewModel.Translation = TmpNode.translation;
         if (TmpNode.mesh != -1) {
             tinygltf::Mesh TmpMesh = model.meshes[TmpNode.mesh];
-            tinygltf::Skin TmpSkin;
-            GLTFModel NewModel(i);
-            NewModel.Id = i;
             NewModel.PrimitivesNum = TmpMesh.primitives.size();
-            NewModel.ChildrenNum = TmpNode.children.size();
-            NewModel.ArmatureInd = TmpNode.skin;
-            NewModel.Children = (std::vector<int32_t>)TmpNode.children;
-            NewModel.Rotation = TmpNode.rotation;
-            NewModel.Scale = TmpNode.scale;
-            NewModel.Translation = TmpNode.translation;
             for (int j = 0; j < TmpMesh.primitives.size(); j++) {
                 NewModel.Primitives.push_back(j);
             }
-            // saveGLTFModelToBinFile(TmpNode.name, NewModel);
+        } else {
+            NewModel.PrimitivesNum = 0;
         }
         
+        saveGLTFModelToBinFile(TmpNode.name, NewModel);
     };
 
     // loading primitives

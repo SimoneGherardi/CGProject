@@ -203,6 +203,7 @@
     </ClCompile>
     <ClCompile Include="DeviceMemory.cpp">
       <Filter>Source Files\allocator</Filter>
+    </ClCompile>
     <ClCompile Include="asset_types.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
@@ -342,6 +343,7 @@
     </ClInclude>
     <ClInclude Include="MemoryReference.h">
       <Filter>Header Files\allocator</Filter>
+    </ClInclude>
     <ClInclude Include="asset_types.hpp">
       <Filter>Header Files\3d</Filter>
     </ClInclude>

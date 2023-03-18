@@ -14,3 +14,8 @@ VkShaderModule initializeShaderModule(const VkDevice device, const std::vector<c
 
 	return shaderModule;
 }
+
+void cleanupShaderModule(const VkDevice device, const VkShaderModule module)
+{
+	vkDestroyShaderModule(device, module, nullptr);
+}

@@ -4,7 +4,8 @@
 #include "queue_families.h"
 
 extern void initializeSwapChain(
-    GLFWwindow* window,
+    const int width,
+    const int height,
     const VkPhysicalDevice physicalDevice,
     const VkDevice device,
     const VkSurfaceKHR surface,
@@ -13,6 +14,11 @@ extern void initializeSwapChain(
     VkFormat* swapChainImageFormat,
     VkExtent2D* swapChainExtent
 );
-extern VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats);
-extern VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
-extern VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window);
+extern VkSurfaceFormatKHR getSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats);
+extern VkPresentModeKHR getSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes);
+extern VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, const int width, const int height);
+
+extern void cleanupSwapChain(
+    const VkDevice device,
+    const VkSwapchainKHR swapChain
+);

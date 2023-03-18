@@ -42,7 +42,7 @@ extern VkPipelineMultisampleStateCreateInfo getPipelineMultisampleStateCreateInf
 );
 
 extern VkPipelineColorBlendAttachmentState getPipelineColorBlendAttachmentState(
-	const VkColorComponentFlags colorComponents,
+	const VkColorComponentFlags colorWriteMask,
 	const VkBool32 blendEnable,
 	const VkBlendFactor srcColorBlendFactor,
 	const VkBlendFactor dstColorBlendFactor,
@@ -61,4 +61,16 @@ extern VkPipelineColorBlendStateCreateInfo getPipelineColorBlendStateCreateInfo(
 	const float blendConstant1,
 	const float blendConstant2,
 	const float blendConstant3
+);
+
+extern VkPipelineDepthStencilStateCreateInfo getPipelineDepthStencilStateCreateInfo(
+	const VkBool32 depthTestEnable,
+	const VkBool32 depthWriteEnable,
+	const VkCompareOp depthCompareOp,
+	const VkBool32 depthBoundsTestEnable,
+	const float minDepthBounds,
+	const float maxDepthBounds,
+	const VkBool32 stencilTestEnable,
+	const VkStencilOpState front,
+	const VkStencilOpState back
 );

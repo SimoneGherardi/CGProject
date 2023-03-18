@@ -1,0 +1,16 @@
+nome files:   snake_case
+tipi:         PascalCase
+
+ppubbliche:   PascalCase
+pprivate:     _PascalCase
+
+mpubblici:    PascalCase
+mprivati:     _PascalCase
+
+parametri:    camelCase
+locali:       camelCase
+
+preproc:      CASE_ASDF
+parentesi:    Allman
+&:            non permesso
+const:        consigliato

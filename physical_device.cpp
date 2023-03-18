@@ -54,15 +54,12 @@ float getPhysicalDeviceSuitability(const VkPhysicalDevice device, const VkSurfac
 
     score += deviceProperties.limits.maxImageDimension2D;
 
-    if (!isDeviceSuitable(device, surface, deviceExtensions))
-    {
-        return 0;
-    }
-    if (!deviceFeatures.geometryShader) {
-        return 0;
-    }
+    bool requiredFeatures =
+        isDeviceSuitable(device, surface, deviceExtensions) &&
+        deviceFeatures.geometryShader
+    ;
 
-    return score;
+    return requiredFeatures ? score : 0;
 }
 
 bool isDeviceSuitable(const VkPhysicalDevice device, const VkSurfaceKHR surface, const Extensions deviceExtensions)

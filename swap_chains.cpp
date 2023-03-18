@@ -1,7 +1,8 @@
 #include "swap_chains.h"
 
 void initializeSwapChain(
-    GLFWwindow* window,
+    const int width,
+    const int height,
     const VkPhysicalDevice physicalDevice,
     const VkDevice device,
     const VkSurfaceKHR surface,
@@ -11,10 +12,11 @@ void initializeSwapChain(
     VkExtent2D* swapChainExtent
 )
 {
+
     SwapChainSupportDetails swapChainSupport = querySwapChainSupport(physicalDevice, surface);
-    VkSurfaceFormatKHR surfaceFormat = chooseSwapSurfaceFormat(swapChainSupport.formats);
-    VkPresentModeKHR presentMode = chooseSwapPresentMode(swapChainSupport.presentModes);
-    VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities, window);
+    VkSurfaceFormatKHR surfaceFormat = getSwapSurfaceFormat(swapChainSupport.formats);
+    VkPresentModeKHR presentMode = getSwapPresentMode(swapChainSupport.presentModes);
+    VkExtent2D extent = getSwapExtent(swapChainSupport.capabilities, width, height);
 
     uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
 
@@ -34,8 +36,11 @@ void initializeSwapChain(
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
-    uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(),
-                                     indices.presentFamily.value() };
+    uint32_t queueFamilyIndices[] = {
+        indices.graphicsFamily.value(),
+        indices.presentFamily.value()
+    };
+
     if (indices.graphicsFamily != indices.presentFamily) {
         createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         createInfo.queueFamilyIndexCount = 2;
@@ -53,9 +58,22 @@ void initializeSwapChain(
     createInfo.clipped = VK_TRUE;
     createInfo.oldSwapchain = VK_NULL_HANDLE;
 
+    /*
+    VkImageFormatProperties formatProps;
+    vkGetPhysicalDeviceImageFormatProperties(
+        physicalDevice,
+        surfaceFormat.format,
+        VK_IMAGE_TYPE_2D,
+        VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+        0,
+        &formatProps
+    );
+    */
+
     VkResult result = vkCreateSwapchainKHR(device, &createInfo, nullptr, swapChain);
     if (result != VK_SUCCESS) {
-        // TODO LOGGING PrintVkError(result);
+        PrintVkError(result);
         throw std::runtime_error("failed to create swap chain!");
     }
 
@@ -70,7 +88,7 @@ void initializeSwapChain(
 
 
 
-VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats)
+VkSurfaceFormatKHR getSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> availableFormats)
 {
     for (const auto& availableFormat : availableFormats) {
         if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
@@ -82,7 +100,7 @@ VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>
     return availableFormats[0];
 }
 
-VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
+VkPresentModeKHR getSwapPresentMode(const std::vector<VkPresentModeKHR> availablePresentModes)
 {
     for (const auto& availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
@@ -92,15 +110,12 @@ VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR> avail
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
-VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwindow* window)
+VkExtent2D getSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, const int width, const int height)
 {
     if (capabilities.currentExtent.width != UINT32_MAX) {
         return capabilities.currentExtent;
     }
     else {
-        int width, height;
-        glfwGetFramebufferSize(window, &width, &height);
-
         VkExtent2D actualExtent = {
             static_cast<uint32_t>(width),
             static_cast<uint32_t>(height)
@@ -111,4 +126,13 @@ VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR capabilities, GLFWwin
             std::min(capabilities.maxImageExtent.height, actualExtent.height));
         return actualExtent;
     }
+}
+
+
+void cleanupSwapChain(
+    const VkDevice device,
+    const VkSwapchainKHR swapChain
+)
+{
+    vkDestroySwapchainKHR(device, swapChain, nullptr);
 }

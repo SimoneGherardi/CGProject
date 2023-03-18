@@ -70,7 +70,13 @@ VkSubpassDependency getSubpassDependency(
     return dependency;
 }
 
-void initializeRenderPass(const VkPhysicalDevice physicalDevice, const VkDevice device, const VkFormat format, const VkSampleCountFlagBits msaaSamples, VkRenderPass* renderPass) {
+void initializeRenderPass(
+    const VkPhysicalDevice physicalDevice,
+    const VkDevice device,
+    const VkFormat format,
+    const VkSampleCountFlagBits msaaSamples,
+    VkRenderPass* renderPass
+) {
     auto colorAttachmentResolve = getAttachmentDescription(
         format,
         VK_SAMPLE_COUNT_1_BIT,
@@ -158,7 +164,7 @@ void initializeRenderPass(const VkPhysicalDevice physicalDevice, const VkDevice 
         renderPass
     );
     if (result != VK_SUCCESS) {
-        // TODO LOGGING PrintVkError(result);
+        PrintVkError(result);
         throw std::runtime_error("failed to create render pass!");
     }
 }

@@ -1,20 +1,4 @@
-#define GLFW_INCLUDE_VULKAN
-
-#include <GLFW/glfw3.h>
-#include <cstdint> // Necessary for uint32_t
-#include <limits> // Necessary for std::numeric_limits
-#include <algorithm> // Necessary for std::clamp
-
-#include <iostream>
-#include <stdexcept>
-#include <cstdlib>
-#include <vector>
-#include <optional>
-#include <set>
-#include <array>
-#include <map>
-#include <unordered_map>
-#include <fstream>
+#include "defines.h"
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEFAULT_ALIGNED_GENTYPES
@@ -49,6 +33,24 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 #define TINYGLTF_NO_INCLUDE_STB_IMAGE
 #include <tiny_gltf.h>
 #include "ThreeDimensionalDataTypes.h"
+#include "debug_messenger.h"
+#include "queue_families.h"
+#include "swap_chain_support.h"
+#include "window.h"
+#include "surface.h"
+#include "physical_device.h"
+#include "logical_device.h"
+#include "swap_chains.h"
+#include "image_views.h"
+#include "render_passes.h"
+#include "descriptor_set_layout.h"
+#include "graphics_pipeline_layout.h"
+#include "std_pipeline.h"
+#include "instance.h"
+#include "command_pool.h"
+#include "framebuffers.h"
+#include "command_buffers.h"
+#include "loader.h"
 
 // see above
 #pragma GCC diagnostic pop
@@ -71,13 +73,6 @@ const std::vector<const char*> deviceExtensions = {
     #endif
 };
 
-#ifdef NDEBUG
-    const bool enableValidationLayers = false;
-    const bool Verbose = false;
-#else
-    const bool enableValidationLayers = true;
-    const bool Verbose = true;
-#endif
 
 // Total number of objects pipelines
 #define OBJ_PIPELINES 2
@@ -176,95 +171,6 @@ struct GlobalUniformBufferObject {
     alignas(16) glm::vec4 selector;
 };
 
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
-    const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo,
-    const VkAllocationCallbacks* pAllocator,
-    VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT)
-        vkGetInstanceProcAddr(instance,
-            "vkCreateDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
-    }
-    else {
-        return VK_ERROR_EXTENSION_NOT_PRESENT;
-    }
-}
-
-void DestroyDebugUtilsMessengerEXT(VkInstance instance,
-    VkDebugUtilsMessengerEXT debugMessenger,
-    const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)
-        vkGetInstanceProcAddr(instance,
-            "vkDestroyDebugUtilsMessengerEXT");
-    if (func != nullptr) {
-        func(instance, debugMessenger, pAllocator);
-    }
-}
-
-struct QueueFamilyIndices {
-    std::optional<uint32_t> graphicsFamily;
-    std::optional<uint32_t> presentFamily;
-
-    bool isComplete() {
-        return graphicsFamily.has_value() &&
-            presentFamily.has_value();
-    }
-};
-
-struct SwapChainSupportDetails {
-    VkSurfaceCapabilitiesKHR capabilities;
-    std::vector<VkSurfaceFormatKHR> formats;
-    std::vector<VkPresentModeKHR> presentModes;
-};
-
-
-struct errorcode {
-    VkResult resultCode;
-    std::string meaning;
-}
-ErrorCodes[] = {
-    { VK_NOT_READY, "Not Ready" },
-    { VK_TIMEOUT, "Timeout" },
-    { VK_EVENT_SET, "Event Set" },
-    { VK_EVENT_RESET, "Event Reset" },
-    { VK_INCOMPLETE, "Incomplete" },
-    { VK_ERROR_OUT_OF_HOST_MEMORY, "Out of Host Memory" },
-    { VK_ERROR_OUT_OF_DEVICE_MEMORY, "Out of Device Memory" },
-    { VK_ERROR_INITIALIZATION_FAILED, "Initialization Failed" },
-    { VK_ERROR_DEVICE_LOST, "Device Lost" },
-    { VK_ERROR_MEMORY_MAP_FAILED, "Memory Map Failed" },
-    { VK_ERROR_LAYER_NOT_PRESENT, "Layer Not Present" },
-    { VK_ERROR_EXTENSION_NOT_PRESENT, "Extension Not Present" },
-    { VK_ERROR_FEATURE_NOT_PRESENT, "Feature Not Present" },
-    { VK_ERROR_INCOMPATIBLE_DRIVER, "Incompatible Driver" },
-    { VK_ERROR_TOO_MANY_OBJECTS, "Too Many Objects" },
-    { VK_ERROR_FORMAT_NOT_SUPPORTED, "Format Not Supported" },
-    { VK_ERROR_FRAGMENTED_POOL, "Fragmented Pool" },
-    { VK_ERROR_SURFACE_LOST_KHR, "Surface Lost" },
-    { VK_ERROR_NATIVE_WINDOW_IN_USE_KHR, "Native Window in Use" },
-    { VK_SUBOPTIMAL_KHR, "Suboptimal" },
-    { VK_ERROR_OUT_OF_DATE_KHR, "Error Out of Date" },
-    { VK_ERROR_INCOMPATIBLE_DISPLAY_KHR, "Incompatible Display" },
-    { VK_ERROR_VALIDATION_FAILED_EXT, "Valuidation Failed" },
-    { VK_ERROR_INVALID_SHADER_NV, "Invalid Shader" },
-    { VK_ERROR_OUT_OF_POOL_MEMORY_KHR, "Out of Pool Memory" },
-    { VK_ERROR_INVALID_EXTERNAL_HANDLE, "Invalid External Handle" },
-
-};
-
-void PrintVkError(VkResult result) {
-    const int numErrorCodes = sizeof(ErrorCodes) / sizeof(struct errorcode);
-    std::string meaning = "";
-    for (int i = 0; i < numErrorCodes; i++) {
-        if (result == ErrorCodes[i].resultCode) {
-            meaning = ErrorCodes[i].meaning;
-            break;
-        }
-    }
-    std::cout << "Error: " << result << ", " << meaning << "\n";
-}
-
 struct SceneModel {
     // Model data
     ModelData MD;
@@ -304,9 +210,9 @@ private:
     VertexDescriptor 	textVertices = VertexDescriptor(true, false, true, false, false);
 
     // Phong pipeline
-    VkDescriptorSetLayout PhongDescriptorSetLayout;
-    VkPipelineLayout PhongPipelineLayout;
-    VkPipeline PhongPipeline;
+    VkDescriptorSetLayout phongDescriptorSetLayout;
+    VkPipelineLayout phongPipelineLayout;
+    VkPipeline phongPipeline;
     //// For the first uniform (per object)
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
@@ -319,9 +225,9 @@ private:
     std::vector<SceneModel> Scene;
 
     //  Skybox pipeline
-    VkDescriptorSetLayout SkyBoxDescriptorSetLayout; // for skybox
-    VkPipelineLayout SkyBoxPipelineLayout;	// for skybox
-    VkPipeline SkyBoxPipeline;		// for skybox
+    VkDescriptorSetLayout skyBoxDescriptorSetLayout; // for skybox
+    VkPipelineLayout skyBoxPipelineLayout;	// for skybox
+    VkPipeline skyBoxPipeline;		// for skybox
     std::vector<VkBuffer> SkyBoxUniformBuffers;
     std::vector<VkDeviceMemory> SkyBoxUniformBuffersMemory;
     // to access uniforms in the pipeline
@@ -330,9 +236,9 @@ private:
     std::vector<SceneModel> SkyBox;
 
     //  Text pipeline
-    VkDescriptorSetLayout TextDescriptorSetLayout;
-    VkPipelineLayout TextPipelineLayout;
-    VkPipeline TextPipeline;
+    VkDescriptorSetLayout textDescriptorSetLayout;
+    VkPipelineLayout textPipelineLayout;
+    VkPipeline textPipeline;
     std::vector<VkBuffer> TextUniformBuffers;
     std::vector<VkDeviceMemory> TextUniformBuffersMemory;
     // to access uniforms in the pipeline
@@ -371,19 +277,11 @@ private:
 
     // Other global variables
     int curText = 0;
+
     // Current pipeline to be used
     int curPipe = OBJ_PIPELINE_PHONG;
     VkPipeline objectsPipeline;
 
-    void initWindow() {
-        glfwInit();
-
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-        glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-    }
 
     static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
         auto app = reinterpret_cast<CGProject*>
@@ -391,9 +289,32 @@ private:
         app->framebufferResized = true;
     }
 
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
+
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+        return VK_FALSE;
+    }
+
+    void initWindow() {
+        window = initializeWindow(
+            "CGProject",
+            WIDTH,
+            HEIGHT,
+            this,
+            framebufferResizeCallback
+        );
+    }
+
     void initVulkan() {
         createInstance();
-        setupDebugMessenger();
+
+#ifdef ENABLE_VALIDATION_LAYERS
+        createDebugMessenger();
+#endif
+
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -416,599 +337,76 @@ private:
    
 
     void createInstance() {
-        VkApplicationInfo appInfo{};
-        appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-        appInfo.pApplicationName = "CGProject";
-        appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.pEngineName = "No Engine";
-        appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-        appInfo.apiVersion = VK_API_VERSION_1_0;
-
-        VkInstanceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        createInfo.pApplicationInfo = &appInfo;
-        createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
-
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        createInfo.enabledExtensionCount = glfwExtensionCount;
-        createInfo.ppEnabledExtensionNames = glfwExtensions;
-
-        createInfo.enabledLayerCount = 0;
-
-        uint32_t extensionCount = 0;
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> extensionsPr(extensionCount);
-        vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
-            extensionsPr.data());
-
-        auto extensions = getRequiredExtensions();
-        createInfo.enabledExtensionCount =
-            static_cast<uint32_t>(extensions.size());
-        createInfo.ppEnabledExtensionNames = extensions.data();
-
-        if (enableValidationLayers && !checkValidationLayerSupport()) {
-            throw std::runtime_error("validation layers requested, but not available!");
-        }
-
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount =
-                static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-
-            populateDebugMessengerCreateInfo(debugCreateInfo);
-            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
-                &debugCreateInfo;
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
-            createInfo.pNext = nullptr;
-        }
-
-        VkResult result = vkCreateInstance(&createInfo, nullptr, &instance);
-
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create instance!");
-        }
+        auto debugCreateInfo = getDebugMessengerCreateInfo(
+            debugCallback,
+            DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
+            DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
+            nullptr
+        );
+        auto requiredExtensions = getRequiredExtensions();
+        auto appInfo = getApplicationInfo("CGProject", VK_MAKE_API_VERSION(0, 1, 0, 0));
+        auto createInfo = getInstanceCreateInfo(
+            &validationLayers, &requiredExtensions, &appInfo, &debugCreateInfo
+        );
+        initializeInstance(&createInfo, &instance);
     }
 
-    std::vector<const char*> getRequiredExtensions() {
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions =
-            glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-        std::vector<const char*> extensions(glfwExtensions,
-            glfwExtensions + glfwExtensionCount);
-        if (enableValidationLayers) {
-            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-        }
-        
-        extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
-        extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
-
-        return extensions;
-    }
-
-    bool checkValidationLayerSupport() {
-        uint32_t layerCount;
-        vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-
-        std::vector<VkLayerProperties> availableLayers(layerCount);
-        vkEnumerateInstanceLayerProperties(&layerCount,
-            availableLayers.data());
-
-        for (const char* layerName : validationLayers) {
-            bool layerFound = false;
-
-            for (const auto& layerProperties : availableLayers) {
-                if (strcmp(layerName, layerProperties.layerName) == 0) {
-                    layerFound = true;
-                    break;
-                }
-            }
-
-            if (!layerFound) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    void populateDebugMessengerCreateInfo(
-        VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
-        createInfo = {};
-        createInfo.sType =
-            VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-        createInfo.messageSeverity =
-            //			VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT | // disabled in the tutorial
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-            VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData = nullptr;
-    }
-
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData) {
-
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-        return VK_FALSE;
-    }
-
-    void setupDebugMessenger() {
-        if (!enableValidationLayers) return;
-
-        VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-        populateDebugMessengerCreateInfo(createInfo);
-
-        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr,
-            &debugMessenger) != VK_SUCCESS) {
-            throw std::runtime_error("failed to set up debug messenger!");
-        }
+    void createDebugMessenger() {
+        auto createInfo = getDebugMessengerCreateInfo(
+            debugCallback,
+            DEBUG_MESSENGER_SEVERITY_MASK(1, 1, 1, 1),
+            DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
+            nullptr
+        );
+        initializeDebugMessenger(instance, &createInfo, nullptr, &debugMessenger);
     }
 
     void createSurface() {
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface)
-            != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
+        initializeSurface(instance, window, &surface);
     }
 
     void pickPhysicalDevice() {
-        uint32_t deviceCount = 0;
-        vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-        std::vector<VkPhysicalDevice> devices(deviceCount);
-        vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-
-        if (deviceCount == 0) {
-            throw std::runtime_error("failed to find GPUs with Vulkan support!");
-        }
-
-        std::multimap<int, VkPhysicalDevice> candidates;
-
-        for (const auto& device : devices) {
-            int score = rateDeviceSuitability(device);
-            candidates.insert(std::make_pair(score, device));
-        }
-
-        for (const auto& device : devices) {
-            if (isDeviceSuitable(device)) {
-                physicalDevice = device;
-                break;
-            }
-        }
-
-        if (physicalDevice == VK_NULL_HANDLE) {
-            throw std::runtime_error("failed to find a suitable GPU!");
-        }
-    }
-
-    int rateDeviceSuitability(VkPhysicalDevice device) {
-        int score = 0;
-        VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
-        vkGetPhysicalDeviceProperties(device, &deviceProperties);
-        vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
-
-        // Discrete GPUs have a significant performance advantage
-        if (deviceProperties.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            score += 1000;
-        }
-
-        // Maximum possible size of textures affects graphics quality
-        score += deviceProperties.limits.maxImageDimension2D;
-
-        // Application can't function without geometry shaders
-        if (!deviceFeatures.geometryShader) {
-            return 0;
-        }
-        return score;
-    }
-
-    bool isDeviceSuitable(VkPhysicalDevice device) {
-        QueueFamilyIndices indices = findQueueFamilies(device);
-
-        bool extensionsSupported = checkDeviceExtensionSupport(device);
-
-        bool swapChainAdequate = false;
-        if (extensionsSupported) {
-            SwapChainSupportDetails swapChainSupport = querySwapChainSupport(device);
-            swapChainAdequate = !swapChainSupport.formats.empty() &&
-                !swapChainSupport.presentModes.empty();
-        }
-
-        VkPhysicalDeviceFeatures supportedFeatures;
-        vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-
-        return indices.isComplete() && extensionsSupported && swapChainAdequate &&
-            supportedFeatures.samplerAnisotropy;
-    }
-
-    QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
-        QueueFamilyIndices indices;
-
-        uint32_t queueFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
-            nullptr);
-
-        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
-            queueFamilies.data());
-
-        int i = 0;
-        for (const auto& queueFamily : queueFamilies) {
-            if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
-                indices.graphicsFamily = i;
-            }
-
-            VkBool32 presentSupport = false;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface,
-                &presentSupport);
-            if (presentSupport) {
-                indices.presentFamily = i;
-            }
-
-            if (indices.isComplete()) {
-                break;
-            }
-            i++;
-        }
-
-        return indices;
-    }
-
-    bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
-        uint32_t extensionCount;
-        vkEnumerateDeviceExtensionProperties(device, nullptr,
-            &extensionCount, nullptr);
-
-        std::vector<VkExtensionProperties> availableExtensions(extensionCount);
-        vkEnumerateDeviceExtensionProperties(device, nullptr,
-            &extensionCount, availableExtensions.data());
-
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(),
-            deviceExtensions.end());
-
-        for (const auto& extension : availableExtensions) {
-            requiredExtensions.erase(extension.extensionName);
-        }
-
-        return requiredExtensions.empty();
-    }
-
-    SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
-        SwapChainSupportDetails details;
-
-        vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
-            &details.capabilities);
-
-        uint32_t formatCount;
-        vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
-            nullptr);
-
-        if (formatCount != 0) {
-            details.formats.resize(formatCount);
-            vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface,
-                &formatCount, details.formats.data());
-        }
-
-        uint32_t presentModeCount;
-        vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface,
-            &presentModeCount, nullptr);
-
-        if (presentModeCount != 0) {
-            details.presentModes.resize(presentModeCount);
-            vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface,
-                &presentModeCount, details.presentModes.data());
-        }
-
-        return details;
-    }
-
-    VkSampleCountFlagBits getMaxUsableSampleCount() {
-        VkPhysicalDeviceProperties physicalDeviceProperties;
-        vkGetPhysicalDeviceProperties(physicalDevice, &physicalDeviceProperties);
-
-        VkSampleCountFlags counts =
-            physicalDeviceProperties.limits.framebufferColorSampleCounts &
-            physicalDeviceProperties.limits.framebufferDepthSampleCounts;
-
-        if (counts & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-        if (counts & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-        if (counts & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-        if (counts & VK_SAMPLE_COUNT_8_BIT) { return VK_SAMPLE_COUNT_8_BIT; }
-        if (counts & VK_SAMPLE_COUNT_4_BIT) { return VK_SAMPLE_COUNT_4_BIT; }
-        if (counts & VK_SAMPLE_COUNT_2_BIT) { return VK_SAMPLE_COUNT_2_BIT; }
-
-        return VK_SAMPLE_COUNT_1_BIT;
+        auto devices = getPhysicalDevices(instance);
+        physicalDevice = getOptimalPhysicalDevice(devices, surface, deviceExtensions);
     }
 
     void createLogicalDevice() {
-        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
-        std::set<uint32_t> uniqueQueueFamilies =
-        { indices.graphicsFamily.value(), indices.presentFamily.value() };
-
-        float queuePriority = 1.0f;
-        for (uint32_t queueFamily : uniqueQueueFamilies) {
-            VkDeviceQueueCreateInfo queueCreateInfo{};
-            queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-            queueCreateInfo.queueFamilyIndex = queueFamily;
-            queueCreateInfo.queueCount = 1;
-            queueCreateInfo.pQueuePriorities = &queuePriority;
-            queueCreateInfos.push_back(queueCreateInfo);
-        }
-
-        VkPhysicalDeviceFeatures deviceFeatures{};
-        deviceFeatures.samplerAnisotropy = VK_TRUE;
-        deviceFeatures.sampleRateShading = VK_TRUE;
-        deviceFeatures.fillModeNonSolid = VK_TRUE;
-
-        VkDeviceCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-
-        createInfo.pQueueCreateInfos = queueCreateInfos.data();
-        createInfo.queueCreateInfoCount =
-            static_cast<uint32_t>(queueCreateInfos.size());
-
-        createInfo.pEnabledFeatures = &deviceFeatures;
-        createInfo.enabledExtensionCount =
-            static_cast<uint32_t>(deviceExtensions.size());
-        createInfo.ppEnabledExtensionNames = deviceExtensions.data();
-
-        if (enableValidationLayers) {
-            createInfo.enabledLayerCount =
-                static_cast<uint32_t>(validationLayers.size());
-            createInfo.ppEnabledLayerNames = validationLayers.data();
-        }
-        else {
-            createInfo.enabledLayerCount = 0;
-        }
-
-        VkResult result = vkCreateDevice(physicalDevice, &createInfo, nullptr, &device);
-
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create logical device!");
-        }
-
-        vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
-        vkGetDeviceQueue(device, indices.presentFamily.value(), 0, &presentQueue);
+        initializeLogicalDevice(
+            physicalDevice,
+            surface,
+            validationLayers,
+            deviceExtensions,
+            &device,
+            &graphicsQueue,
+            &presentQueue
+        );
     }
 
     void createSwapChain() {
-        SwapChainSupportDetails swapChainSupport =
-            querySwapChainSupport(physicalDevice);
-        VkSurfaceFormatKHR surfaceFormat =
-            chooseSwapSurfaceFormat(swapChainSupport.formats);
-        VkPresentModeKHR presentMode =
-            chooseSwapPresentMode(swapChainSupport.presentModes);
-        VkExtent2D extent = chooseSwapExtent(swapChainSupport.capabilities);
-
-        uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
-
-        if (swapChainSupport.capabilities.maxImageCount > 0 &&
-            imageCount > swapChainSupport.capabilities.maxImageCount) {
-            imageCount = swapChainSupport.capabilities.maxImageCount;
-        }
-
-        VkSwapchainCreateInfoKHR createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-        createInfo.surface = surface;
-        createInfo.minImageCount = imageCount;
-        createInfo.imageFormat = surfaceFormat.format;
-        createInfo.imageColorSpace = surfaceFormat.colorSpace;
-        createInfo.imageExtent = extent;
-        createInfo.imageArrayLayers = 1;
-        createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
-
-        QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-        uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(),
-                                         indices.presentFamily.value() };
-        if (indices.graphicsFamily != indices.presentFamily) {
-            createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-            createInfo.queueFamilyIndexCount = 2;
-            createInfo.pQueueFamilyIndices = queueFamilyIndices;
-        }
-        else {
-            createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-            createInfo.queueFamilyIndexCount = 0; // Optional
-            createInfo.pQueueFamilyIndices = nullptr; // Optional
-        }
-
-        createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-        createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-        createInfo.presentMode = presentMode;
-        createInfo.clipped = VK_TRUE;
-        createInfo.oldSwapchain = VK_NULL_HANDLE;
-
-        VkResult result = vkCreateSwapchainKHR(device, &createInfo, nullptr, &swapChain);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create swap chain!");
-        }
-
-        vkGetSwapchainImagesKHR(device, swapChain, &imageCount, nullptr);
-        swapChainImages.resize(imageCount);
-        vkGetSwapchainImagesKHR(device, swapChain, &imageCount,
-            swapChainImages.data());
-
-        swapChainImageFormat = surfaceFormat.format;
-        swapChainExtent = extent;
-    }
-
-    VkSurfaceFormatKHR chooseSwapSurfaceFormat(
-        const std::vector<VkSurfaceFormatKHR>& availableFormats)
-    {
-        for (const auto& availableFormat : availableFormats) {
-            if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB &&
-                availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-                return availableFormat;
-            }
-        }
-
-        return availableFormats[0];
-    }
-
-    VkPresentModeKHR chooseSwapPresentMode(
-        const std::vector<VkPresentModeKHR>& availablePresentModes) {
-        for (const auto& availablePresentMode : availablePresentModes) {
-            if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
-                return availablePresentMode;
-            }
-        }
-        return VK_PRESENT_MODE_FIFO_KHR;
-    }
-
-    VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities) {
-        if (capabilities.currentExtent.width != UINT32_MAX) {
-            return capabilities.currentExtent;
-        }
-        else {
-            int width, height;
-            glfwGetFramebufferSize(window, &width, &height);
-
-            VkExtent2D actualExtent = {
-                static_cast<uint32_t>(width),
-                static_cast<uint32_t>(height)
-            };
-            actualExtent.width = std::max(capabilities.minImageExtent.width,
-                std::min(capabilities.maxImageExtent.width, actualExtent.width));
-            actualExtent.height = std::max(capabilities.minImageExtent.height,
-                std::min(capabilities.maxImageExtent.height, actualExtent.height));
-            return actualExtent;
-        }
+        initializeSwapChain(
+            window,
+            physicalDevice,
+            device,
+            surface,
+            &swapChain,
+            &swapChainImages,
+            &swapChainImageFormat,
+            &swapChainExtent
+        );
     }
 
     void createImageViews() {
-        swapChainImageViews.resize(swapChainImages.size());
-
-        for (size_t i = 0; i < swapChainImages.size(); i++) {
-            swapChainImageViews[i] = createImageView(swapChainImages[i],
-                swapChainImageFormat,
-                VK_IMAGE_ASPECT_COLOR_BIT, 1,
-                VK_IMAGE_VIEW_TYPE_2D, 1);
-        }
-    }
-
-    VkImageView createImageView(VkImage image, VkFormat format,
-        VkImageAspectFlags aspectFlags,
-        uint32_t mipLevels, VkImageViewType type, int layerCount) {
-        VkImageViewCreateInfo viewInfo{};
-        viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
-        viewInfo.image = image;
-        viewInfo.viewType = type;
-        viewInfo.format = format;
-        viewInfo.subresourceRange.aspectMask = aspectFlags;
-        viewInfo.subresourceRange.baseMipLevel = 0;
-        viewInfo.subresourceRange.levelCount = mipLevels;
-        viewInfo.subresourceRange.baseArrayLayer = 0;
-        viewInfo.subresourceRange.layerCount = layerCount;
-        VkImageView imageView;
-
-        VkResult result = vkCreateImageView(device, &viewInfo, nullptr,
-            &imageView);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create image view!");
-        }
-        return imageView;
+        initializeImageViews(device, swapChainImages, swapChainImageFormat, &swapChainImageViews);
     }
 
     void createRenderPass() {
-        VkAttachmentDescription colorAttachmentResolve{};
-        colorAttachmentResolve.format = swapChainImageFormat;
-        colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-        colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
-
-        VkAttachmentReference colorAttachmentResolveRef{};
-        colorAttachmentResolveRef.attachment = 2;
-        colorAttachmentResolveRef.layout =
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = findDepthFormat();
-        depthAttachment.samples = msaaSamples;
-        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        depthAttachment.finalLayout =
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference depthAttachmentRef{};
-        depthAttachmentRef.attachment = 1;
-        depthAttachmentRef.layout =
-            VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentDescription colorAttachment{};
-        colorAttachment.format = swapChainImageFormat;
-        colorAttachment.samples = msaaSamples;
-        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkAttachmentReference colorAttachmentRef{};
-        colorAttachmentRef.attachment = 0;
-        colorAttachmentRef.layout =
-            VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
-
-        VkSubpassDescription subpass{};
-        subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
-        subpass.colorAttachmentCount = 1;
-        subpass.pColorAttachments = &colorAttachmentRef;
-        subpass.pDepthStencilAttachment = &depthAttachmentRef;
-        subpass.pResolveAttachments = &colorAttachmentResolveRef;
-
-        VkSubpassDependency dependency{};
-        dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-        dependency.dstSubpass = 0;
-        dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.srcAccessMask = 0;
-        dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
-        dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
-
-        std::array<VkAttachmentDescription, 3> attachments =
-        { colorAttachment, depthAttachment,
-         colorAttachmentResolve };
-
-        VkRenderPassCreateInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-        renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
-        renderPassInfo.pAttachments = attachments.data();
-        renderPassInfo.subpassCount = 1;
-        renderPassInfo.pSubpasses = &subpass;
-        renderPassInfo.dependencyCount = 1;
-        renderPassInfo.pDependencies = &dependency;
-
-        VkResult result = vkCreateRenderPass(device, &renderPassInfo, nullptr,
-            &renderPass);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create render pass!");
-        }
+        initializeRenderPass(
+            physicalDevice,
+            device,
+            swapChainImageFormat,
+            msaaSamples,
+            &renderPass
+        );
     }
 
     void createDescriptorSetLayouts() {
@@ -1018,108 +416,72 @@ private:
     }
 
     void createPhongDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding globalUboLayoutBinding{};
-        globalUboLayoutBinding.binding = 2;
-        globalUboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        globalUboLayoutBinding.descriptorCount = 1;
-        globalUboLayoutBinding.stageFlags = VK_SHADER_STAGE_ALL_GRAPHICS;
-        globalUboLayoutBinding.pImmutableSamplers = nullptr;
+        auto globalUboLayoutBinding = getDescriptorSetLayoutBinding(
+            2, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_ALL_GRAPHICS, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 3> bindings =
-        { uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 3> bindings = {
+            uboLayoutBinding, samplerLayoutBinding, globalUboLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &PhongDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &phongDescriptorSetLayout
+        );
     }
 
     void createSkyBoxDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings =
-        { uboLayoutBinding, samplerLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+            uboLayoutBinding, samplerLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &SkyBoxDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create SkyBox descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &skyBoxDescriptorSetLayout
+        );
     }
 
     void createTextDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
+        auto uboLayoutBinding = getDescriptorSetLayoutBinding(
+            0, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            1, VK_SHADER_STAGE_VERTEX_BIT, nullptr
+        );
 
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorType =
-            VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
+        auto samplerLayoutBinding = getDescriptorSetLayoutBinding(
+            1, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            1, VK_SHADER_STAGE_FRAGMENT_BIT, nullptr
+        );
 
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings =
-        { uboLayoutBinding, samplerLayoutBinding };
+        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {
+            uboLayoutBinding, samplerLayoutBinding
+        };
 
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        VkResult result = vkCreateDescriptorSetLayout(device, &layoutInfo,
-            nullptr, &TextDescriptorSetLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create Text descriptor set layout!");
-        }
+        initializeDescriptorSetLayout(
+            device, static_cast<uint32_t>(bindings.size()),
+            bindings.data(), &textDescriptorSetLayout
+        );
     }
-    
 
     void createPipelines() {
         createPhongPipeline();
@@ -1130,253 +492,88 @@ private:
 
     
     void createWireframePipeline() {
-        createPipeline("BRDFVert.spv", "BRDFFrag.spv",
-            PhongPipelineLayout, wireframePipeline,
-            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_LINE,
-            VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
+        createPipeline(
+            "BRDFVert.spv",
+            "BRDFFrag.spv",
+            VK_COMPARE_OP_LESS,
+            VK_POLYGON_MODE_LINE,
+            VK_CULL_MODE_NONE,
+            false,
+            &phongAndSkyBoxVertices,
+            &phongDescriptorSetLayout,
+            &phongPipelineLayout,
+            &wireframePipeline
+        );
     }
     
 
     void createPhongPipeline() {
-        createPipeline("BRDFVert.spv", "BRDFFrag.spv",
-            PhongPipelineLayout, PhongPipeline,
-            PhongDescriptorSetLayout, VK_COMPARE_OP_LESS, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_NONE, false, phongAndSkyBoxVertices);
+        createPipeline(
+            "BRDFVert.spv",
+            "BRDFFrag.spv",
+            VK_COMPARE_OP_LESS,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE,
+            false,
+            &phongAndSkyBoxVertices,
+            &phongDescriptorSetLayout,
+            &phongPipelineLayout,
+            &phongPipeline
+        );
     }
 
     void createSkyBoxPipeline() {
-        createPipeline("SkyBoxVert.spv", "SkyBoxFrag.spv",
-            SkyBoxPipelineLayout, SkyBoxPipeline,
-            SkyBoxDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_BACK_BIT, false, phongAndSkyBoxVertices);
+        createPipeline(
+            "SkyBoxVert.spv",
+            "SkyBoxFrag.spv",
+            VK_COMPARE_OP_LESS_OR_EQUAL,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_BACK_BIT,
+            false,
+            &phongAndSkyBoxVertices,
+            &skyBoxDescriptorSetLayout,
+            &skyBoxPipelineLayout,
+            &skyBoxPipeline
+        );
     }
 
     void createTextPipeline() {
-        createPipeline("TextVert.spv", "TextFrag.spv",
-            TextPipelineLayout, TextPipeline,
-            TextDescriptorSetLayout, VK_COMPARE_OP_LESS_OR_EQUAL, VK_POLYGON_MODE_FILL,
-            VK_CULL_MODE_NONE, true, textVertices);
+        createPipeline(
+            "TextVert.spv",
+            "TextFrag.spv",
+            VK_COMPARE_OP_LESS_OR_EQUAL,
+            VK_POLYGON_MODE_FILL,
+            VK_CULL_MODE_NONE,
+            true,
+            &textVertices,
+            &textDescriptorSetLayout,
+            &textPipelineLayout,
+            &textPipeline
+        );
     }
 
-    void createPipeline(const char* VertexShaderName, const char* FragShaderName,
-        VkPipelineLayout& PipelineLayout,
-        VkPipeline& Pipeline,
-        VkDescriptorSetLayout& descriptorSetLayout,
-        VkCompareOp compareOp, VkPolygonMode polyModel,
-        VkCullModeFlagBits CM, bool transp,
-        VertexDescriptor& VD) {
-        auto vertShaderCode = readFile((SHADER_PATH + VertexShaderName).c_str());
-        auto fragShaderCode = readFile((SHADER_PATH + FragShaderName).c_str());
+    void createPipeline(
+        const std::string vertexShaderName,
+        const std::string fragShaderName,
+        const VkCompareOp compareOp,
+        const VkPolygonMode polyModel,
+        const VkCullModeFlagBits CM,
+        const bool transp,
+        VertexDescriptor* VD,
+        VkDescriptorSetLayout* descriptorSetLayout,
+        VkPipelineLayout* pipelineLayout,
+        VkPipeline* pipeline
+    ) {
+        auto vsPath = SHADER_PATH + vertexShaderName;
+        auto fsPath = SHADER_PATH + fragShaderName;
 
-        VkShaderModule vertShaderModule =
-            createShaderModule(vertShaderCode);
-        VkShaderModule fragShaderModule =
-            createShaderModule(fragShaderCode);
-
-        VkPipelineShaderStageCreateInfo vertShaderStageInfo{};
-        vertShaderStageInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        vertShaderStageInfo.stage = VK_SHADER_STAGE_VERTEX_BIT;
-        vertShaderStageInfo.module = vertShaderModule;
-        vertShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo fragShaderStageInfo{};
-        fragShaderStageInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
-        fragShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-        fragShaderStageInfo.module = fragShaderModule;
-        fragShaderStageInfo.pName = "main";
-
-        VkPipelineShaderStageCreateInfo shaderStages[] =
-        { vertShaderStageInfo, fragShaderStageInfo };
-
-        VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
-        vertexInputInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        auto bindingDescription = VD.getBindingDescription();
-        auto attributeDescriptions = VD.getAttributeDescriptions();
-
-        vertexInputInfo.vertexBindingDescriptionCount = 1;
-        vertexInputInfo.vertexAttributeDescriptionCount =
-            static_cast<uint32_t>(attributeDescriptions.size());
-        vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
-        vertexInputInfo.pVertexAttributeDescriptions =
-            attributeDescriptions.data();
-
-        VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
-        inputAssembly.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-        inputAssembly.primitiveRestartEnable = VK_FALSE;
-
-        VkViewport viewport{};
-        viewport.x = 0.0f;
-        viewport.y = 0.0f;
-        viewport.width = (float)swapChainExtent.width;
-        viewport.height = (float)swapChainExtent.height;
-        viewport.minDepth = 0.0f;
-        viewport.maxDepth = 1.0f;
-
-        VkRect2D scissor{};
-        scissor.offset = { 0, 0 };
-        scissor.extent = swapChainExtent;
-
-        VkPipelineViewportStateCreateInfo viewportState{};
-        viewportState.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        viewportState.viewportCount = 1;
-        viewportState.pViewports = &viewport;
-        viewportState.scissorCount = 1;
-        viewportState.pScissors = &scissor;
-
-        VkPipelineRasterizationStateCreateInfo rasterizer{};
-        rasterizer.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-        rasterizer.depthClampEnable = VK_FALSE;
-        rasterizer.rasterizerDiscardEnable = VK_FALSE;
-        rasterizer.polygonMode = polyModel;
-        rasterizer.lineWidth = 1.0f;
-        rasterizer.cullMode = CM;
-        rasterizer.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-        rasterizer.depthBiasEnable = VK_FALSE;
-        rasterizer.depthBiasConstantFactor = 0.0f; // Optional
-        rasterizer.depthBiasClamp = 0.0f; // Optional
-        rasterizer.depthBiasSlopeFactor = 0.0f; // Optional
-
-        VkPipelineMultisampleStateCreateInfo multisampling{};
-        multisampling.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-        multisampling.sampleShadingEnable = VK_TRUE;
-        multisampling.minSampleShading = .2f;
-        multisampling.rasterizationSamples = msaaSamples;
-        multisampling.minSampleShading = 1.0f; // Optional
-        multisampling.pSampleMask = nullptr; // Optional
-        multisampling.alphaToCoverageEnable = VK_FALSE; // Optional
-        multisampling.alphaToOneEnable = VK_FALSE; // Optional
-
-        VkPipelineColorBlendAttachmentState colorBlendAttachment{};
-        colorBlendAttachment.colorWriteMask =
-            VK_COLOR_COMPONENT_R_BIT |
-            VK_COLOR_COMPONENT_G_BIT |
-            VK_COLOR_COMPONENT_B_BIT |
-            VK_COLOR_COMPONENT_A_BIT;
-        colorBlendAttachment.blendEnable = transp ? VK_TRUE : VK_FALSE;
-        colorBlendAttachment.srcColorBlendFactor =
-            transp ? VK_BLEND_FACTOR_SRC_ALPHA : VK_BLEND_FACTOR_ONE;
-        colorBlendAttachment.dstColorBlendFactor =
-            transp ? VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA : VK_BLEND_FACTOR_ZERO;
-        colorBlendAttachment.colorBlendOp =
-            VK_BLEND_OP_ADD; // Optional
-        colorBlendAttachment.srcAlphaBlendFactor =
-            VK_BLEND_FACTOR_ONE; // Optional
-        colorBlendAttachment.dstAlphaBlendFactor =
-            VK_BLEND_FACTOR_ZERO; // Optional
-        colorBlendAttachment.alphaBlendOp =
-            VK_BLEND_OP_ADD; // Optional
-
-        VkPipelineColorBlendStateCreateInfo colorBlending{};
-        colorBlending.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
-        colorBlending.logicOpEnable = VK_FALSE;
-        colorBlending.logicOp = VK_LOGIC_OP_COPY; // Optional
-        colorBlending.attachmentCount = 1;
-        colorBlending.pAttachments = &colorBlendAttachment;
-        colorBlending.blendConstants[0] = 0.0f; // Optional
-        colorBlending.blendConstants[1] = 0.0f; // Optional
-        colorBlending.blendConstants[2] = 0.0f; // Optional
-        colorBlending.blendConstants[3] = 0.0f; // Optional
-
-        VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
-        pipelineLayoutInfo.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
-        pipelineLayoutInfo.pushConstantRangeCount = 0; // Optional
-        pipelineLayoutInfo.pPushConstantRanges = nullptr; // Optional
-
-        VkResult result = vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
-            &PipelineLayout);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create pipeline layout!");
-        }
-
-        VkPipelineDepthStencilStateCreateInfo depthStencil{};
-        depthStencil.sType =
-            VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-        depthStencil.depthTestEnable = VK_TRUE;
-        depthStencil.depthWriteEnable = VK_TRUE;
-        depthStencil.depthCompareOp = compareOp;
-        depthStencil.depthBoundsTestEnable = VK_FALSE;
-        depthStencil.minDepthBounds = 0.0f; // Optional
-        depthStencil.maxDepthBounds = 1.0f; // Optional
-        depthStencil.stencilTestEnable = VK_FALSE;
-        depthStencil.front = {}; // Optional
-        depthStencil.back = {}; // Optional
-
-        VkGraphicsPipelineCreateInfo pipelineInfo{};
-        pipelineInfo.sType =
-            VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-        pipelineInfo.stageCount = 2;
-        pipelineInfo.pStages = shaderStages;
-        pipelineInfo.pVertexInputState = &vertexInputInfo;
-        pipelineInfo.pInputAssemblyState = &inputAssembly;
-        pipelineInfo.pViewportState = &viewportState;
-        pipelineInfo.pRasterizationState = &rasterizer;
-        pipelineInfo.pMultisampleState = &multisampling;
-        pipelineInfo.pDepthStencilState = &depthStencil;
-        pipelineInfo.pColorBlendState = &colorBlending;
-        pipelineInfo.pDynamicState = nullptr; // Optional
-        pipelineInfo.layout = PipelineLayout;
-        pipelineInfo.renderPass = renderPass;
-        pipelineInfo.subpass = 0;
-        pipelineInfo.basePipelineHandle = VK_NULL_HANDLE; // Optional
-        pipelineInfo.basePipelineIndex = -1; // Optional
-
-        result = vkCreateGraphicsPipelines(device, VK_NULL_HANDLE, 1,
-            &pipelineInfo, nullptr, &Pipeline);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create graphics pipeline!");
-        }
-
-        vkDestroyShaderModule(device, fragShaderModule, nullptr);
-        vkDestroyShaderModule(device, vertShaderModule, nullptr);
-    }
-
-    static std::vector<char> readFile(const std::string& filename) {
-        std::ifstream file(filename, std::ios::ate | std::ios::binary);
-        if (!file.is_open()) {
-            throw std::runtime_error("failed to open file!");
-        }
-
-        size_t fileSize = (size_t)file.tellg();
-        std::vector<char> buffer(fileSize);
-
-        file.seekg(0);
-        file.read(buffer.data(), fileSize);
-
-        file.close();
-
-        return buffer;
-    }
-
-    VkShaderModule createShaderModule(const std::vector<char>& code) {
-        VkShaderModuleCreateInfo createInfo{};
-        createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-        createInfo.codeSize = code.size();
-        createInfo.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-        VkShaderModule shaderModule;
-
-        VkResult result = vkCreateShaderModule(device, &createInfo, nullptr,
-            &shaderModule);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create shader module!");
-        }
-
-        return shaderModule;
+        initializeGraphicsPipelineLayout(device, 1, descriptorSetLayout, 0, nullptr, pipelineLayout);
+        initializeStdPipeline(
+            device, vsPath, fsPath, swapChainExtent,
+            msaaSamples, compareOp, polyModel,
+            CM, transp, *pipelineLayout, renderPass,
+            VD, pipeline
+        );
     }
 
     void createFramebuffers() {
@@ -1388,40 +585,24 @@ private:
                 swapChainImageViews[i]
             };
 
-            VkFramebufferCreateInfo framebufferInfo{};
-            framebufferInfo.sType =
-                VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-            framebufferInfo.renderPass = renderPass;
-            framebufferInfo.attachmentCount =
-                static_cast<uint32_t>(attachments.size());;
-            framebufferInfo.pAttachments = attachments.data();
-            framebufferInfo.width = swapChainExtent.width;
-            framebufferInfo.height = swapChainExtent.height;
-            framebufferInfo.layers = 1;
-
-            VkResult result = vkCreateFramebuffer(device, &framebufferInfo, nullptr,
-                &swapChainFramebuffers[i]);
-            if (result != VK_SUCCESS) {
-                PrintVkError(result);
-                throw std::runtime_error("failed to create framebuffer!");
-            }
+            initializeFrameBuffer(
+                device,
+                static_cast<uint32_t>(attachments.size()),
+                attachments.data(),
+                renderPass,
+                swapChainExtent,
+                &swapChainFramebuffers[i]
+            );
         }
     }
 
     void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices =
-            findQueueFamilies(physicalDevice);
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-        poolInfo.flags = 0; // Optional
-
-        VkResult result = vkCreateCommandPool(device, &poolInfo, nullptr, &commandPool);
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to create command pool!");
-        }
+        QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice, surface);
+        initializeCommandPool(
+            device,
+            queueFamilyIndices,
+            &commandPool
+        );
     }
 
     void createColorResources() {
@@ -1432,20 +613,22 @@ private:
             VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             colorImage, colorImageMemory);
-        colorImageView = createImageView(colorImage, colorFormat,
+        colorImageView = initializeImageView(
+            device, colorImage, colorFormat,
             VK_IMAGE_ASPECT_COLOR_BIT, 1,
             VK_IMAGE_VIEW_TYPE_2D, 1);
     }
 
     void createDepthResources() {
-        VkFormat depthFormat = findDepthFormat();
+        VkFormat depthFormat = findDepthFormat(physicalDevice);
 
         createImage(swapChainExtent.width, swapChainExtent.height, 1,
             msaaSamples, depthFormat, VK_IMAGE_TILING_OPTIMAL,
             VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
             depthImage, depthImageMemory);
-        depthImageView = createImageView(depthImage, depthFormat,
+        depthImageView = initializeImageView(
+            device, depthImage, depthFormat,
             VK_IMAGE_ASPECT_DEPTH_BIT, 1,
             VK_IMAGE_VIEW_TYPE_2D, 1);
 
@@ -1453,38 +636,7 @@ private:
             VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL, 1, 1);
     }
 
-    VkFormat findDepthFormat() {
-        return findSupportedFormat({ VK_FORMAT_D32_SFLOAT,
-                                    VK_FORMAT_D32_SFLOAT_S8_UINT,
-                                    VK_FORMAT_D24_UNORM_S8_UINT },
-            VK_IMAGE_TILING_OPTIMAL,
-            VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-    }
-
-    VkFormat findSupportedFormat(const std::vector<VkFormat> candidates,
-        VkImageTiling tiling, VkFormatFeatureFlags features) {
-        for (VkFormat format : candidates) {
-            VkFormatProperties props;
-
-            vkGetPhysicalDeviceFormatProperties(physicalDevice, format, &props);
-            if (tiling == VK_IMAGE_TILING_LINEAR &&
-                (props.linearTilingFeatures & features) == features) {
-                return format;
-            }
-            else if (tiling == VK_IMAGE_TILING_OPTIMAL &&
-                (props.optimalTilingFeatures & features) == features) {
-                return format;
-            }
-        }
-
-        throw std::runtime_error("failed to find supported format!");
-    }
-
-    bool hasStencilComponent(VkFormat format) {
-        return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
-            format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
+    // TODO move in library
     void createTextureImage(const char* FName, TextureData& TD) {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load((TEXTURE_PATH + FName).c_str(), &texWidth, &texHeight,
@@ -1533,6 +685,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createCubicTextureImage(const char* const FName[6], TextureData& TD) {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels[6];
@@ -1585,6 +738,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void generateMipmaps(VkImage image, VkFormat imageFormat,
         int32_t texWidth, int32_t texHeight,
         uint32_t mipLevels, int layerCount) {
@@ -1673,6 +827,7 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
     void createSkyBoxImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkImage& image,
         VkDeviceMemory& imageMemory) {
         VkImageCreateInfo imageInfo{};
@@ -1713,6 +868,7 @@ private:
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
+    // TODO move in library
     void createImage(uint32_t width, uint32_t height, uint32_t mipLevels,
         VkSampleCountFlagBits numSamples, VkFormat format,
         VkImageTiling tiling, VkImageUsageFlags usage,
@@ -1756,6 +912,7 @@ private:
         vkBindImageMemory(device, image, imageMemory, 0);
     }
 
+    // TODO move in library
     void transitionImageLayout(VkImage image, VkFormat format,
         VkImageLayout oldLayout, VkImageLayout newLayout,
         uint32_t mipLevels, int layersCount) {
@@ -1821,6 +978,13 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
+    bool hasStencilComponent(VkFormat format) {
+        return format == VK_FORMAT_D32_SFLOAT_S8_UINT ||
+            format == VK_FORMAT_D24_UNORM_S8_UINT;
+    }
+
+    // TODO move in library
     void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t
         width, uint32_t height, int layerCount) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
@@ -1843,7 +1007,8 @@ private:
     }
 
     void createTextureImageView(TextureData& TD) {
-        TD.textureImageView = createImageView(TD.textureImage,
+        TD.textureImageView = initializeImageView(
+            device, TD.textureImage,
             VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_ASPECT_COLOR_BIT,
             TD.mipLevels,
@@ -1851,13 +1016,15 @@ private:
     }
 
     void createSkyBoxImageView(TextureData& TD) {
-        TD.textureImageView = createImageView(TD.textureImage,
+        TD.textureImageView = initializeImageView(
+            device, TD.textureImage,
             VK_FORMAT_R8G8B8A8_SRGB,
             VK_IMAGE_ASPECT_COLOR_BIT,
             TD.mipLevels,
             VK_IMAGE_VIEW_TYPE_CUBE, 6);
     }
 
+    // TODO move in library
     void createTextureSampler(TextureData& TD) {
         VkSamplerCreateInfo samplerInfo{};
         samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -1885,6 +1052,7 @@ private:
         }
     }
 
+    // TODO move in library
     void loadModels() {
         Scene.resize(SceneToLoad.size());
         int i = 0;
@@ -1898,6 +1066,7 @@ private:
         createTexts();
     }
 
+    // TODO move in library
     void loadModelWithTexture(const Model& M, int i) {
         loadMesh(M.ObjFile, M.type, Scene[i].MD, phongAndSkyBoxVertices);
         createVertexBuffer(Scene[i].MD);
@@ -1908,6 +1077,7 @@ private:
         createTextureSampler(Scene[i].TD);
     }
 
+    // TODO move in library
     void loadSkyBox() {
         int i = 0;
         SkyBox.resize(SkyBoxToLoad.size());
@@ -1924,6 +1094,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createTexts() {
         createTextMesh(SText.MD, textVertices);
         createVertexBuffer(SText.MD);
@@ -1934,6 +1105,7 @@ private:
         createTextureSampler(SText.TD);
     }
 
+    // TODO move in library
     void loadMesh(const char* FName, ModelType T, ModelData& MD, VertexDescriptor& VD) {
         switch (T) {
         case OBJ:
@@ -1945,6 +1117,7 @@ private:
         }
     }
 
+    // TODO move in library
     void loadObjMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
@@ -1996,6 +1169,7 @@ private:
             << ", I: " << MD.indices.size() << "\n";
     }
 
+    // TODO move in library
     void loadGLTFMesh(const char* FName, ModelData& MD, VertexDescriptor& VD) {
         tinygltf::Model model;
         tinygltf::TinyGLTF loader;
@@ -2102,6 +1276,7 @@ private:
         //		throw std::runtime_error("Now We Stop Here!");			
     }
 
+    // TODO move in library
     void createTextMesh(ModelData& MD, VertexDescriptor& VD) {
         MD.vertDesc = &VD;
 
@@ -2189,6 +1364,7 @@ private:
             << ", I: " << MD.indices.size() << "\n";
     }
 
+    // TODO move in library
     void createVertexBuffer(ModelData& Md) {
         VkDeviceSize bufferSize = sizeof(Md.vertices[0]) * Md.vertices.size();
 
@@ -2215,6 +1391,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage,
         VkMemoryPropertyFlags properties,
         VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
@@ -2250,7 +1427,7 @@ private:
         vkBindBufferMemory(device, buffer, bufferMemory, 0);
     }
 
-
+    // TODO move in library
     uint32_t findMemoryType(uint32_t typeFilter,
         VkMemoryPropertyFlags properties) {
         VkPhysicalDeviceMemoryProperties memProperties;
@@ -2267,6 +1444,7 @@ private:
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
+    // TODO move in library
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
         VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
@@ -2278,27 +1456,17 @@ private:
         endSingleTimeCommands(commandBuffer);
     }
 
+    // TODO move in library
     VkCommandBuffer beginSingleTimeCommands() {
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
-        allocInfo.commandBufferCount = 1;
-
         VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(device, &allocInfo, &commandBuffer);
-
-        VkCommandBufferBeginInfo beginInfo{};
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
+        initializeCommandBuffer(device, commandPool, 1, &commandBuffer);
+        beginCommandBuffer(commandBuffer, VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT, nullptr);
         return commandBuffer;
     }
 
+    // TODO move in library
     void endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-        vkEndCommandBuffer(commandBuffer);
+        endCommandBuffer(commandBuffer);
 
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -2307,9 +1475,10 @@ private:
         vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(graphicsQueue);
 
-        vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);
+        cleanupCommandBuffer(device, commandPool, 1, &commandBuffer);
     }
 
+    // TODO move in library
     void createIndexBuffer(ModelData& Md) {
         VkDeviceSize bufferSize = sizeof(Md.indices[0]) * Md.indices.size();
 
@@ -2335,6 +1504,7 @@ private:
         vkFreeMemory(device, stagingBufferMemory, nullptr);
     }
 
+    // TODO move in library
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
@@ -2385,6 +1555,7 @@ private:
         }
     }
 
+    // TODO move in library
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 9> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -2426,9 +1597,10 @@ private:
         createTextDescriptorSets();
     }
 
+    // TODO move in library
     void createPhongDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * Scene.size(),
-            PhongDescriptorSetLayout);
+            phongDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2496,9 +1668,10 @@ private:
         }
     }
 
+    // TODO move in library
     void createSkyBoxDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size() * SkyBox.size(),
-            SkyBoxDescriptorSetLayout);
+            skyBoxDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2553,9 +1726,10 @@ private:
         }
     }
 
+    // TODO move in library
     void createTextDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(swapChainImages.size(),
-            TextDescriptorSetLayout);
+            textDescriptorSetLayout);
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;
@@ -2606,35 +1780,13 @@ private:
         }
     }
 
-
-
-
+    // TODO move in library
     void createCommandBuffers() {
         commandBuffers.resize(swapChainFramebuffers.size());
-
-        VkCommandBufferAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
-        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandBufferCount = (uint32_t)commandBuffers.size();
-
-        VkResult result = vkAllocateCommandBuffers(device, &allocInfo,
-            commandBuffers.data());
-        if (result != VK_SUCCESS) {
-            PrintVkError(result);
-            throw std::runtime_error("failed to allocate command buffers!");
-        }
+        initializeCommandBuffer(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
         for (size_t i = 0; i < commandBuffers.size(); i++) {
-            VkCommandBufferBeginInfo beginInfo{};
-            beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-            beginInfo.flags = 0; // Optional
-            beginInfo.pInheritanceInfo = nullptr; // Optional
-
-            if (vkBeginCommandBuffer(commandBuffers[i], &beginInfo) !=
-                VK_SUCCESS) {
-                throw std::runtime_error("failed to begin recording command buffer!");
-            }
+            beginCommandBuffer(commandBuffers[i], 0, nullptr);
 
             VkRenderPassBeginInfo renderPassInfo{};
             renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -2669,7 +1821,7 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                PhongPipelineLayout, 0, 1,
+                phongPipelineLayout, 0, 1,
                 &PhongDescriptorSets[i + j * swapChainImages.size()],
                 0, nullptr);
 
@@ -2679,7 +1831,7 @@ private:
 
             // Draws the Skybox
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                SkyBoxPipeline);
+                skyBoxPipeline);
             VkBuffer vertexBuffers[] = { SkyBox[curText].MD.vertexBuffer };
             VkDeviceSize offsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, vertexBuffers, offsets);
@@ -2687,7 +1839,7 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                SkyBoxPipelineLayout, 0, 1,
+                skyBoxPipelineLayout, 0, 1,
                 &SkyBoxDescriptorSets[i + curText * swapChainImages.size()],
                 0, nullptr);
             vkCmdDrawIndexed(commandBuffers[i],
@@ -2696,7 +1848,7 @@ private:
 
             // Draws the text
             vkCmdBindPipeline(commandBuffers[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                TextPipeline);
+                textPipeline);
             VkBuffer TvertexBuffers[] = { SText.MD.vertexBuffer };
             VkDeviceSize Toffsets[] = { 0 };
             vkCmdBindVertexBuffers(commandBuffers[i], 0, 1, TvertexBuffers, Toffsets);
@@ -2704,19 +1856,18 @@ private:
                 VK_INDEX_TYPE_UINT32);
             vkCmdBindDescriptorSets(commandBuffers[i],
                 VK_PIPELINE_BIND_POINT_GRAPHICS,
-                TextPipelineLayout, 0, 1,
+                textPipelineLayout, 0, 1,
                 &TextDescriptorSets[i],
                 0, nullptr);
             vkCmdDrawIndexed(commandBuffers[i],
                 static_cast<uint32_t>(SceneText[curText].len), 1, static_cast<uint32_t>(SceneText[curText].start), 0, 0);
 
             vkCmdEndRenderPass(commandBuffers[i]);
-            if (vkEndCommandBuffer(commandBuffers[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to record command buffer!");
-            }
+            endCommandBuffer(commandBuffers[i]);
         }
     }
 
+    // TODO move in library
     void createSyncObjects() {
         imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
         renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
@@ -2832,6 +1983,7 @@ private:
         currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
     }
 
+    // TODO move in library
     void updateUniformBuffer(uint32_t currentImage) {
         static auto startTime = std::chrono::high_resolution_clock::now();
         static float lastTime = 0.0f;
@@ -3036,7 +2188,7 @@ private:
 
         vkDeviceWaitIdle(device);
 
-        cleanupSwapChain();
+        cleanupSwapChain2();
 
         createSwapChain();
         createImageViews();
@@ -3051,39 +2203,39 @@ private:
         createCommandBuffers();
     }
 
-
-    void cleanupSwapChain() {
-        vkDestroyImageView(device, colorImageView, nullptr);
+    // TODO this function doesn't cleanup only swapchains
+    void cleanupSwapChain2() {
+        cleanupImageView(device, colorImageView);
         vkDestroyImage(device, colorImage, nullptr);
         vkFreeMemory(device, colorImageMemory, nullptr);
 
-        vkDestroyImageView(device, depthImageView, nullptr);
+        cleanupImageView(device, depthImageView);
         vkDestroyImage(device, depthImage, nullptr);
         vkFreeMemory(device, depthImageMemory, nullptr);
 
-        for (size_t i = 0; i < swapChainFramebuffers.size(); i++) {
-            vkDestroyFramebuffer(device, swapChainFramebuffers[i], nullptr);
+        for (auto fb : swapChainFramebuffers)
+        {
+            cleanupFrameBuffer(device, fb);
         }
 
-        vkFreeCommandBuffers(device, commandPool,
-            static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
+        cleanupCommandBuffer(device, commandPool, static_cast<uint32_t>(commandBuffers.size()), commandBuffers.data());
 
-        vkDestroyPipeline(device, PhongPipeline, nullptr);
-        vkDestroyPipelineLayout(device, PhongPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, phongPipeline);
+        cleanupGraphicsPipelineLayout(device, phongPipelineLayout);
 
-        vkDestroyPipeline(device, SkyBoxPipeline, nullptr);
-        vkDestroyPipelineLayout(device, SkyBoxPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, skyBoxPipeline);
+        cleanupGraphicsPipelineLayout(device, skyBoxPipelineLayout);
 
-        vkDestroyPipeline(device, TextPipeline, nullptr);
-        vkDestroyPipelineLayout(device, TextPipelineLayout, nullptr);
+        cleanupGraphicsPipeline(device, textPipeline);
+        cleanupGraphicsPipelineLayout(device, textPipelineLayout);
 
-        vkDestroyRenderPass(device, renderPass, nullptr);
+        cleanupRenderPass(device, renderPass);
 
         for (size_t i = 0; i < swapChainImageViews.size(); i++) {
-            vkDestroyImageView(device, swapChainImageViews[i], nullptr);
+            cleanupImageView(device, swapChainImageViews[i]);
         }
 
-        vkDestroySwapchainKHR(device, swapChain, nullptr);
+        cleanupSwapChain(device, swapChain);
 
         for (size_t i = 0; i < swapChainImages.size() * Scene.size(); i++) {
             vkDestroyBuffer(device, uniformBuffers[i], nullptr);
@@ -3107,11 +2259,11 @@ private:
 
 
     void cleanup() {
-        cleanupSwapChain();
+        cleanupSwapChain2();
 
         for (size_t i = 0; i < Scene.size(); i++) {
             vkDestroySampler(device, Scene[i].TD.textureSampler, nullptr);
-            vkDestroyImageView(device, Scene[i].TD.textureImageView, nullptr);
+            cleanupImageView(device, Scene[i].TD.textureImageView);
             vkDestroyImage(device, Scene[i].TD.textureImage, nullptr);
             vkFreeMemory(device, Scene[i].TD.textureImageMemory, nullptr);
 
@@ -3123,7 +2275,7 @@ private:
         }
         for (size_t i = 0; i < SkyBox.size(); i++) {
             vkDestroySampler(device, SkyBox[i].TD.textureSampler, nullptr);
-            vkDestroyImageView(device, SkyBox[i].TD.textureImageView, nullptr);
+            cleanupImageView(device, SkyBox[i].TD.textureImageView);
             vkDestroyImage(device, SkyBox[i].TD.textureImage, nullptr);
             vkFreeMemory(device, SkyBox[i].TD.textureImageMemory, nullptr);
 
@@ -3135,7 +2287,7 @@ private:
         }
 
         vkDestroySampler(device, SText.TD.textureSampler, nullptr);
-        vkDestroyImageView(device, SText.TD.textureImageView, nullptr);
+        cleanupImageView(device, SText.TD.textureImageView);
         vkDestroyImage(device, SText.TD.textureImage, nullptr);
         vkFreeMemory(device, SText.TD.textureImageMemory, nullptr);
 
@@ -3145,9 +2297,9 @@ private:
         vkDestroyBuffer(device, SText.MD.vertexBuffer, nullptr);
         vkFreeMemory(device, SText.MD.vertexBufferMemory, nullptr);
 
-        vkDestroyDescriptorSetLayout(device, PhongDescriptorSetLayout, nullptr);
-        vkDestroyDescriptorSetLayout(device, SkyBoxDescriptorSetLayout, nullptr);
-        vkDestroyDescriptorSetLayout(device, TextDescriptorSetLayout, nullptr);
+        cleanupDescriptorSetLayout(device, phongDescriptorSetLayout);
+        cleanupDescriptorSetLayout(device, skyBoxDescriptorSetLayout);
+        cleanupDescriptorSetLayout(device, textDescriptorSetLayout);
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(device, renderFinishedSemaphores[i], nullptr);
@@ -3155,20 +2307,19 @@ private:
             vkDestroyFence(device, inFlightFences[i], nullptr);
         }
 
-        vkDestroyCommandPool(device, commandPool, nullptr);
+        cleanupCommandPool(device, commandPool);
 
-        vkDestroyDevice(device, nullptr);
+        cleanupLogicalDevice(device);
 
-        if (enableValidationLayers) {
-            DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-        }
+#ifdef ENABLE_VALIDATION_LAYERS
+        cleanupDebugMessenger(instance, debugMessenger, nullptr);
+#endif
 
-        vkDestroySurfaceKHR(instance, surface, nullptr);
-        vkDestroyInstance(instance, nullptr);
+        cleanupSurface(instance, surface);
 
-        glfwDestroyWindow(window);
+        cleanupInstance(instance);
 
-        glfwTerminate();
+        cleanupWindow(window);
     }
 
     VkPipeline getObjectsPipeline() {
@@ -3178,7 +2329,7 @@ private:
     void setObjectsPipeline(int selectedPipeline) {
         switch (selectedPipeline) {
         case OBJ_PIPELINE_PHONG:
-            objectsPipeline = PhongPipeline;
+            objectsPipeline = phongPipeline;
             break;
         case OBJ_PIPELINE_WIREFRAME:
             objectsPipeline = wireframePipeline;

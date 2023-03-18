@@ -137,14 +137,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="asset_types.cpp" />
+    <ClCompile Include="cleanup_stack.cpp" />
+    <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
+    <ClCompile Include="defines.cpp" />
+    <ClCompile Include="descriptor_set_layout.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
-    <ClCompile Include="GLTFLoader.cpp" />
+    <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
+    <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="ioutils.cpp" />
@@ -157,10 +163,14 @@
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
     <ClCompile Include="render_passes.cpp" />
+    <ClCompile Include="render_target.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
     <ClCompile Include="shader_module.cpp" />
+    <ClCompile Include="std_pipeline.cpp" />
     <ClCompile Include="surface.cpp" />
+    <ClCompile Include="surface_factory.cpp" />
+    <ClCompile Include="swap_chain_info.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
     <ClCompile Include="test.cpp" />
@@ -170,16 +180,20 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="assets.h" />
+    <ClInclude Include="asset_types.hpp" />
+    <ClInclude Include="cleanup_stack.h" />
     <ClInclude Include="command_buffers.h" />
     <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
+    <ClInclude Include="descriptor_set_layout.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
-    <ClInclude Include="GLTFLoader.h" />
+    <ClInclude Include="gltf_loader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
+    <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="instance.h" />
     <ClInclude Include="ioutils.h" />
@@ -190,18 +204,28 @@
     <ClInclude Include="PipelineBuilder.h" />
     <ClInclude Include="queue_families.h" />
     <ClInclude Include="render_passes.h" />
+    <ClInclude Include="render_target.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
     <ClInclude Include="shader_module.h" />
+    <ClInclude Include="std_pipeline.h" />
     <ClInclude Include="surface.h" />
+    <ClInclude Include="surface_factory.h" />
     <ClInclude Include="swap_chains.h" />
+    <ClInclude Include="swap_chain_info.h" />
     <ClInclude Include="swap_chain_support.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
     <ClInclude Include="viewport.h" />
-    <ClInclude Include="vulkan.h" />
+    <ClInclude Include="game_engine.h" />
     <ClInclude Include="window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="vulkan.bak" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="conventions.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

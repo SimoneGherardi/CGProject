@@ -5,11 +5,11 @@ VkDevice initializeLogicalDevice(
     const VkSurfaceKHR surface,
     const ValidationLayers validationLayers,
     const Extensions deviceExtensions,
+    VkDevice* device,
     VkQueue* graphicsQueue,
     VkQueue* presentationQueue
 )
 {
-    VkDevice device = {};
     QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -26,6 +26,9 @@ VkDevice initializeLogicalDevice(
     }
 
     VkPhysicalDeviceFeatures deviceFeatures{};
+    deviceFeatures.samplerAnisotropy = VK_TRUE;
+    deviceFeatures.sampleRateShading = VK_TRUE;
+    deviceFeatures.fillModeNonSolid = VK_TRUE;
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -45,12 +48,16 @@ VkDevice initializeLogicalDevice(
     createInfo.enabledLayerCount = 0;
 #endif
 
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) != VK_SUCCESS) {
+    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, device) != VK_SUCCESS) {
         throw std::runtime_error("failed to create logical device!");
     }
 
-    vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, graphicsQueue);
-    vkGetDeviceQueue(device, indices.presentFamily.value(), 0, presentationQueue);
+    vkGetDeviceQueue(*device, indices.graphicsFamily.value(), 0, graphicsQueue);
+    vkGetDeviceQueue(*device, indices.presentFamily.value(), 0, presentationQueue);
+}
 
-    return device;
+
+void cleanupLogicalDevice(const VkDevice device)
+{
+    vkDestroyDevice(device, nullptr);
 }

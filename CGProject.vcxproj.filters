@@ -347,6 +347,9 @@
     <ClInclude Include="asset_types.hpp">
       <Filter>Header Files\3d</Filter>
     </ClInclude>
+    <ClInclude Include="VertexData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="vulkan.bak" />

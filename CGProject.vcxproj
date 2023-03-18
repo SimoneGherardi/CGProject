@@ -226,6 +226,7 @@
     <ClInclude Include="test.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
+    <ClInclude Include="VertexData.h" />
     <ClInclude Include="viewport.h" />
     <ClInclude Include="game_engine.h" />
     <ClInclude Include="VulkanStructs.h" />

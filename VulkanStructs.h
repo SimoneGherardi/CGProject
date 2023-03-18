@@ -1,5 +1,6 @@
 #pragma once
 #include "defines.h"
+#include "VertexData.h"
 
 namespace VulkanStructs {
 	const VkCommandPoolCreateInfo CommandPoolCreateInfo(const VkCommandPoolResetFlags flags = 0);
@@ -27,4 +28,6 @@ namespace VulkanStructs {
 	const VkSamplerCreateInfo SamplerCreateInfo(const VkFilter filters, const VkSamplerAddressMode samplerAdressMode = VK_SAMPLER_ADDRESS_MODE_REPEAT);
 	const VkBufferMemoryBarrier BufferBarrier(const VkBuffer buffer, const uint32_t queue);
 	const VkImageMemoryBarrier ImageBarrier(const VkImage image, const VkAccessFlags srcAccessMask, const VkAccessFlags dstAccessMask, const VkImageLayout oldLayout, const VkImageLayout newLayout, const VkImageAspectFlags aspectMask);
+	const VkVertexInputBindingDescription VertexInputBindingDescription(const uint32_t binding, const uint32_t size, const VkVertexInputRate rate);
+	const std::vector<VkVertexInputAttributeDescription> VertexInputAttributeDescription(const uint32_t binding);
 }

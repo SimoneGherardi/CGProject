@@ -14,6 +14,7 @@
 #include "command_pool.h"
 #include "render_target.h"
 #include "framebuffers.h"
+#include "Allocator.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -254,6 +255,16 @@ public:
 		_InitializeSurface(factory);
 		_InitializePhysicalDevice();
 		_InitializeLogicalDevice();
+
+		//Test
+		const uint32_t arr1[] = { 1,2,3,4,5,6,7,8 };
+		const uint32_t arr2[] = { 10,20,30,40 };
+		const VulkanContext context = { _PhysicalDevice, _Device, _GraphicsQueue, _PresentationQueue };
+		Allocator* a = new Allocator(context, 4);
+		auto x = a->AllocateAndSet((void*) arr2, sizeof(uint32_t) * 4, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		auto y = a->AllocateAndSet((void*) arr1, sizeof(uint32_t) * 8, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
+		//Fine test
+
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();
 		// descriptor set layouts

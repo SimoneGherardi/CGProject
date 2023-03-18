@@ -64,6 +64,12 @@
     <Filter Include="Header Files\utilities">
       <UniqueIdentifier>{3cad1fd4-01a0-4bf8-9069-6ae6011a4814}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\allocator">
+      <UniqueIdentifier>{1e1ef219-60aa-48b6-9a24-869cf64bd8cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\allocator">
+      <UniqueIdentifier>{b36a9b96-85b8-41e6-a6ed-23e3f78ceb95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -183,6 +189,20 @@
     <ClCompile Include="image.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="Allocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryReference.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="ImmediateCommandBuffer.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanStructs.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceMemory.cpp">
+      <Filter>Source Files\allocator</Filter>
     <ClCompile Include="asset_types.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
@@ -308,6 +328,20 @@
     <ClInclude Include="image.h">
       <Filter>Header Files\vulkan</Filter>
     </ClInclude>
+    <ClInclude Include="Allocator.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="ImmediateCommandBuffer.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanStructs.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceMemory.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryReference.h">
+      <Filter>Header Files\allocator</Filter>
     <ClInclude Include="asset_types.hpp">
       <Filter>Header Files\3d</Filter>
     </ClInclude>

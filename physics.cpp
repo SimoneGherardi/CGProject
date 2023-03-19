@@ -5,35 +5,35 @@
 
 void CreateCollisionBody(flecs::entity e, Transform& transform, CollisionBody& collisionBody)
 {
-    if (collisionBody.body != NULL) return;
+    if (collisionBody.Body != NULL) return;
 
     GameEngine& engine = GameEngine::GetInstance();
-    rp3d::Vector3 position(transform.position.x, transform.position.y, transform.position.z);
-    rp3d::Quaternion rotation(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+    rp3d::Vector3 position(transform.Position.x, transform.Position.y, transform.Position.z);
+    rp3d::Quaternion rotation(transform.Rotation.x, transform.Rotation.y, transform.Rotation.z, transform.Rotation.w);
     rp3d::Transform initialTransform(position, rotation);
-    collisionBody.body = engine.PhysicsWorld->createCollisionBody(initialTransform);
+    collisionBody.Body = engine.PhysicsWorld->createCollisionBody(initialTransform);
 }
 
 void CreateRigidBody(flecs::entity e, Transform& transform, RigidBody& rigidbody)
 {
-    if (rigidbody.body != NULL) return;
+    if (rigidbody.Body != NULL) return;
 
     GameEngine& engine = GameEngine::GetInstance();
-    rp3d::Vector3 position(transform.position.x, transform.position.y, transform.position.z);
-    rp3d::Quaternion rotation(transform.rotation.x, transform.rotation.y, transform.rotation.z, transform.rotation.w);
+    rp3d::Vector3 position(transform.Position.x, transform.Position.y, transform.Position.z);
+    rp3d::Quaternion rotation(transform.Rotation.x, transform.Rotation.y, transform.Rotation.z, transform.Rotation.w);
     rp3d::Transform initialTransform(position, rotation);
-    rigidbody.body = engine.PhysicsWorld->createRigidBody(initialTransform);
-    rigidbody.body->setType(rigidbody.type);
-    rigidbody.body->setMass(rigidbody.weight);
+    rigidbody.Body = engine.PhysicsWorld->createRigidBody(initialTransform);
+    rigidbody.Body->setType(rigidbody.Type);
+    rigidbody.Body->setMass(rigidbody.Weight);
 }
 
 void CreateCollider(flecs::entity e, CollisionBody& body, Collider& collider)
 {
-    if (collider.collider != NULL) return;
+    if (collider.Collider != NULL) return;
 
     GameEngine& engine = GameEngine::GetInstance();
     rp3d::CollisionShape* shape;
-    switch (collider.type)
+    switch (collider.Type)
     {
     case rp3d::CollisionShapeName::CAPSULE:
         shape = engine.PhysicsCommon.createCapsuleShape(c->size.x, c->size.y);
@@ -46,19 +46,19 @@ void CreateCollider(flecs::entity e, CollisionBody& body, Collider& collider)
         shape = engine.PhysicsCommon.createSphereShape(c->size.x);
         break;
     }
-    collider.collider = body.body->addCollider(shape, rp3d::Transform::identity());
+    collider.Collider = body.Body->addCollider(shape, rp3d::Transform::identity());
 }
 
 void PhysicsCopyPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
 {
-    if (rigidbody.body == NULL) return;
+    if (rigidbody.Body == NULL) return;
     GameEngine& engine = GameEngine::GetInstance();
-    rp3d::Transform physicsTransform = rigidbody.body->getTransform();
+    rp3d::Transform physicsTransform = rigidbody.Body->getTransform();
     float factor = engine.Accumulator / PHYSIC_TIMESTEP;
-    rp3d::Transform currentTransform = rp3d::Transform(transform.position, transform.rotation);
+    rp3d::Transform currentTransform = rp3d::Transform(transform.Position, transform.Rotation);
     rp3d::Transform interpolatedTransform = rp3d::Transform::interpolateTransforms(currentTransform, physicsTransform, factor);
-    transform.position = interpolatedTransform.getPosition();
-    transform.rotation = interpolatedTransform.getOrientation();
+    transform.Position = interpolatedTransform.getPosition();
+    transform.Rotation = interpolatedTransform.getOrientation();
 }
 
 Physics::Physics(flecs::world& world)

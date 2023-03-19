@@ -4,20 +4,34 @@
 
 typedef struct Transform
 {
-    rp3d::Vector3 position = {0, 0, 0};
-    rp3d::Quaternion rotation = rp3d::Quaternion::identity();
+public:
+    Transform* Parent;
+
+    rp3d::Vector3 GetPosition();
+    void SetPosition(rp3d::Vector3);
+    rp3d::Quaternion GetRotation();
+    void SetRotation(rp3d::Quaternion);
+    rp3d::Transform GetGlobalTransform();
+private:
+    rp3d::Vector3 _Position = {0, 0, 0};
+    rp3d::Quaternion _Rotation = rp3d::Quaternion::identity();
+    rp3d::Transform _LocalTransform;
+    rp3d::Transform _GlobalTransform;
+    std::chrono::system_clock::time_point _LastGlobalTransformUpdate = std::chrono::system_clock::time_point::min();
+
+    void _UpdateTransform();
 } Transform;
 
 typedef struct Velocity
 {
-    rp3d::Vector3 direction = { 1, 0, 0 };
-    float magnitude = 0;
+    rp3d::Vector3 Direction = { 1, 0, 0 };
+    float Magnitude = 0;
 } Velocity;
 
 typedef struct AngularVelocity
 {
-    rp3d::Quaternion direction = rp3d::Quaternion::fromEulerAngles(0, 0, 0);
-    float magnitude = 0;
+    rp3d::Quaternion Direction = rp3d::Quaternion::fromEulerAngles(0, 0, 0);
+    float Magnitude = 0;
 } AngularVelocity;
 
 class Movement

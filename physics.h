@@ -4,21 +4,21 @@
 
 typedef struct CollisionBody
 {
-    rp3d::CollisionBody* body;
+    rp3d::CollisionBody* Body;
 } CollisionBody;
 
 typedef struct RigidBody: CollisionBody
 {
-    rp3d::RigidBody* body;
-    rp3d::BodyType type = rp3d::BodyType::DYNAMIC;
-    float weight = 70;
+    rp3d::RigidBody* Body;
+    rp3d::BodyType Type = rp3d::BodyType::DYNAMIC;
+    float Weight = 70;
 } RigidBody;
 
 typedef struct Collider
 {
-    rp3d::Collider* collider;
-    rp3d::CollisionShapeName type = rp3d::CollisionShapeName::CAPSULE;
-    rp3d::Vector3 size = rp3d::Vector3(1, 1, 1);
+    rp3d::Collider* Collider;
+    rp3d::CollisionShapeName Type = rp3d::CollisionShapeName::CAPSULE;
+    rp3d::Vector3 Size = rp3d::Vector3(1, 1, 1);
 } Collider;
 
 class Physics

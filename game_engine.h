@@ -10,7 +10,8 @@ public:
     std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
     rp3d::PhysicsCommon PhysicsCommon;
     rp3d::PhysicsWorld* PhysicsWorld;
-
+    std::chrono::system_clock::time_point GetCurrentFrameTime();
+    
     void Loop();
 
     GameEngine(GameEngine const&) = delete;

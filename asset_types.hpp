@@ -20,12 +20,19 @@ struct GLTFModel {
     int32_t ChildrenNum;
     int32_t PrimitivesNum;
     int32_t ArmatureInd;
+    int32_t WeightsNum;
+    bool Rot;
+    bool Sca;
+    bool Tra;
+    bool Mat;
     std::vector<int32_t> Children;      // Nodes Id
     std::vector<int32_t> Primitives;    // Primitives Id
     // For the animations
     std::vector<double> Rotation;       // length must be 0 or 4
     std::vector<double> Scale;          // length must be 0 or 3
     std::vector<double> Translation;    // length must be 0 or 3
+    std::vector<double> Matrix;         // length must be 0 or 16
+    std::vector<double> Weights;
 };
 
 struct GLTFPrimitive {

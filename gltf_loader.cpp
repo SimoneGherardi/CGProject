@@ -307,21 +307,27 @@ void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFModel");
     // Evaluate dimension of object
-    int32_t GLTFModelSize = (sizeof(int32_t) * 4);
+    int32_t GLTFModelSize = (sizeof(int32_t) * 5) + (sizeof(bool) * 4);
     if (model.ChildrenNum != 0) {
-        GLTFModelSize += model.ChildrenNum * sizeof(int32_t);
+        GLTFModelSize += model.Children.size() * sizeof(int32_t);
     }
     if (model.PrimitivesNum != 0) {
-        GLTFModelSize += model.PrimitivesNum * sizeof(int32_t);
+        GLTFModelSize += model.Primitives.size() * sizeof(int32_t);
     }
-    if (model.Rotation.size() != 0) {
-        GLTFModelSize += 4 * sizeof(double);
+    if (model.Rot) {
+        GLTFModelSize += model.Rotation.size() * sizeof(double);
     }
-    if (model.Scale.size() != 0) {
-        GLTFModelSize += 3 * sizeof(double);
+    if (model.Sca) {
+        GLTFModelSize += model.Scale.size() * sizeof(double);
     }
-    if (model.Translation.size() != 0) {
-        GLTFModelSize += 3 * sizeof(double);
+    if (model.Tra) {
+        GLTFModelSize += model.Translation.size() * sizeof(double);
+    }
+    if (model.Mat) {
+        GLTFModelSize += model.Matrix.size() * sizeof(double);
+    }
+    if (model.WeightsNum != 0) {
+        GLTFModelSize += model.Weights.size() * sizeof(double);
     }
 
     // Save to file
@@ -351,20 +357,30 @@ void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
         memcpy(ToFile + Offset, (reinterpret_cast<int32_t*> (&model.Primitives[0])), model.PrimitivesNum * sizeof(int32_t));
         Offset += model.PrimitivesNum * sizeof(int32_t);
     }
-    if (model.Rotation.size() != 0) {
+    if (model.Rot) {
         // std::vector<double> Rotation
-        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), 4 * sizeof(double));
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), model.Translation.size() * sizeof(double));
         Offset += 4 * sizeof(double);
     }
-    if (model.Scale.size() != 0) {
+    if (model.Sca) {
         // std::vector<double> Scale
-        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Scale[0])), 3 * sizeof(double));
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Scale[0])), model.Scale.size() * sizeof(double));
         Offset += 3 * sizeof(double);
     }
-    if (model.Translation.size() != 0) {
+    if (model.Tra) {
         // std::vector<double> Translation
-        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Translation[0])), 3 * sizeof(double));
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Translation[0])), model.Translation.size() * sizeof(double));
         Offset += 3 * sizeof(double);
+    }
+    if (model.Mat) {
+        // std::vector<double> Matrix
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Matrix[0])), model.Matrix.size() * sizeof(double));
+        Offset += 3 * sizeof(double);
+    }
+    if (model.WeightsNum != 0) {
+        // std::vector<double> Weights;
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Weights[0])), model.WeightsNum * sizeof(double));
+        Offset += model.WeightsNum * sizeof(double);
     }
     
     
@@ -398,8 +414,20 @@ void loadDataFromGLTF(  const char* fileName,
         NewModel.ArmatureInd = TmpNode.skin;
         NewModel.Children = (std::vector<int32_t>)TmpNode.children;
         NewModel.Rotation = TmpNode.rotation;
+        NewModel.Rotation.size() != 0 ? NewModel.Rot = true : NewModel.Rot = false;
+        
         NewModel.Scale = TmpNode.scale;
+        NewModel.Scale.size() != 0 ? NewModel.Sca = true : NewModel.Sca = false;
+
         NewModel.Translation = TmpNode.translation;
+        NewModel.Translation.size() != 0 ? NewModel.Tra = true : NewModel.Tra = false;
+
+        NewModel.Matrix = TmpNode.matrix;
+        NewModel.Matrix.size() != 0 ? NewModel.Mat = true : NewModel.Mat = false;
+
+        NewModel.Weights = TmpNode.weights;
+        NewModel.WeightsNum = NewModel.Weights.size();
+
         if (TmpNode.mesh != -1) {
             tinygltf::Mesh TmpMesh = model.meshes[TmpNode.mesh];
             NewModel.PrimitivesNum = TmpMesh.primitives.size();

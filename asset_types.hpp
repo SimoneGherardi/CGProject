@@ -78,7 +78,9 @@ struct GLTFArmature {
     GLTFArmature(int32_t id, int32_t boneCount);
     int32_t Id;
     int32_t BoneCount;
+    int32_t JointsCount;
     std::vector<std::vector<float>> InvBindMatrices; // bone index, 16 floats matrix, dim = BoneCount * 16
+    std::vector<int> Joints;
 };
 
 struct GLTFAnimationChannel {

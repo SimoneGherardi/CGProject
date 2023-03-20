@@ -143,17 +143,31 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature){
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFArmature");
     // Evaluate dimension of object
-    int32_t GLTFArmatureSize = (sizeof(int32_t) * 2) + (armature.BoneCount * 4 * sizeof(float));
+    int32_t GLTFArmatureSize = (sizeof(int32_t) * 3) + (armature.BoneCount * 4 * sizeof(float));
+    if (armature.JointsCount != 0) {
+        GLTFArmatureSize += armature.Joints.size() * sizeof(int);
+    }
     // Save to file
     // #ArmatureId_ArmatureName.armature
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(armature.Id) + "_" + filename + ".armature";
     char* ToFile = (char*)malloc(GLTFArmatureSize);
+    int32_t Offset = 0;
     // int32_t Id;
     memcpy(ToFile, &armature.Id, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // int32_t BoneCount;
-    memcpy(ToFile + sizeof(int32_t), &armature.BoneCount, sizeof(int32_t));
+    memcpy(ToFile + Offset, &armature.BoneCount, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t JointsCount;
+    memcpy(ToFile + Offset, &armature.JointsCount, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // std::vector<std::vector<float>> InvBindMatrices;
-    memcpy(ToFile + (2 * sizeof(int32_t)), (reinterpret_cast<float*> (&armature.InvBindMatrices[0])), armature.BoneCount * sizeof(float) * 4);
+    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&armature.InvBindMatrices[0])), armature.BoneCount * sizeof(float) * 4);
+    Offset += armature.BoneCount * sizeof(float) * 4;
+    // std::vector<int> Joints;
+    memcpy(ToFile + Offset, (reinterpret_cast<int*> (&armature.Joints[0])), armature.Joints.size() * sizeof(int));
+    Offset += armature.Joints.size() * sizeof(int);
+
     saveToFile(BinaryFileName, ToFile, GLTFArmatureSize);
 }
 
@@ -523,7 +537,8 @@ void loadDataFromGLTF(  const char* fileName,
         GLTFArmature NewArmature(i, TmpSkin.joints.size());
         char* AccessorData = readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount);
         NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
-        
+        NewArmature.JointsCount = TmpSkin.joints.size();
+        NewArmature.Joints = TmpSkin.joints;
         saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature);
         allArmatures.push_back(NewArmature);
     };

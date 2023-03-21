@@ -124,26 +124,25 @@ std::string createGLTFDirectories(std::string dirname) {
     int tmp = errno;
     if (stat(DirectoryName.c_str(), &sb) != 0)
     {
-        //tmp = CreateDirectory((LPCWSTR)DirectoryName.c_str(), NULL);
         std::filesystem::create_directory(DirectoryName);
     };
     return DirectoryName;
 }
 
-void saveToFile(std::string filename, char* toFile, int32_t size) {
+void saveToFile(std::string fileName, char* toFile, int32_t size) {
     std::ofstream Outfile;
-    Outfile.open(filename, std::ios::binary | std::ios::out);
+    Outfile.open(fileName, std::ios::binary | std::ios::out);
     Outfile.write(toFile, size);
     Outfile.close();
     return;
 }
 
 
-void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature){
+void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, const char* InvBindMat){
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFArmature");
     // Evaluate dimension of object
-    int32_t GLTFArmatureSize = (sizeof(int32_t) * 3) + (armature.BoneCount * 4 * sizeof(float));
+    int32_t GLTFArmatureSize = (sizeof(int32_t) * 3) + (armature.BoneCount * 16 * sizeof(float));
     if (armature.JointsCount != 0) {
         GLTFArmatureSize += armature.Joints.size() * sizeof(int);
     }
@@ -153,22 +152,77 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature){
     char* ToFile = (char*)malloc(GLTFArmatureSize);
     int32_t Offset = 0;
     // int32_t Id;
-    memcpy(ToFile, &armature.Id, sizeof(int32_t));
+    memcpy(ToFile, (char*) &armature.Id, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t BoneCount;
-    memcpy(ToFile + Offset, &armature.BoneCount, sizeof(int32_t));
+    memcpy(ToFile + Offset, (char*) &armature.BoneCount, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t JointsCount;
-    memcpy(ToFile + Offset, &armature.JointsCount, sizeof(int32_t));
+    memcpy(ToFile + Offset, (char*) &armature.JointsCount, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // std::vector<std::vector<float>> InvBindMatrices;
-    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&armature.InvBindMatrices[0])), armature.BoneCount * sizeof(float) * 4);
-    Offset += armature.BoneCount * sizeof(float) * 4;
+    for (int i = 0; i < armature.BoneCount; i++) {
+        std::vector TmpVector = armature.InvBindMatrices[i];
+        for (int j = 0; j < 16; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
     // std::vector<int> Joints;
-    memcpy(ToFile + Offset, (reinterpret_cast<int*> (&armature.Joints[0])), armature.Joints.size() * sizeof(int));
+    memcpy(ToFile + Offset, (reinterpret_cast<char*> (&armature.Joints[0])), armature.Joints.size() * sizeof(int));
     Offset += armature.Joints.size() * sizeof(int);
 
     saveToFile(BinaryFileName, ToFile, GLTFArmatureSize);
+}
+
+GLTFArmature loadArmatureFromBin(std::string fileName) {
+    std::ifstream Infile;
+    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
+    int32_t SizeOfFile = Infile.tellg();
+    char* FileStream = (char*)malloc(SizeOfFile);
+    Infile.seekg(0);
+    Infile.read(FileStream, SizeOfFile);
+    int32_t TmpId;
+    int32_t TmpBoneCount;
+    int32_t Offset = 0;
+    // int32_t Id;
+    memcpy(&TmpId, (int32_t*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t BoneCount;
+    memcpy(&TmpBoneCount, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFArmature ReadArmature(TmpId, TmpBoneCount);
+
+    // int32_t JointsCount;
+    memcpy(&ReadArmature.JointsCount, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // std::vector<std::vector<float>> InvBindMatrices;
+    //char* TmpAccessorData = (char*)malloc(ReadArmature.BoneCount * sizeof(float) * 4);
+    //memcpy(TmpAccessorData, FileStream + Offset, ReadArmature.BoneCount * sizeof(float) * 4);
+    //Offset += ReadArmature.BoneCount * sizeof(float) * 4;
+    // ReadArmature.InvBindMatrices = dataToFloatVectorVectors(TmpAccessorData, ReadArmature.BoneCount, sizeof(float) * 4);
+    for (int i = 0; i < ReadArmature.BoneCount; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 16; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadArmature.InvBindMatrices.push_back(TmpVec);
+    }
+    
+    // std::vector<int> Joints;
+    for (int i = 0; i < ReadArmature.JointsCount; i++) {
+        int TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(int));
+        Offset += sizeof(int);
+        ReadArmature.Joints.push_back(TmpElement);
+    }
+    
+    return ReadArmature;
 }
 
 void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
@@ -539,9 +593,19 @@ void loadDataFromGLTF(  const char* fileName,
         NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
         NewArmature.JointsCount = TmpSkin.joints.size();
         NewArmature.Joints = TmpSkin.joints;
-        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature);
+        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature, AccessorData);
         allArmatures.push_back(NewArmature);
     };
+
+    // read Armatures test
+    std::string path = ".\\resources\\models\\gltf\\GLTFArmature";
+    int i = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path() << std::endl;
+        GLTFArmature ReadArmature = loadArmatureFromBin(entry.path().string());
+        i++;
+    }
+        
 
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {

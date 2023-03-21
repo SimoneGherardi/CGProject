@@ -53,6 +53,9 @@ struct GLTFTexture {
     int32_t Id;
     int32_t Width;
     int32_t Height;
+    int32_t Component;
+    int32_t Bits;        // bit depth per channel. 8(byte), 16 or 32.
+    int32_t PixelType;  // pixel type(TINYGLTF_COMPONENT_TYPE_***). usually UBYTE(bits = 8) or USHORT(bits = 16)
     // ordered data:
     // [0]:magFilter [1]:minFilter [2]:wrapS [3]:wrapT
     int32_t Samplers[4];

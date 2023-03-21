@@ -62,7 +62,7 @@ public:
 	);
 
 	BufferMemoryReference Get(void* data);
-	void Allocate(
+	BufferMemoryReference Allocate(
 		void* data,
 		const VkDeviceSize size,
 		const VkBufferUsageFlags usage

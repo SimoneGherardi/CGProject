@@ -18,7 +18,7 @@ BufferMemoryReference Allocator::Get(void* data)
 	return _Allocations[data];
 }
 
-void Allocator::Allocate(
+BufferMemoryReference Allocator::Allocate(
 	void* data,
 	const VkDeviceSize size,
 	const VkBufferUsageFlags usage
@@ -38,6 +38,7 @@ void Allocator::Allocate(
 	);
 	_Allocations[data] = newRef;
 	_MemoryOffset += size;
+	return Get(data);
 }
 
 BufferMemoryReference Allocator::AllocateAndSet(
@@ -121,8 +122,12 @@ void Allocator::_ReallocateMemory(const VkDeviceSize chunks)
 	_ChunksCount = chunks;
 }
 
-
-
-
-
-
+void Allocator::Cleanup()
+{
+	for (auto& r : _Allocations)
+	{
+		BufferMemoryReference::Cleanup(_Context, r.second);
+	}
+	_Memory.Cleanup();
+	_Immediate.Cleanup();
+}

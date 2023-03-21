@@ -15,6 +15,12 @@
 #include "render_target.h"
 #include "framebuffers.h"
 #include "Allocator.h"
+#include "FrameData.h"
+#include "descriptor_set_layout.h"
+#include "descriptor_pool.h"
+#include "descriptor_set.h"
+
+#define FRAME_OVERLAP 3
 
 struct WindowSize {
 	int Width, Height;
@@ -35,11 +41,18 @@ private:
 	RenderTarget _ColorRenderTarget;
 	RenderTarget _DepthRenderTarget;
 
+	VulkanContext _Context;
+
 	VkRenderPass _RenderPass;
 
 	VkCommandPool _CommandPool;
 
 	std::vector<VkFramebuffer> _SwapChainFramebuffers;
+
+	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
+	Allocator* _FrameDataAllocator;
+	VkDescriptorPool _FrameDataDescriptorPool;
+	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 
 	CleanupStack _CleanupStack;
 
@@ -164,6 +177,83 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializeAllocators()
+	{
+		TRACESTART;
+		_FrameDataAllocator = new Allocator(_Context, sizeof(GlobalData) * FRAME_OVERLAP, false);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up allocators");
+			_FrameDataAllocator->Cleanup();
+			delete _FrameDataAllocator;
+		});
+		TRACEEND;
+	}
+
+	void _InitializeDescriptorSet()
+	{
+		TRACESTART;
+
+		VkDescriptorSetLayoutBinding layoutBinding = getDescriptorSetLayoutBinding(
+			0,
+			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			nullptr
+		);
+
+		initializeDescriptorPool(
+			_Context,
+			{
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 }
+			},
+			&_FrameDataDescriptorPool
+		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up frame data descriptor pool");
+			cleanupDescriptorPool(_Context, _FrameDataDescriptorPool);
+		});
+
+		initializeDescriptorSetLayout(
+			_Context.Device,
+			1,
+			&layoutBinding,
+			&_FrameDataDescriptorSetLayout
+		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up frame data descriptor set layout");
+			cleanupDescriptorSetLayout(_Context.Device, _FrameDataDescriptorSetLayout);
+		});
+
+		for (size_t i = 0; i < FRAME_OVERLAP; i++)
+		{
+			_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
+				&(_FrameData[i].Global.Data),
+				sizeof(GlobalData),
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+			);
+
+			initializeDescriptorSet(
+				_Context,
+				_FrameDataDescriptorPool,
+				1,
+				&_FrameDataDescriptorSetLayout,
+				&(_FrameData[i].Global.DescriptorSet)
+			);
+
+			updateDescriptorSet(
+				_Context,
+				_FrameData[i].Global.MemoryReference.Buffer,
+				sizeof(GlobalData),
+				0,
+				_FrameData[i].Global.DescriptorSet,
+				1,
+				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+			);
+		}
+
+		TRACEEND;
+	}
+
 	void _InitializeCommandPool() {
 		TRACESTART;
 		auto queueFamilyIndices = findQueueFamilies(_PhysicalDevice, _Surface);
@@ -267,7 +357,14 @@ public:
 
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();
-		// descriptor set layouts
+
+		_Context.PhysicalDevice = _PhysicalDevice;
+		_Context.Device = _Device;
+		_Context.GraphicsQueue = _GraphicsQueue;
+		_Context.PresentationQueue = _PresentationQueue;
+		
+		_InitializeAllocators();
+		_InitializeDescriptorSet();
 		// pipeline
 		_InitializeCommandPool();
 		_InitializeRenderTargets();

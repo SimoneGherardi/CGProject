@@ -4,16 +4,12 @@
 
 struct GlobalData
 {
-	struct Camera {
-		glm::vec4 View;
-		glm::vec4 Projection;
-		glm::vec4 ViewProjection;
-	};
+	glm::mat4 CameraView;
+	glm::mat4 CameraProjection;
+	glm::mat4 CameraViewProjection;
 
-	struct Sun {
-		glm::vec3 Position;
-		glm::vec3 Color;
-	};
+	glm::vec3 SunPosition;
+	glm::vec3 SunColor;
 
 	glm::vec3 AmbientLight;
 };

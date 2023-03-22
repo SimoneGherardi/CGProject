@@ -137,6 +137,16 @@ void saveToFile(std::string fileName, char* toFile, int32_t size) {
     return;
 }
 
+char* openBinFile(std::string fileName) {
+    std::ifstream Infile;
+    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
+    int32_t SizeOfFile = Infile.tellg();
+    char* FileStream = (char*)malloc(SizeOfFile);
+    Infile.seekg(0);
+    Infile.read(FileStream, SizeOfFile);
+    return FileStream;
+}
+
 
 void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, const char* InvBindMat){
     // Create directory
@@ -177,12 +187,7 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, cons
 }
 
 GLTFArmature loadArmatureFromBin(std::string fileName) {
-    std::ifstream Infile;
-    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
-    int32_t SizeOfFile = Infile.tellg();
-    char* FileStream = (char*)malloc(SizeOfFile);
-    Infile.seekg(0);
-    Infile.read(FileStream, SizeOfFile);
+    char* FileStream = openBinFile(fileName);
     int32_t TmpId;
     int32_t TmpBoneCount;
     int32_t Offset = 0;
@@ -263,12 +268,7 @@ void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
 }
 
 GLTFTexture loadTextureFromBin(std::string fileName) {
-    std::ifstream Infile;
-    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
-    int32_t SizeOfFile = Infile.tellg();
-    char* FileStream = (char*)malloc(SizeOfFile);
-    Infile.seekg(0);
-    Infile.read(FileStream, SizeOfFile);
+    char* FileStream = openBinFile(fileName);
     int32_t TmpId;
     int32_t TmpWidth;
     int32_t TmpHeight;
@@ -353,12 +353,7 @@ void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
 }
 
 GLTFMaterial loadMaterialFromBin(std::string fileName) {
-    std::ifstream Infile;
-    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
-    int32_t SizeOfFile = Infile.tellg();
-    char* FileStream = (char*)malloc(SizeOfFile);
-    Infile.seekg(0);
-    Infile.read(FileStream, SizeOfFile);
+    char* FileStream = openBinFile(fileName);
     int32_t TmpId;
     int32_t Offset = 0;
 
@@ -406,17 +401,38 @@ void saveGLTFAnimationToBinFile(std::string filename, GLTFAnimation animation) {
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFAnimation");
     // Evaluate dimension of object
-    int32_t GLTFAnimationSize = sizeof(int32_t) * (1 + animation.Channels.size());
+    int32_t GLTFAnimationSize = sizeof(int32_t) * 2;
     // Save to file
     // #AnimationId_"AnimationName".animation
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animation.Id) + "_" + filename + ".animation";
     char* ToFile = (char*)malloc(GLTFAnimationSize);
+    int32_t Offset = 0;
     // int32_t Id;
     memcpy(ToFile, &animation.Id, sizeof(int32_t));
-    // std::vector<int32_t> Channels;
-    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<int32_t*> (&animation.Channels[0])), animation.Channels.size() * sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Id;
+    memcpy(ToFile + Offset, &animation.ChannelsNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     
     saveToFile(BinaryFileName, ToFile, GLTFAnimationSize);
+}
+
+GLTFAnimation loadAnimationFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t Offset = 0;
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFAnimation ReadAnimation(TmpId);
+
+    // int32_t ChannelsNum;
+    memcpy(&ReadAnimation.ChannelsNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    return ReadAnimation;
 }
 
 void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId, GLTFAnimationChannel animationChannel) {
@@ -710,14 +726,7 @@ void loadDataFromGLTF(  const char* fileName,
         allMaterials.push_back(NewMaterial);
     };
 
-    // read Material test
-    std::string path = ".\\resources\\models\\gltf\\GLTFMaterial";
-    int i = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path() << std::endl;
-        GLTFMaterial ReadMaterial = loadMaterialFromBin(entry.path().string());
-        i++;
-    };
+    
 
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
@@ -732,15 +741,31 @@ void loadDataFromGLTF(  const char* fileName,
     };
 
     
-        
-
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
         GLTFAnimation NewAnimation(i);
         for (int j = 0; j < TmpAnimation.channels.size(); j++) {
-            GLTFAnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
+            GLTFAnimationChannel NewAnimationChannel(i, j);
+            tinygltf::AnimationChannel TmpAnimationChannel = TmpAnimation.channels[j];
             tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
+            NewAnimationChannel.Node = TmpAnimationChannel.target_node;
+            if (TmpAnimationChannel.target_path == "translation") {
+                NewAnimationChannel.Path = PATH_TRANSLATION;
+                NewAnimationChannel.OutputDim = 3;
+            }
+            else if (TmpAnimationChannel.target_path == "rotation") {
+                NewAnimationChannel.Path = PATH_ROTATION;
+                NewAnimationChannel.OutputDim = 4;
+            }
+            else if (TmpAnimationChannel.target_path == "scale") {
+                NewAnimationChannel.Path = PATH_SCALE;
+                NewAnimationChannel.OutputDim = 3;
+            }
+            else if (TmpAnimationChannel.target_path == "weights") {
+                NewAnimationChannel.Path = PATH_WEIGHTS;
+                NewAnimationChannel.OutputDim = 1;
+            }
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             // loading "input"
             NewAnimationChannel.Input = dataToFloatVector(readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount);
@@ -758,11 +783,20 @@ void loadDataFromGLTF(  const char* fileName,
             NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
             
             saveGLTFAnimationChannelToBinFile("AnimationChannel", NewAnimation.Id, NewAnimationChannel);
-            NewAnimation.Channels.push_back(NewAnimationChannel.Id);
+            //NewAnimation.Channels.push_back(NewAnimationChannel.Id);
         }
-        
+        NewAnimation.ChannelsNum = TmpAnimation.channels.size();
         saveGLTFAnimationToBinFile(TmpAnimation.name, NewAnimation);
         allAnimations.push_back(NewAnimation);
+    };
+
+    // read Animation test
+    std::string path = ".\\resources\\models\\gltf\\GLTFAnimation";
+    int i = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path() << std::endl;
+        GLTFAnimation ReadAnimation = loadAnimationFromBin(entry.path().string());
+        i++;
     };
 
     return;

@@ -87,7 +87,8 @@ struct GLTFArmature {
 };
 
 struct GLTFAnimationChannel {
-    GLTFAnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel);
+    GLTFAnimationChannel(int32_t animationId, int32_t id);
+    int32_t AnimationId;
     int32_t Id;
     int32_t Node;                   // index of the node to animate
     int32_t Path;                   // property to animate or weights; 0: translation, 1: rotation, 2: scale, 3: weights 
@@ -101,6 +102,7 @@ struct GLTFAnimationChannel {
 struct GLTFAnimation {
     GLTFAnimation(int32_t id);
     int32_t Id;
-    std::vector<int32_t> Channels;
+    int32_t ChannelsNum;
+    //std::vector<int32_t> Channels;
 };
 

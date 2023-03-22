@@ -117,11 +117,18 @@ std::vector<std::vector<float>> dataToFloatVectorVectors(char* data, int count, 
     return vecVec;
 }
 
-std::string createGLTFDirectories(std::string dirname) {
+std::string createGLTFDirectories(std::string root, std::string dirname) {
     struct stat sb;
-    std::string DirectoryName = "./resources/models/gltf/" + dirname;
-    int ret = stat(DirectoryName.c_str(), &sb);
+    std::string RootName = "./resources/models/gltf/" + root;
+    int ret = stat(RootName.c_str(), &sb);
     int tmp = errno;
+    if (stat(RootName.c_str(), &sb) != 0)
+    {
+        std::filesystem::create_directory(RootName);
+    };
+    std::string DirectoryName = "./resources/models/gltf/" + root + "/" + dirname;
+    ret = stat(DirectoryName.c_str(), &sb);
+    tmp = errno;
     if (stat(DirectoryName.c_str(), &sb) != 0)
     {
         std::filesystem::create_directory(DirectoryName);
@@ -148,9 +155,9 @@ char* openBinFile(std::string fileName) {
 }
 
 
-void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, const char* InvBindMat){
+void saveGLTFArmatureToBinFile(std::string root, std::string filename, GLTFArmature armature){
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFArmature");
+    std::string DirName = createGLTFDirectories(root, "GLTFArmature");
     // Evaluate dimension of object
     int32_t GLTFArmatureSize = (sizeof(int32_t) * 3) + (armature.BoneCount * 16 * sizeof(float));
     if (armature.JointsCount != 0) {
@@ -230,9 +237,9 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
     return ReadArmature;
 }
 
-void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
+void saveGLTFTextureToBinFile(std::string root, std::string filename, GLTFTexture texture) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFTexture");
+    std::string DirName = createGLTFDirectories(root, "GLTFTexture");
     // Evaluate dimension of object
     int32_t GLTFTextureSize = (sizeof(int32_t) * 7) + (texture.Pixels.size() * sizeof(unsigned char));
     // Save to file
@@ -309,9 +316,9 @@ GLTFTexture loadTextureFromBin(std::string fileName) {
     return ReadTexture;
 }
 
-void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
+void saveGLTFMaterialToBinFile(std::string root, std::string filename, GLTFMaterial material) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFMaterial");
+    std::string DirName = createGLTFDirectories(root, "GLTFMaterial");
     // Evaluate dimension of object
     int32_t GLTFMaterialSize = (sizeof(int32_t) * 4) + (sizeof(double) * 8);
     // Save to file
@@ -397,9 +404,9 @@ GLTFMaterial loadMaterialFromBin(std::string fileName) {
     return ReadMaterial;
 }
 
-void saveGLTFAnimationToBinFile(std::string filename, GLTFAnimation animation) {
+void saveGLTFAnimationToBinFile(std::string root, std::string filename, GLTFAnimation animation) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFAnimation");
+    std::string DirName = createGLTFDirectories(root, "GLTFAnimation");
     // Evaluate dimension of object
     int32_t GLTFAnimationSize = sizeof(int32_t) * 2;
     // Save to file
@@ -435,9 +442,9 @@ GLTFAnimation loadAnimationFromBin(std::string fileName) {
     return ReadAnimation;
 }
 
-void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId, GLTFAnimationChannel animationChannel) {
+void saveGLTFAnimationChannelToBinFile(std::string root, std::string filename, int32_t animationId, GLTFAnimationChannel animationChannel) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFAnimationChannel");
+    std::string DirName = createGLTFDirectories(root, "GLTFAnimationChannel");
     // Evaluate dimension of object
     int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 6) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
     // Save to file
@@ -472,9 +479,9 @@ void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId
     saveToFile(BinaryFileName, ToFile, GLTFAnimationChannelSize);
 }
 
-void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
+void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrimitive primitive) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFPrimitive");
+    std::string DirName = createGLTFDirectories(root, "GLTFPrimitive");
     // Evaluate dimension of object
     int32_t GLTFPrimitiveSize = (sizeof(int32_t) * 5) + (sizeof(float) * 3 * (primitive.PositionsNum * 2)) + (sizeof(unsigned short) * primitive.IndicesNum);
     // Save to file
@@ -509,9 +516,9 @@ void saveGLTFPrimitiveToBinFile(std::string filename, GLTFPrimitive primitive) {
     saveToFile(BinaryFileName, ToFile, GLTFPrimitiveSize);
 }
 
-void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
+void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel model) {
     // Create directory
-    std::string DirName = createGLTFDirectories("GLTFModel");
+    std::string DirName = createGLTFDirectories(root, "GLTFModel");
     // Evaluate dimension of object
     int32_t GLTFModelSize = (sizeof(int32_t) * 5) + (sizeof(bool) * 4);
     if (model.ChildrenNum != 0) {
@@ -594,11 +601,16 @@ void saveGLTFModelToBinFile(std::string filename, GLTFModel model) {
     saveToFile(BinaryFileName, ToFile, GLTFModelSize);
 }
 
-void loadDataFromGLTF(  const char* fileName,
-                        std::vector<GLTFTexture>& allTextures,
-                        std::vector<GLTFMaterial>& allMaterials,
-                        std::vector<GLTFArmature>& allArmatures,
-                        std::vector<GLTFAnimation>& allAnimations){
+std::string extractFileName(const char* completePath) {
+    std::string PathString = std::string(completePath);
+    std::string BaseFilename = PathString.substr(PathString.find_last_of("/\\") + 1);
+    for (int i = 0; i < 5; i++) {
+        BaseFilename.pop_back();
+    }
+    return BaseFilename;
+}
+
+void loadDataFromGLTF(const char* fileName){
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -608,6 +620,8 @@ void loadDataFromGLTF(  const char* fileName,
         std::cerr << err << std::endl;
         return;
     };
+
+    std::string Root = extractFileName(fileName);
 
     // loading nodes
     for (int i = 0; i < model.nodes.size(); i++) {
@@ -644,7 +658,7 @@ void loadDataFromGLTF(  const char* fileName,
             NewModel.PrimitivesNum = 0;
         }
         
-        saveGLTFModelToBinFile(TmpNode.name, NewModel);
+        saveGLTFModelToBinFile(Root, TmpNode.name, NewModel);
     };
 
     // loading primitives
@@ -670,7 +684,7 @@ void loadDataFromGLTF(  const char* fileName,
             NewPrimitive.IndicesNum = TmpAccessor.count;
             NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
         
-            saveGLTFPrimitiveToBinFile(TmpMesh.name + "_primitive_", NewPrimitive);
+            saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };
 
@@ -690,8 +704,7 @@ void loadDataFromGLTF(  const char* fileName,
         NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
         NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
 
-        saveGLTFTextureToBinFile(model.textures[i].name, NewTexture);
-        allTextures.push_back(NewTexture);
+        saveGLTFTextureToBinFile(Root, model.textures[i].name, NewTexture);
         
     };
 
@@ -722,8 +735,7 @@ void loadDataFromGLTF(  const char* fileName,
 
         NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
         
-        saveGLTFMaterialToBinFile(TmpMaterial.name, NewMaterial);
-        allMaterials.push_back(NewMaterial);
+        saveGLTFMaterialToBinFile(Root, TmpMaterial.name, NewMaterial);
     };
 
     
@@ -736,8 +748,7 @@ void loadDataFromGLTF(  const char* fileName,
         NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
         NewArmature.JointsCount = TmpSkin.joints.size();
         NewArmature.Joints = TmpSkin.joints;
-        saveGLTFArmatureToBinFile(TmpSkin.name, NewArmature, AccessorData);
-        allArmatures.push_back(NewArmature);
+        saveGLTFArmatureToBinFile(Root, TmpSkin.name, NewArmature);
     };
 
     
@@ -782,12 +793,10 @@ void loadDataFromGLTF(  const char* fileName,
             // loading "output"
             NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
             
-            saveGLTFAnimationChannelToBinFile("AnimationChannel", NewAnimation.Id, NewAnimationChannel);
-            //NewAnimation.Channels.push_back(NewAnimationChannel.Id);
+            saveGLTFAnimationChannelToBinFile(Root, "AnimationChannel", NewAnimation.Id, NewAnimationChannel);
         }
         NewAnimation.ChannelsNum = TmpAnimation.channels.size();
-        saveGLTFAnimationToBinFile(TmpAnimation.name, NewAnimation);
-        allAnimations.push_back(NewAnimation);
+        saveGLTFAnimationToBinFile(Root, TmpAnimation.name, NewAnimation);
     };
 
     // read Animation test

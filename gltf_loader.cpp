@@ -137,6 +137,16 @@ void saveToFile(std::string fileName, char* toFile, int32_t size) {
     return;
 }
 
+char* openBinFile(std::string fileName) {
+    std::ifstream Infile;
+    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
+    int32_t SizeOfFile = Infile.tellg();
+    char* FileStream = (char*)malloc(SizeOfFile);
+    Infile.seekg(0);
+    Infile.read(FileStream, SizeOfFile);
+    return FileStream;
+}
+
 
 void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, const char* InvBindMat){
     // Create directory
@@ -177,12 +187,7 @@ void saveGLTFArmatureToBinFile(std::string filename, GLTFArmature armature, cons
 }
 
 GLTFArmature loadArmatureFromBin(std::string fileName) {
-    std::ifstream Infile;
-    Infile.open(fileName, std::ios::binary | std::ios::ate | std::ios::in);
-    int32_t SizeOfFile = Infile.tellg();
-    char* FileStream = (char*)malloc(SizeOfFile);
-    Infile.seekg(0);
-    Infile.read(FileStream, SizeOfFile);
+    char* FileStream = openBinFile(fileName);
     int32_t TmpId;
     int32_t TmpBoneCount;
     int32_t Offset = 0;
@@ -234,17 +239,74 @@ void saveGLTFTextureToBinFile(std::string filename, GLTFTexture texture) {
     // #TextureId_TextureName.texture
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(texture.Id) + "_" + filename + ".texture";
     char* ToFile = (char*)malloc(GLTFTextureSize);
+    int32_t Offset = 0;
     // int32_t Id;
-    memcpy(ToFile, &texture.Id, sizeof(int32_t));
+    memcpy(ToFile + Offset, &texture.Id, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // int32_t Width;
-    memcpy(ToFile + (1 * sizeof(int32_t)), &texture.Width, sizeof(int32_t));
+    memcpy(ToFile + Offset, &texture.Width, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // int32_t Height;
-    memcpy(ToFile + (2 * sizeof(int32_t)), &texture.Height, sizeof(int32_t));
+    memcpy(ToFile + Offset, &texture.Height, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Component;
+    memcpy(ToFile + Offset, &texture.Component, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Bits;
+    memcpy(ToFile + Offset, &texture.Bits, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t PixelType;
+    memcpy(ToFile + Offset, &texture.PixelType, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // int32_t Samplers[4];
-    memcpy(ToFile + (3) * sizeof(int32_t), texture.Samplers, 4 * sizeof(int32_t));
+    memcpy(ToFile + Offset, texture.Samplers, 4 * sizeof(int32_t));
+    Offset += 4 * sizeof(int32_t);
     // The elements of a vector are stored contiguously 
-    memcpy(ToFile + ((7) * sizeof(int32_t)), reinterpret_cast<char*> (&texture.Pixels[0]), sizeof(int32_t));
+    memcpy(ToFile + Offset, reinterpret_cast<char*> (&texture.Pixels[0]), texture.Width * texture.Height * 4);
+    Offset += texture.Width * texture.Height * 4;
     saveToFile(BinaryFileName, ToFile, GLTFTextureSize);
+}
+
+GLTFTexture loadTextureFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t TmpWidth;
+    int32_t TmpHeight;
+    int32_t Offset = 0;
+    // int32_t Id;
+    memcpy(&TmpId, (int32_t*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Width;
+    memcpy(&TmpWidth, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Height;
+    memcpy(&TmpHeight, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFTexture ReadTexture(TmpId, TmpWidth, TmpHeight);
+
+    // int32_t Component;
+    memcpy(&ReadTexture.Component, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Bits;
+    memcpy(&ReadTexture.Bits, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t PixelType;
+    memcpy(&ReadTexture.PixelType, FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Samplers[4];
+    memcpy(&ReadTexture.Samplers[0], FileStream + Offset, 4 * sizeof(int32_t));
+    Offset += 4 * sizeof(int32_t);
+
+    // std::vector<unsigned char> Pixels;
+    for (int i = 0; i < ReadTexture.Width * ReadTexture.Height * 4; i++) {
+        unsigned char TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(unsigned char));
+        Offset += sizeof(unsigned char);
+        ReadTexture.Pixels.push_back(TmpElement);
+    }
+
+    return ReadTexture;
 }
 
 void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
@@ -256,45 +318,121 @@ void saveGLTFMaterialToBinFile(std::string filename, GLTFMaterial material) {
     // #MaterialId_MaterialName.material
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(material.Id) + "_" + filename + ".material";
     char* ToFile = (char*)malloc(GLTFMaterialSize);
+    int32_t Offset = 0;
     // int32_t Id;
     memcpy(ToFile, &material.Id, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // double Roughness;
-    memcpy(ToFile + (1 * sizeof(int32_t)), &material.Roughness, sizeof(double));
+    memcpy(ToFile + Offset, &material.Roughness, sizeof(double));
+    Offset += sizeof(double);
     // double Specular;
-    memcpy(ToFile + (1 * sizeof(int32_t)) + (1 * sizeof(double)), &material.Specular, sizeof(double));
+    memcpy(ToFile + Offset, &material.Specular, sizeof(double));
+    Offset += sizeof(double);
+    
     // std::vector<double> BaseColorFactor;
-    // The elements of a vector are stored contiguously 
-    memcpy(ToFile + (1 * sizeof(int32_t)) + (2 * sizeof(double)), (reinterpret_cast<double*> (&material.BaseColorFactor[0])), material.BaseColorFactor.size() * sizeof(double));
+    memcpy(ToFile + Offset, (reinterpret_cast<double*> (&material.BaseColorFactor[0])), material.BaseColorFactor.size() * sizeof(double));
+    Offset += material.BaseColorFactor.size() * sizeof(double);
+
     // int32_t AlbedoInd;
-    memcpy(ToFile + (1 * sizeof(int32_t)) + (6 * sizeof(double)), &material.AlbedoInd, sizeof(int32_t));
+    memcpy(ToFile + Offset, &material.AlbedoInd, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // int32_t NormalMapInd;
-    memcpy(ToFile + (2 * sizeof(int32_t)) + (6 * sizeof(double)), &material.NormalMapInd, sizeof(int32_t));
+    memcpy(ToFile + Offset, &material.NormalMapInd, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // double NormalScale;
-    memcpy(ToFile + (3 * sizeof(int32_t)) + (6 * sizeof(double)), &material.NormalScale, sizeof(double));
+    memcpy(ToFile + Offset, &material.NormalScale, sizeof(double));
+    Offset += sizeof(double);
     // int32_t OcclusionInd;
-    memcpy(ToFile + (3 * sizeof(int32_t)) + (7 * sizeof(double)), &material.OcclusionInd, sizeof(int32_t));
+    memcpy(ToFile + Offset, &material.OcclusionInd, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     // double OcclusionStrength;
-    memcpy(ToFile + (4 * sizeof(int32_t)) + (7 * sizeof(double)), &material.OcclusionStrength, sizeof(double));
+    memcpy(ToFile + Offset, &material.OcclusionStrength, sizeof(double));
+    Offset += sizeof(double);
     
     saveToFile(BinaryFileName, ToFile, GLTFMaterialSize);
+}
+
+GLTFMaterial loadMaterialFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t Offset = 0;
+
+    // int32_t Id;
+    memcpy(&TmpId, (int32_t*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFMaterial ReadMaterial(TmpId);
+    
+    // double Roughness;
+    memcpy(&ReadMaterial.Roughness, (char*)FileStream + Offset, sizeof(double));
+    Offset += sizeof(double);
+    // double Specular;
+    memcpy(&ReadMaterial.Specular, (char*)FileStream + Offset, sizeof(double));
+    Offset += sizeof(double);
+
+    // std::vector<double> BaseColorFactor;
+    for (int i = 0; i < 4; i++) {
+        double TmpElement;
+        memcpy(&TmpElement, (char*)FileStream + Offset, sizeof(double));
+        Offset += sizeof(double);
+        ReadMaterial.BaseColorFactor.push_back(TmpElement);
+    }
+
+    // int32_t AlbedoInd;
+    memcpy(&ReadMaterial.AlbedoInd, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t NormalMapInd;
+    memcpy(&ReadMaterial.NormalMapInd, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // double NormalScale;
+    memcpy(&ReadMaterial.NormalScale, (char*)FileStream + Offset, sizeof(double));
+    Offset += sizeof(double);
+    // int32_t OcclusionInd;
+    memcpy(&ReadMaterial.OcclusionInd, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // double OcclusionStrength;
+    memcpy(&ReadMaterial.OcclusionStrength, (char*)FileStream + Offset, sizeof(double));
+    Offset += sizeof(double);
+
+    return ReadMaterial;
 }
 
 void saveGLTFAnimationToBinFile(std::string filename, GLTFAnimation animation) {
     // Create directory
     std::string DirName = createGLTFDirectories("GLTFAnimation");
     // Evaluate dimension of object
-    int32_t GLTFAnimationSize = sizeof(int32_t) * (1 + animation.Channels.size());
+    int32_t GLTFAnimationSize = sizeof(int32_t) * 2;
     // Save to file
     // #AnimationId_"AnimationName".animation
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animation.Id) + "_" + filename + ".animation";
     char* ToFile = (char*)malloc(GLTFAnimationSize);
+    int32_t Offset = 0;
     // int32_t Id;
     memcpy(ToFile, &animation.Id, sizeof(int32_t));
-    // std::vector<int32_t> Channels;
-    memcpy(ToFile + (1 * sizeof(int32_t)), (reinterpret_cast<int32_t*> (&animation.Channels[0])), animation.Channels.size() * sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t Id;
+    memcpy(ToFile + Offset, &animation.ChannelsNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
     
-
     saveToFile(BinaryFileName, ToFile, GLTFAnimationSize);
+}
+
+GLTFAnimation loadAnimationFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t Offset = 0;
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFAnimation ReadAnimation(TmpId);
+
+    // int32_t ChannelsNum;
+    memcpy(&ReadAnimation.ChannelsNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    return ReadAnimation;
 }
 
 void saveGLTFAnimationChannelToBinFile(std::string filename, int32_t animationId, GLTFAnimationChannel animationChannel) {
@@ -544,6 +682,9 @@ void loadDataFromGLTF(  const char* fileName,
         NewTexture.Id = i;
         NewTexture.Pixels = TmpImage.image;
         tinygltf::Sampler TmpSampler = model.samplers[model.textures[i].sampler];
+        NewTexture.Component = (int32_t)TmpImage.component;
+        NewTexture.Bits = (int32_t)TmpImage.bits;
+        NewTexture.PixelType = (int32_t)TmpImage.pixel_type;
         NewTexture.Samplers[0] = (int32_t)TmpSampler.magFilter;
         NewTexture.Samplers[1] = (int32_t)TmpSampler.minFilter;
         NewTexture.Samplers[2] = (int32_t)TmpSampler.wrapS;
@@ -553,6 +694,15 @@ void loadDataFromGLTF(  const char* fileName,
         allTextures.push_back(NewTexture);
         
     };
+
+    // read Textures test
+    //std::string path = ".\\resources\\models\\gltf\\GLTFTexture";
+    //int i = 0;
+    //for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //    std::cout << entry.path() << std::endl;
+    //    GLTFTexture ReadTexture = loadTextureFromBin(entry.path().string());
+    //    i++;
+    //}
 
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
@@ -566,24 +716,17 @@ void loadDataFromGLTF(  const char* fileName,
         NewMaterial.Roughness = TmpMaterial.pbrMetallicRoughness.roughnessFactor;
         NewMaterial.Specular = TmpMaterial.pbrMetallicRoughness.metallicFactor;
         NewMaterial.BaseColorFactor = TmpMaterial.pbrMetallicRoughness.baseColorFactor;
-        if (NewMaterial.NormalMapInd != -1) {
-            NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
-        }
-        else {
-            NewMaterial.NormalScale = -1;
-        }
+        
+        NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
+        
 
-        if (NewMaterial.OcclusionInd != -1) {
-            NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
-        }
-        else {
-            NewMaterial.OcclusionStrength = -1;
-        }
-
-
+        NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
+        
         saveGLTFMaterialToBinFile(TmpMaterial.name, NewMaterial);
         allMaterials.push_back(NewMaterial);
     };
+
+    
 
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
@@ -597,23 +740,32 @@ void loadDataFromGLTF(  const char* fileName,
         allArmatures.push_back(NewArmature);
     };
 
-    // read Armatures test
-    std::string path = ".\\resources\\models\\gltf\\GLTFArmature";
-    int i = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path() << std::endl;
-        GLTFArmature ReadArmature = loadArmatureFromBin(entry.path().string());
-        i++;
-    }
-        
-
+    
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
         GLTFAnimation NewAnimation(i);
         for (int j = 0; j < TmpAnimation.channels.size(); j++) {
-            GLTFAnimationChannel NewAnimationChannel(i, TmpAnimation.channels[j]);
+            GLTFAnimationChannel NewAnimationChannel(i, j);
+            tinygltf::AnimationChannel TmpAnimationChannel = TmpAnimation.channels[j];
             tinygltf::AnimationSampler TmpAnimationSampler = TmpAnimation.samplers[TmpAnimation.channels[j].sampler];
+            NewAnimationChannel.Node = TmpAnimationChannel.target_node;
+            if (TmpAnimationChannel.target_path == "translation") {
+                NewAnimationChannel.Path = PATH_TRANSLATION;
+                NewAnimationChannel.OutputDim = 3;
+            }
+            else if (TmpAnimationChannel.target_path == "rotation") {
+                NewAnimationChannel.Path = PATH_ROTATION;
+                NewAnimationChannel.OutputDim = 4;
+            }
+            else if (TmpAnimationChannel.target_path == "scale") {
+                NewAnimationChannel.Path = PATH_SCALE;
+                NewAnimationChannel.OutputDim = 3;
+            }
+            else if (TmpAnimationChannel.target_path == "weights") {
+                NewAnimationChannel.Path = PATH_WEIGHTS;
+                NewAnimationChannel.OutputDim = 1;
+            }
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             // loading "input"
             NewAnimationChannel.Input = dataToFloatVector(readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount);
@@ -631,11 +783,20 @@ void loadDataFromGLTF(  const char* fileName,
             NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
             
             saveGLTFAnimationChannelToBinFile("AnimationChannel", NewAnimation.Id, NewAnimationChannel);
-            NewAnimation.Channels.push_back(NewAnimationChannel.Id);
+            //NewAnimation.Channels.push_back(NewAnimationChannel.Id);
         }
-        
+        NewAnimation.ChannelsNum = TmpAnimation.channels.size();
         saveGLTFAnimationToBinFile(TmpAnimation.name, NewAnimation);
         allAnimations.push_back(NewAnimation);
+    };
+
+    // read Animation test
+    std::string path = ".\\resources\\models\\gltf\\GLTFAnimation";
+    int i = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path() << std::endl;
+        GLTFAnimation ReadAnimation = loadAnimationFromBin(entry.path().string());
+        i++;
     };
 
     return;

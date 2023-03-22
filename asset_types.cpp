@@ -29,26 +29,9 @@ GLTFAnimation::GLTFAnimation(int32_t id) : Id(id)
 
 }
 
-GLTFAnimationChannel::GLTFAnimationChannel(int32_t id, tinygltf::AnimationChannel gltfChannel): Id(id)
+GLTFAnimationChannel::GLTFAnimationChannel(int32_t animationId, int32_t id): AnimationId(animationId), Id(id)
 {
-    this->Node = gltfChannel.target_node;
-    if (gltfChannel.target_path == "translation") {
-        this->Path = PATH_TRANSLATION;
-        this->OutputDim = 3;
-    }
-    else if (gltfChannel.target_path == "rotation") {
-        this->Path = PATH_ROTATION;
-        this->OutputDim = 4;
-    }
-    else if (gltfChannel.target_path == "scale") {
-        this->Path = PATH_SCALE;
-        this->OutputDim = 3;
-    }
-    else if (gltfChannel.target_path == "weights") {
-        this->Path = PATH_WEIGHTS;
-        this->OutputDim = 1;
-    }
-    this->Interpolation = -1;
+    
 }
 
 GLTFPrimitive::GLTFPrimitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive) : MeshId(meshId), Id(id)

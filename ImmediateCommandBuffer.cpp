@@ -24,7 +24,6 @@ ImmediateCommandBuffer::ImmediateCommandBuffer(
 void ImmediateCommandBuffer::Cleanup() const
 {
 	vkResetCommandPool(_Context.Device, _Pool, 0);
-
 	vkDestroyCommandPool(_Context.Device, _Pool, nullptr);
 	vkDestroyFence(_Context.Device, _Fence, nullptr);
 }

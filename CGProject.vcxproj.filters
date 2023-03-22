@@ -207,6 +207,15 @@
     <ClCompile Include="asset_types.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
+    <ClCompile Include="GlobalData.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="descriptor_pool.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="descriptor_set.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -349,6 +358,18 @@
     </ClInclude>
     <ClInclude Include="VertexData.h">
       <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_pool.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_set.h">
+      <Filter>Header Files\vulkan</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

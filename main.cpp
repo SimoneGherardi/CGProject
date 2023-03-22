@@ -44,11 +44,7 @@ int main()
     try
     {
         initialize();
-        std::vector<GLTFTexture> AllTextures;
-        std::vector<GLTFMaterial> AllMaterials;
-        std::vector<GLTFArmature> AllArmatures;
-        std::vector<GLTFAnimation> AllAnimations;
-        loadDataFromGLTF("resources/models/gltf/untitled.gltf");
+        // loadDataFromGLTF("resources/models/gltf/untitled.gltf");
 
         while (!glfwWindowShouldClose(Window)) {
             glfwPollEvents();

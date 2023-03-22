@@ -21,6 +21,6 @@ extern void initializeStdPipeline(
 	const bool transparency,
 	const VkPipelineLayout pipelineLayout,
 	const VkRenderPass renderPass,
-	VertexDescriptor* vertexDescriptor,
+	// VertexDescriptor* vertexDescriptor,
 	VkPipeline* pipeline
 );

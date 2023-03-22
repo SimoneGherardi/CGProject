@@ -154,7 +154,6 @@ char* openBinFile(std::string fileName) {
     return FileStream;
 }
 
-
 void saveGLTFArmatureToBinFile(std::string root, std::string filename, GLTFArmature armature){
     // Create directory
     std::string DirName = createGLTFDirectories(root, "GLTFArmature");
@@ -211,10 +210,7 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
     memcpy(&ReadArmature.JointsCount, FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // std::vector<std::vector<float>> InvBindMatrices;
-    //char* TmpAccessorData = (char*)malloc(ReadArmature.BoneCount * sizeof(float) * 4);
-    //memcpy(TmpAccessorData, FileStream + Offset, ReadArmature.BoneCount * sizeof(float) * 4);
-    //Offset += ReadArmature.BoneCount * sizeof(float) * 4;
-    // ReadArmature.InvBindMatrices = dataToFloatVectorVectors(TmpAccessorData, ReadArmature.BoneCount, sizeof(float) * 4);
+    
     for (int i = 0; i < ReadArmature.BoneCount; i++) {
         std::vector<float> TmpVec;
         for (int j = 0; j < 16; j++) {
@@ -446,14 +442,17 @@ void saveGLTFAnimationChannelToBinFile(std::string root, std::string filename, i
     // Create directory
     std::string DirName = createGLTFDirectories(root, "GLTFAnimationChannel");
     // Evaluate dimension of object
-    int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 6) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
+    int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 7) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
     // Save to file
     // #AnimationId_#AnimationChannelId_"AnimationChannel".animationChannel
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animationId) + "_" + "0000" + std::to_string(animationChannel.Id) + "_" + filename + ".animationChannel";
     char* ToFile = (char*)malloc(GLTFAnimationChannelSize);
     int32_t Offset = 0;
+    // int32_t AnimationId;
+    memcpy(ToFile, &animationChannel.AnimationId, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t Id;
-    memcpy(ToFile, &animationChannel.Id, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.Id, sizeof(int32_t));
     Offset += 1 * sizeof(int32_t);
     // int32_t Node;
     memcpy(ToFile + Offset, &animationChannel.Node, sizeof(int32_t));
@@ -474,9 +473,75 @@ void saveGLTFAnimationChannelToBinFile(std::string root, std::string filename, i
     memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Input[0])), animationChannel.Input.size() * sizeof(float));
     Offset += animationChannel.Input.size() * sizeof(float);
     // std::vector<std::vector<float>> Output;
-    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Output[0])), (animationChannel.OutputDim * animationChannel.Output.size()) * sizeof(float));
+    for (int i = 0; i < animationChannel.KeyFrameCount; i++) {
+        std::vector TmpVector = animationChannel.Output[i];
+        for (int j = 0; j < animationChannel.OutputDim; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
+
 
     saveToFile(BinaryFileName, ToFile, GLTFAnimationChannelSize);
+}
+
+GLTFAnimationChannel loadAnimationChannelFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t TmpAnimationId;
+    int32_t Offset = 0;
+
+    // int32_t AnimationId;
+    memcpy(&TmpAnimationId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFAnimationChannel ReadAnimationChannel(TmpAnimationId, TmpId);
+
+    // int32_t Node;
+    memcpy(&ReadAnimationChannel.Node, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Path;
+    memcpy(&ReadAnimationChannel.Path, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Interpolation;
+    memcpy(&ReadAnimationChannel.Interpolation, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t OutputDim;
+    memcpy(&ReadAnimationChannel.OutputDim, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t KeyFrameCount;
+    memcpy(&ReadAnimationChannel.KeyFrameCount, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // std::vector<float> Input; 
+    for (int i = 0; i < ReadAnimationChannel.KeyFrameCount; i++) {
+        float TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(float));
+        Offset += sizeof(float);
+        ReadAnimationChannel.Input.push_back(TmpElement);
+    }
+
+    // std::vector<std::vector<float>> Output;
+    for (int i = 0; i < ReadAnimationChannel.KeyFrameCount; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < ReadAnimationChannel.OutputDim; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadAnimationChannel.Output.push_back(TmpVec);
+    }
+    return ReadAnimationChannel;
 }
 
 void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrimitive primitive) {
@@ -800,11 +865,11 @@ void loadDataFromGLTF(const char* fileName){
     };
 
     // read Animation test
-    std::string path = ".\\resources\\models\\gltf\\GLTFAnimation";
+    std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFAnimationChannel";
     int i = 0;
     for (const auto& entry : std::filesystem::directory_iterator(path)) {
         std::cout << entry.path() << std::endl;
-        GLTFAnimation ReadAnimation = loadAnimationFromBin(entry.path().string());
+        GLTFAnimationChannel ReadAnimationChannel = loadAnimationChannelFromBin(entry.path().string());
         i++;
     };
 

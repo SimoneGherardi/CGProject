@@ -19,6 +19,9 @@
 #include "descriptor_set_layout.h"
 #include "descriptor_pool.h"
 #include "descriptor_set.h"
+#include "std_pipeline.h"
+#include "SyncStructures.h"
+#include "CommandBuffer.h"
 
 #define FRAME_OVERLAP 3
 
@@ -45,7 +48,15 @@ private:
 
 	VkRenderPass _RenderPass;
 
+	VkPipelineLayout _PipelineLayout;
+	VkPipeline _Pipeline;
+
+	Fence* _RenderFence;
+	Semaphore* _PresentSemaphore;
+	Semaphore* _RenderSemaphore;
+
 	VkCommandPool _CommandPool;
+	CommandBuffer* _MainCommandBuffer;
 
 	std::vector<VkFramebuffer> _SwapChainFramebuffers;
 
@@ -254,6 +265,54 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializePipeline()
+	{
+		TRACESTART;
+		initializeGraphicsPipelineLayout(
+			_Context.Device,
+			0,
+			&_FrameDataDescriptorSetLayout,
+			0,
+			nullptr,
+			&_PipelineLayout
+		);
+		initializeStdPipeline(
+			_Context.Device,
+			"resources/shaders/Triangle.vert.spv",
+			"resources/shaders/Triangle.frag.spv",
+			_Swapchain.GetExtent(),
+			VK_SAMPLE_COUNT_2_BIT,
+			VK_COMPARE_OP_LESS,
+			VK_POLYGON_MODE_FILL,
+			VK_CULL_MODE_NONE,
+			false,
+			_PipelineLayout,
+			_RenderPass,
+			&_Pipeline
+		);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up pipeline");
+			cleanupGraphicsPipeline(_Context.Device, _Pipeline);
+			cleanupGraphicsPipelineLayout(_Context.Device, _PipelineLayout);
+		});
+		TRACEEND;
+	}
+
+	void _InitializeSyncStructures()
+	{
+		TRACESTART;
+		_RenderFence = new Fence(_Context, true);
+		_PresentSemaphore = new Semaphore(_Context);
+		_RenderSemaphore = new Semaphore(_Context);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up sync structures");
+			_RenderFence->Cleanup();
+			_PresentSemaphore->Cleanup();
+			_RenderSemaphore->Cleanup();
+		});
+		TRACEEND;
+	}
+
 	void _InitializeCommandPool() {
 		TRACESTART;
 		auto queueFamilyIndices = findQueueFamilies(_PhysicalDevice, _Surface);
@@ -265,6 +324,17 @@ private:
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up command pool");
 			cleanupCommandPool(_Device, _CommandPool);
+		});
+		TRACEEND;
+	}
+
+	void _InitializeCommandBuffers()
+	{
+		TRACESTART;
+		_MainCommandBuffer = new CommandBuffer(_Context, _CommandPool);
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up command buffers");
+			_MainCommandBuffer->Cleanup();
 		});
 		TRACEEND;
 	}
@@ -363,13 +433,81 @@ public:
 		_Context.GraphicsQueue = _GraphicsQueue;
 		_Context.PresentationQueue = _PresentationQueue;
 		
+		_InitializeSyncStructures();
 		_InitializeAllocators();
 		_InitializeDescriptorSet();
-		// pipeline
+		_InitializePipeline();
 		_InitializeCommandPool();
+		_InitializeCommandBuffers();
 		_InitializeRenderTargets();
 		_InitializeFrameBuffer();
 		TRACEEND;
+	}
+
+	void Render()
+	{
+		// TODO refactor
+		_RenderFence->Wait();
+		_RenderFence->Reset();
+		uint32_t imageIndex;
+		CheckVkResult(
+			vkAcquireNextImageKHR(
+				_Context.Device, _Swapchain.GetSwapchain(),
+				1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
+			)
+		);
+		_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+		std::array<VkClearValue, 2> clearValues;
+		clearValues[0].color = {{.1f, .0f, .1f, 1.0f}};
+		clearValues[1].depthStencil = {1.0f, 0};
+		VkRenderPassBeginInfo rpInfo = {};
+		rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		rpInfo.pNext = nullptr;
+		rpInfo.renderPass = _RenderPass;
+		rpInfo.renderArea.offset.x = 0;
+		rpInfo.renderArea.offset.y = 0;
+		rpInfo.renderArea.extent = _Swapchain.GetExtent();
+		rpInfo.framebuffer = _SwapChainFramebuffers[imageIndex];
+		rpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		rpInfo.pClearValues = clearValues.data();
+		vkCmdBeginRenderPass(
+			_MainCommandBuffer->Buffer,
+			&rpInfo,
+			VK_SUBPASS_CONTENTS_INLINE
+		);
+
+		vkCmdBindPipeline(
+			_MainCommandBuffer->Buffer,
+			VK_PIPELINE_BIND_POINT_GRAPHICS,
+			_Pipeline
+		);
+		vkCmdDraw(
+			_MainCommandBuffer->Buffer,
+			3, 1, 0, 0
+		);
+
+		vkCmdEndRenderPass(_MainCommandBuffer->Buffer);
+		_MainCommandBuffer->End();
+		_MainCommandBuffer->Submit(
+			_GraphicsQueue,
+			VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+			1,
+			&(_PresentSemaphore->Instance),
+			1,
+			&(_RenderSemaphore->Instance),
+			_RenderFence->Instance
+		);
+
+		auto swp = _Swapchain.GetSwapchain();
+		VkPresentInfoKHR presentInfo = {};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.pNext = nullptr;
+		presentInfo.pSwapchains = &swp;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pWaitSemaphores = &(_RenderSemaphore->Instance);
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pImageIndices = &imageIndex;
+		CheckVkResult(vkQueuePresentKHR(_GraphicsQueue, &presentInfo));
 	}
 
 	void Cleanup()

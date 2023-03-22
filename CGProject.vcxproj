@@ -140,6 +140,7 @@
     <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="asset_types.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
+    <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
@@ -180,6 +181,7 @@
     <ClCompile Include="swap_chain_info.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
+    <ClCompile Include="SyncStructures.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="validation_layers.cpp" />
     <ClCompile Include="viewport.cpp" />
@@ -191,6 +193,7 @@
     <ClInclude Include="assets.h" />
     <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />
+    <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="command_buffers.h" />
     <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
@@ -230,6 +233,7 @@
     <ClInclude Include="swap_chains.h" />
     <ClInclude Include="swap_chain_info.h" />
     <ClInclude Include="swap_chain_support.h" />
+    <ClInclude Include="SyncStructures.h" />
     <ClInclude Include="test.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />

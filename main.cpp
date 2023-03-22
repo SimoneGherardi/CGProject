@@ -49,6 +49,12 @@ int main()
         std::vector<GLTFArmature> AllArmatures;
         std::vector<GLTFAnimation> AllAnimations;
         loadDataFromGLTF("resources/models/gltf/untitled.gltf", AllTextures, AllMaterials, AllArmatures, AllAnimations);
+
+        while (!glfwWindowShouldClose(Window)) {
+            glfwPollEvents();
+            ENGINE.Render();
+        }
+
         cleanup();
     }
     catch (const std::exception& e) {

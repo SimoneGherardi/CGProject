@@ -37,15 +37,15 @@ struct GLTFModel {
 
 struct GLTFPrimitive {
     // Objects or parts of objects of the same material
-    GLTFPrimitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
+    GLTFPrimitive(int32_t meshId, int32_t id);
     int32_t MeshId;
     int32_t Id;
     int32_t PositionsNum;
     int32_t IndicesNum;
     int32_t MaterialId;
-    std::vector<std::vector<float>> Positions;
-    std::vector<std::vector<float>> Normals;
-    std::vector<unsigned short> Indices;
+    std::vector<std::vector<float>> Positions;  // PositionsNum * 3 floats
+    std::vector<std::vector<float>> Normals;    // PositionsNum * 3 floats
+    std::vector<unsigned short> Indices;        // IndicesNum
 };
 
 struct GLTFTexture {
@@ -95,8 +95,8 @@ struct GLTFAnimationChannel {
     int32_t Interpolation;          // 0: step, 1: linear, 2: spheric linear, 3: cubic spline
     int32_t OutputDim;              // depending on the property to animate, it is the dimension of the elements in output: PATH_TRANSLATION: 3, PATH_ROTATION: 4, PATH_SCALE: 3, PATH_WEIGHTS: 1
     int32_t KeyFrameCount;
-    std::vector<float> Input;                   // instants in ms of the keyframes
-    std::vector<std::vector<float>> Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar
+    std::vector<float> Input;                   // instants in ms of the keyframes - dim: KeyFrameCount floats
+    std::vector<std::vector<float>> Output;                 // values for the animation, depending on the path. If translation->vec3, rotation->vec4, scale->vec3, weights->scalar - dim: KeyFrameCount * Outputdim floats
 };
 
 struct GLTFAnimation {

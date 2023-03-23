@@ -45,7 +45,7 @@ int main()
     try
     {
         initialize();
-        // loadDataFromGLTF("resources/models/gltf/untitled.gltf");
+        loadDataFromGLTF("resources/models/gltf/untitled.gltf");
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<double, std::milli>;

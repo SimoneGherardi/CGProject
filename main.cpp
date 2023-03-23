@@ -5,6 +5,7 @@
 #include "game_engine.h"
 #include "window.h"
 #include "gltf_loader.h"
+#include <chrono>
 
 const char* TITLE = "CG Project";
 const uint32_t WIDTH = 800;
@@ -45,10 +46,15 @@ int main()
     {
         initialize();
         loadDataFromGLTF("resources/models/gltf/untitled.gltf");
-
+        float delta = 0;
+        using clock = std::chrono::system_clock;
+        using millisec = std::chrono::duration<double, std::milli>;
         while (!glfwWindowShouldClose(Window)) {
+            const auto start = clock::now();
             glfwPollEvents();
-            ENGINE.Render();
+            ENGINE.Render(delta);
+            const millisec duration = clock::now() - start;
+            delta = (float) duration.count() / 1000.0f;
         }
         
         cleanup();

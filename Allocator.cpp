@@ -49,17 +49,17 @@ BufferMemoryReference Allocator::AllocateAndSet(
 {
 	Allocate(data, size, usage);
 	auto dst = Get(data);
-	TransferFromHost(data, 0, size, dst);
+	TransferFromHost(data, 0, size);
 	return dst;
 }
 
 void Allocator::TransferFromHost(
 	void* data,
 	const VkDeviceSize offset,
-	const VkDeviceSize size,
-	const BufferMemoryReference destination
+	const VkDeviceSize size
 )
 {
+	auto destination = Get(data);
 	void* dst;
 	vkMapMemory(_Context.Device, _Memory.Memory, destination.Offset, destination.Size, 0, &dst);
 	memcpy((int8_t*) dst + offset, (int8_t*) data + offset, size);

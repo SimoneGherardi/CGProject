@@ -22,6 +22,7 @@
 #include "std_pipeline.h"
 #include "SyncStructures.h"
 #include "CommandBuffer.h"
+#include "tests.h"
 
 #define FRAME_OVERLAP 3
 
@@ -32,6 +33,7 @@ struct WindowSize {
 class GameEngine
 {
 private:
+	WindowSize _WindowSize;
 	VkInstance _Instance;
 	VkDebugUtilsMessengerEXT _DebugMessenger;
 	VkSurfaceKHR _Surface;
@@ -237,7 +239,8 @@ private:
 
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
-			_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
+			_FrameData[i].Global.Data = {};
+			_FrameData[i].Global.MemoryReference = _FrameDataAllocator->AllocateAndSet(
 				&(_FrameData[i].Global.Data),
 				sizeof(GlobalData),
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
@@ -270,7 +273,7 @@ private:
 		TRACESTART;
 		initializeGraphicsPipelineLayout(
 			_Context.Device,
-			0,
+			1,
 			&_FrameDataDescriptorSetLayout,
 			0,
 			nullptr,
@@ -278,8 +281,8 @@ private:
 		);
 		initializeStdPipeline(
 			_Context.Device,
-			"resources/shaders/Triangle.vert.spv",
-			"resources/shaders/Triangle.frag.spv",
+			"resources/shaders/TriangleVertex.vert.spv",
+			"resources/shaders/TriangleVertex.frag.spv",
 			_Swapchain.GetExtent(),
 			VK_SAMPLE_COUNT_2_BIT,
 			VK_COMPARE_OP_LESS,
@@ -408,6 +411,7 @@ public:
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
 	{
 		TRACESTART;
+		_WindowSize = windowSize;
 		_InitializeInstance(title);
 		#ifdef ENABLE_VALIDATION_LAYERS
 		_InitializeDebugMessenger();
@@ -441,10 +445,11 @@ public:
 		_InitializeCommandBuffers();
 		_InitializeRenderTargets();
 		_InitializeFrameBuffer();
+		TEST_INIT(_Context);
 		TRACEEND;
 	}
 
-	void Render()
+	void Render(float delta)
 	{
 		// TODO refactor
 		_RenderFence->Wait();
@@ -481,10 +486,10 @@ public:
 			VK_PIPELINE_BIND_POINT_GRAPHICS,
 			_Pipeline
 		);
-		vkCmdDraw(
-			_MainCommandBuffer->Buffer,
-			3, 1, 0, 0
-		);
+
+		// TODO frame overlap?
+		TEST_CAMERA(_WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, _FrameDataAllocator, &(_FrameData[0]));
+		TEST_RENDER(_MainCommandBuffer->Buffer);
 
 		vkCmdEndRenderPass(_MainCommandBuffer->Buffer);
 		_MainCommandBuffer->End();
@@ -513,6 +518,7 @@ public:
 	void Cleanup()
 	{
 		TRACESTART;
+		TEST_CLEANUP();
 		_CleanupStack.flush();
 		TRACEEND;
 	}

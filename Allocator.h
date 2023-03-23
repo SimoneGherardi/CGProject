@@ -75,8 +75,7 @@ public:
 	void TransferFromHost(
 		void* data,
 		const VkDeviceSize offset,
-		const VkDeviceSize size,
-		const BufferMemoryReference destination
+		const VkDeviceSize size
 	);
 
 	void Cleanup();

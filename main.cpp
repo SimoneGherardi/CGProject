@@ -44,7 +44,7 @@ int main()
     try
     {
         initialize();
-        // loadDataFromGLTF("resources/models/gltf/untitled.gltf");
+        loadDataFromGLTF("resources/models/gltf/untitled.gltf");
 
         while (!glfwWindowShouldClose(Window)) {
             glfwPollEvents();

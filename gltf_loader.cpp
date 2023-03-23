@@ -154,7 +154,6 @@ char* openBinFile(std::string fileName) {
     return FileStream;
 }
 
-
 void saveGLTFArmatureToBinFile(std::string root, std::string filename, GLTFArmature armature){
     // Create directory
     std::string DirName = createGLTFDirectories(root, "GLTFArmature");
@@ -211,10 +210,7 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
     memcpy(&ReadArmature.JointsCount, FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // std::vector<std::vector<float>> InvBindMatrices;
-    //char* TmpAccessorData = (char*)malloc(ReadArmature.BoneCount * sizeof(float) * 4);
-    //memcpy(TmpAccessorData, FileStream + Offset, ReadArmature.BoneCount * sizeof(float) * 4);
-    //Offset += ReadArmature.BoneCount * sizeof(float) * 4;
-    // ReadArmature.InvBindMatrices = dataToFloatVectorVectors(TmpAccessorData, ReadArmature.BoneCount, sizeof(float) * 4);
+    
     for (int i = 0; i < ReadArmature.BoneCount; i++) {
         std::vector<float> TmpVec;
         for (int j = 0; j < 16; j++) {
@@ -446,14 +442,17 @@ void saveGLTFAnimationChannelToBinFile(std::string root, std::string filename, i
     // Create directory
     std::string DirName = createGLTFDirectories(root, "GLTFAnimationChannel");
     // Evaluate dimension of object
-    int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 6) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
+    int32_t GLTFAnimationChannelSize = (sizeof(int32_t) * 7) + ((sizeof(float)) * (animationChannel.Input.size() + (animationChannel.OutputDim * animationChannel.Output.size())));
     // Save to file
     // #AnimationId_#AnimationChannelId_"AnimationChannel".animationChannel
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(animationId) + "_" + "0000" + std::to_string(animationChannel.Id) + "_" + filename + ".animationChannel";
     char* ToFile = (char*)malloc(GLTFAnimationChannelSize);
     int32_t Offset = 0;
+    // int32_t AnimationId;
+    memcpy(ToFile, &animationChannel.AnimationId, sizeof(int32_t));
+    Offset += 1 * sizeof(int32_t);
     // int32_t Id;
-    memcpy(ToFile, &animationChannel.Id, sizeof(int32_t));
+    memcpy(ToFile + Offset, &animationChannel.Id, sizeof(int32_t));
     Offset += 1 * sizeof(int32_t);
     // int32_t Node;
     memcpy(ToFile + Offset, &animationChannel.Node, sizeof(int32_t));
@@ -474,9 +473,75 @@ void saveGLTFAnimationChannelToBinFile(std::string root, std::string filename, i
     memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Input[0])), animationChannel.Input.size() * sizeof(float));
     Offset += animationChannel.Input.size() * sizeof(float);
     // std::vector<std::vector<float>> Output;
-    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&animationChannel.Output[0])), (animationChannel.OutputDim * animationChannel.Output.size()) * sizeof(float));
+    for (int i = 0; i < animationChannel.KeyFrameCount; i++) {
+        std::vector TmpVector = animationChannel.Output[i];
+        for (int j = 0; j < animationChannel.OutputDim; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
+
 
     saveToFile(BinaryFileName, ToFile, GLTFAnimationChannelSize);
+}
+
+GLTFAnimationChannel loadAnimationChannelFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t TmpAnimationId;
+    int32_t Offset = 0;
+
+    // int32_t AnimationId;
+    memcpy(&TmpAnimationId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFAnimationChannel ReadAnimationChannel(TmpAnimationId, TmpId);
+
+    // int32_t Node;
+    memcpy(&ReadAnimationChannel.Node, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Path;
+    memcpy(&ReadAnimationChannel.Path, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Interpolation;
+    memcpy(&ReadAnimationChannel.Interpolation, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t OutputDim;
+    memcpy(&ReadAnimationChannel.OutputDim, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t KeyFrameCount;
+    memcpy(&ReadAnimationChannel.KeyFrameCount, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // std::vector<float> Input; 
+    for (int i = 0; i < ReadAnimationChannel.KeyFrameCount; i++) {
+        float TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(float));
+        Offset += sizeof(float);
+        ReadAnimationChannel.Input.push_back(TmpElement);
+    }
+
+    // std::vector<std::vector<float>> Output;
+    for (int i = 0; i < ReadAnimationChannel.KeyFrameCount; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < ReadAnimationChannel.OutputDim; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadAnimationChannel.Output.push_back(TmpVec);
+    }
+    return ReadAnimationChannel;
 }
 
 void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrimitive primitive) {
@@ -493,7 +558,7 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
     memcpy(ToFile, &primitive.MeshId, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t Id;
-    memcpy(ToFile, &primitive.Id, sizeof(int32_t));
+    memcpy(ToFile + Offset, &primitive.Id, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t PositionsNum;
     memcpy(ToFile + Offset, &primitive.PositionsNum, sizeof(int32_t));
@@ -504,16 +569,95 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
     // int32_t MaterialId;
     memcpy(ToFile + Offset, &primitive.MaterialId, sizeof(int32_t));
     Offset += sizeof(int32_t);
+
     // std::vector<std::vector<float>> Positions;
-    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&primitive.Positions[0])), primitive.PositionsNum * 3 * sizeof(float));
-    Offset += primitive.PositionsNum * 3 * sizeof(float);
+    for (int i = 0; i < primitive.PositionsNum; i++) {
+        std::vector TmpVector = primitive.Positions[i];
+        for (int j = 0; j < 3; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
+
     // std::vector<std::vector<float>> Normals;
-    memcpy(ToFile + Offset, (reinterpret_cast<float*> (&primitive.Normals[0])), primitive.PositionsNum * 3 * sizeof(float));
-    Offset += primitive.PositionsNum * 3 * sizeof(float);
+    for (int i = 0; i < primitive.PositionsNum; i++) {
+        std::vector TmpVector = primitive.Normals[i];
+        for (int j = 0; j < 3; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
+
     // std::vector<unsigned short> Indices;
     memcpy(ToFile + Offset, (reinterpret_cast<unsigned short*> (&primitive.Indices[0])), primitive.IndicesNum * sizeof(unsigned short));
 
     saveToFile(BinaryFileName, ToFile, GLTFPrimitiveSize);
+}
+
+GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpMeshId;
+    int32_t TmpId;
+    int32_t Offset = 0;
+
+    // int32_t MeshId;
+    memcpy(&TmpMeshId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFPrimitive ReadPrimitive(TmpMeshId, TmpId);
+
+    // int32_t PositionsNum;
+    memcpy(&ReadPrimitive.PositionsNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t IndicesNum;
+    memcpy(&ReadPrimitive.IndicesNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t MaterialId;
+    memcpy(&ReadPrimitive.MaterialId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // std::vector<std::vector<float>> Positions;
+    for (int i = 0; i < ReadPrimitive.PositionsNum; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 3; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadPrimitive.Positions.push_back(TmpVec);
+    }
+
+    // std::vector<std::vector<float>> Normals;
+    for (int i = 0; i < ReadPrimitive.PositionsNum; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 3; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadPrimitive.Normals.push_back(TmpVec);
+    }
+
+    // std::vector<unsigned short> Indices; 
+    for (int i = 0; i < ReadPrimitive.IndicesNum; i++) {
+        unsigned short TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(unsigned short));
+        Offset += sizeof(unsigned short);
+        ReadPrimitive.Indices.push_back(TmpElement);
+    }
+
+    
+    return ReadPrimitive;
 }
 
 void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel model) {
@@ -552,7 +696,7 @@ void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel mo
     memcpy(ToFile, &model.Id, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t ChildrenNum;
-    memcpy(ToFile, &model.ChildrenNum, sizeof(int32_t));
+    memcpy(ToFile + Offset, &model.ChildrenNum, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // int32_t PrimitivesNum;
     memcpy(ToFile + Offset, &model.PrimitivesNum, sizeof(int32_t));
@@ -560,6 +704,21 @@ void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel mo
     // int32_t ArmatureInd;
     memcpy(ToFile + Offset, &model.ArmatureInd, sizeof(int32_t));
     Offset += sizeof(int32_t);
+    // int32_t WeightsNum;
+    memcpy(ToFile + Offset, &model.WeightsNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // bool Rot;
+    memcpy(ToFile + Offset, &model.Rot, sizeof(bool));
+    Offset += sizeof(bool);
+    // bool Sca;
+    memcpy(ToFile + Offset, &model.Sca, sizeof(bool));
+    Offset += sizeof(bool);
+    // bool Tra;
+    memcpy(ToFile + Offset, &model.Tra, sizeof(bool));
+    Offset += sizeof(bool);
+    // bool Mat;
+    memcpy(ToFile + Offset, &model.Mat, sizeof(bool));
+    Offset += sizeof(bool);
     if (model.ChildrenNum != 0) {
         // std::vector<int32_t> Children;
         memcpy(ToFile + Offset, (reinterpret_cast<int32_t*> (&model.Children[0])), model.ChildrenNum * sizeof(int32_t));
@@ -572,7 +731,7 @@ void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel mo
     }
     if (model.Rot) {
         // std::vector<double> Rotation
-        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), model.Translation.size() * sizeof(double));
+        memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Rotation[0])), model.Rotation.size() * sizeof(double));
         Offset += 4 * sizeof(double);
     }
     if (model.Sca) {
@@ -595,10 +754,119 @@ void saveGLTFModelToBinFile(std::string root, std::string filename, GLTFModel mo
         memcpy(ToFile + Offset, (reinterpret_cast<double*> (&model.Weights[0])), model.WeightsNum * sizeof(double));
         Offset += model.WeightsNum * sizeof(double);
     }
-    
-    
-    
+
+
+
     saveToFile(BinaryFileName, ToFile, GLTFModelSize);
+};
+
+GLTFModel loadModelFromBin(std::string fileName) {
+    char* FileStream = openBinFile(fileName);
+    int32_t TmpId;
+    int32_t Offset = 0;
+
+    // int32_t Id;
+    memcpy(&TmpId, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    GLTFModel ReadModel(TmpId);
+
+    // int32_t ChildrenNum;
+    memcpy(&ReadModel.ChildrenNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t PrimitivesNum;
+    memcpy(&ReadModel.PrimitivesNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t ArmatureInd;
+    memcpy(&ReadModel.ArmatureInd, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // int32_t WeightsNum;
+    memcpy(&ReadModel.WeightsNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
+    // bool Rot;
+    memcpy(&ReadModel.Rot, (char*)FileStream + Offset, sizeof(bool));
+    Offset += sizeof(bool);
+
+    // bool Sca;
+    memcpy(&ReadModel.Sca, (char*)FileStream + Offset, sizeof(bool));
+    Offset += sizeof(bool);
+
+    // bool Tra;
+    memcpy(&ReadModel.Tra, (char*)FileStream + Offset, sizeof(bool));
+    Offset += sizeof(bool);
+
+    // bool Mat;
+    memcpy(&ReadModel.Mat, (char*)FileStream + Offset, sizeof(bool));
+    Offset += sizeof(bool);
+
+    // std::vector<int32_t> Children;
+    for (int i = 0; i < ReadModel.ChildrenNum; i++) {
+        int32_t TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(int32_t));
+        Offset += sizeof(int32_t);
+        ReadModel.Children.push_back(TmpElement);
+    }
+
+    // std::vector<int32_t> Primitives;
+    for (int i = 0; i < ReadModel.PrimitivesNum; i++) {
+        int32_t TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(int32_t));
+        Offset += sizeof(int32_t);
+        ReadModel.Primitives.push_back(TmpElement);
+    }
+
+    // std::vector<double> Rotation;
+    if (ReadModel.Rot) {
+        for (int i = 0; i < 4; i++) {
+            double TmpElement;
+            memcpy(&TmpElement, FileStream + Offset, sizeof(double));
+            Offset += sizeof(double);
+            ReadModel.Rotation.push_back(TmpElement);
+        }
+    }
+
+    // std::vector<double> Scale;
+    if (ReadModel.Sca) {
+        for (int i = 0; i < 3; i++) {
+            double TmpElement;
+            memcpy(&TmpElement, FileStream + Offset, sizeof(double));
+            Offset += sizeof(double);
+            ReadModel.Scale.push_back(TmpElement);
+        }
+    }
+
+    // std::vector<double> Translation;
+    if (ReadModel.Tra) {
+        for (int i = 0; i < 3; i++) {
+            double TmpElement;
+            memcpy(&TmpElement, FileStream + Offset, sizeof(double));
+            Offset += sizeof(double);
+            ReadModel.Translation.push_back(TmpElement);
+        }
+    }
+
+    // std::vector<double> Translation;
+    if (ReadModel.Mat) {
+        for (int i = 0; i < 16; i++) {
+            double TmpElement;
+            memcpy(&TmpElement, FileStream + Offset, sizeof(double));
+            Offset += sizeof(double);
+            ReadModel.Matrix.push_back(TmpElement);
+        }
+    }
+
+    for (int i = 0; i < ReadModel.WeightsNum; i++) {
+        double TmpElement;
+        memcpy(&TmpElement, FileStream + Offset, sizeof(double));
+        Offset += sizeof(double);
+        ReadModel.Weights.push_back(TmpElement);
+    }
+
+    return ReadModel;
 }
 
 std::string extractFileName(const char* completePath) {
@@ -622,7 +890,7 @@ void loadDataFromGLTF(const char* fileName){
     };
 
     std::string Root = extractFileName(fileName);
-
+    std::vector<GLTFModel> Models;
     // loading nodes
     for (int i = 0; i < model.nodes.size(); i++) {
         tinygltf::Node TmpNode = model.nodes[i];
@@ -659,6 +927,7 @@ void loadDataFromGLTF(const char* fileName){
         }
         
         saveGLTFModelToBinFile(Root, TmpNode.name, NewModel);
+        Models.push_back(NewModel);
     };
 
     // loading primitives
@@ -667,11 +936,12 @@ void loadDataFromGLTF(const char* fileName){
         // loading primitives 
         for (int j = 0; j < TmpMesh.primitives.size(); j++) {
             tinygltf::Primitive TmpPrimitive = TmpMesh.primitives[j];
-            GLTFPrimitive NewPrimitive(i, j, TmpPrimitive);
+            GLTFPrimitive NewPrimitive(i, j);
             // TmpAccessor for positions of the Vertex
             tinygltf::Accessor TmpAccessor = model.accessors[TmpPrimitive.attributes["POSITION"]];
             // float VEC3
             NewPrimitive.PositionsNum = TmpAccessor.count;
+            NewPrimitive.MaterialId = TmpPrimitive.material;
             NewPrimitive.Positions = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
             // TmpAccessor for normals of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.attributes["NORMAL"]];
@@ -708,14 +978,7 @@ void loadDataFromGLTF(const char* fileName){
         
     };
 
-    // read Textures test
-    //std::string path = ".\\resources\\models\\gltf\\GLTFTexture";
-    //int i = 0;
-    //for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    //    std::cout << entry.path() << std::endl;
-    //    GLTFTexture ReadTexture = loadTextureFromBin(entry.path().string());
-    //    i++;
-    //}
+    
 
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
@@ -799,14 +1062,17 @@ void loadDataFromGLTF(const char* fileName){
         saveGLTFAnimationToBinFile(Root, TmpAnimation.name, NewAnimation);
     };
 
-    // read Animation test
-    std::string path = ".\\resources\\models\\gltf\\GLTFAnimation";
-    int i = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path() << std::endl;
-        GLTFAnimation ReadAnimation = loadAnimationFromBin(entry.path().string());
-        i++;
-    };
+    // test
+    //std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFModel";
+    //std::vector<GLTFModel> ReadModels;
+    //int i = 0;
+    //for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //    std::cout << entry.path() << std::endl;
+    //    GLTFModel ReadModel = loadModelFromBin(entry.path().string());
+    //    i++;
+    //    ReadModels.push_back(ReadModel);
+    //};
+
 
     return;
 }

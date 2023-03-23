@@ -6,6 +6,9 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include "FrameData.h"
+#include "gltf_loader.h"
+#include "asset_types.hpp"
+#include <filesystem>
 
 std::vector<VertexData> test_vertices;
 Allocator* test_allocator;
@@ -17,7 +20,7 @@ void TEST_RECT(std::vector<VertexData>* data, const float x, const float y, cons
 {
 	VertexData v = {};
 	v.Color = color;
-	v.Normal = { 0, 0, -1 };
+	v.Normal = { 0, 0, 1 };
 	v.Position = { x, y, z };
 	data->push_back(v);
 	v.Position = { x + w, y, z };
@@ -32,19 +35,33 @@ void TEST_RECT(std::vector<VertexData>* data, const float x, const float y, cons
 	data->push_back(v);
 }
 
+void TEST_PRIMITIVE_TO_TRIANGLES(std::vector<VertexData>* data, const GLTFPrimitive* p, const size_t i, const glm::vec4 color)
+{
+	VertexData v = {};
+	v.Color = color;
+	v.Position = { p->Positions[i][0], p->Positions[i][1], p->Positions[i][2] };
+	v.Normal = { p->Normals[i][0], p->Normals[i][1], p->Normals[i][2] };
+	data->push_back(v);
+}
+
 void TEST_INIT(const VulkanContext context)
 {
-	// test_vertices.resize(3);
-
-	TEST_RECT(&test_vertices, -2, -2, 4, 4, 0.0f, {1,1,1,1});
-
-	/*test_vertices[0].Position = { 1.0f, 1.0f, 0.0f };
-	test_vertices[1].Position = { -1.0f, 1.0f, 0.0f };
-	test_vertices[2].Position = { 0.0f, -1.0f, 0.0f };
-
-	test_vertices[0].Color = { 0.0f, 0.0f, 1.0f, 1.0f };
-	test_vertices[1].Color = { 0.0f, 1.0f, 0.0f, 1.0f };
-	test_vertices[2].Color = { 1.0f, 0.0f, 0.0f, 1.0f };*/
+	loadDataFromGLTF("resources/models/gltf/untitled.gltf");
+	std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
+	std::string pathm = ".\\resources\\models\\gltf\\untitled\\GLTFMaterial";
+	std::vector<GLTFMaterial> mats = {};
+	for (const auto& entry : std::filesystem::directory_iterator(pathm)) {
+		mats.push_back(loadMaterialFromBin(entry.path().string()));
+	}
+	for (const auto& entry : std::filesystem::directory_iterator(path)) {
+		GLTFPrimitive pr = loadPrimitiveFromBin(entry.path().string());
+		for (auto i : pr.Indices)
+		{
+			auto mat = mats[pr.MaterialId];
+			glm::vec4 col = { mat.BaseColorFactor[0], mat.BaseColorFactor[1] , mat.BaseColorFactor[2] , mat.BaseColorFactor[3] };
+			TEST_PRIMITIVE_TO_TRIANGLES(&test_vertices, &pr, i, col);
+		}
+	};
 
 	test_allocator = new Allocator(context, test_vertices.size() * sizeof(VertexData), false);
 	test_reference = test_allocator->AllocateAndSet(
@@ -59,7 +76,7 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	timer += delta;
 	float x = glm::sin(timer) * 0; // change 0 for spinning
 	float y = glm::cos(timer) * 0; // change 0 for spinning
-	glm::vec3 camPos = { x, y, -10.0f };
+	glm::vec3 camPos = { x, y, -4.0f };
 
 	glm::mat4 view = glm::translate(glm::mat4(1.0f), camPos);
 	glm::mat4 projection = glm::perspective(glm::radians(70.f), width / height, 0.1f, 200.0f);

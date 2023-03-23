@@ -463,7 +463,7 @@ public:
 		);
 		_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 		std::array<VkClearValue, 2> clearValues;
-		clearValues[0].color = {{.1f, .0f, .1f, 1.0f}};
+		clearValues[0].color = {{.05f, .0f, .05f, 1.0f}};
 		clearValues[1].depthStencil = {1.0f, 0};
 		VkRenderPassBeginInfo rpInfo = {};
 		rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

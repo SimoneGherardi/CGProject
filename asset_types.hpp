@@ -37,15 +37,15 @@ struct GLTFModel {
 
 struct GLTFPrimitive {
     // Objects or parts of objects of the same material
-    GLTFPrimitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive);
+    GLTFPrimitive(int32_t meshId, int32_t id);
     int32_t MeshId;
     int32_t Id;
     int32_t PositionsNum;
     int32_t IndicesNum;
     int32_t MaterialId;
-    std::vector<std::vector<float>> Positions;
-    std::vector<std::vector<float>> Normals;
-    std::vector<unsigned short> Indices;
+    std::vector<std::vector<float>> Positions;  // PositionsNum * 3 floats
+    std::vector<std::vector<float>> Normals;    // PositionsNum * 3 floats
+    std::vector<unsigned short> Indices;        // IndicesNum
 };
 
 struct GLTFTexture {

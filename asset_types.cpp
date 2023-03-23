@@ -34,7 +34,7 @@ GLTFAnimationChannel::GLTFAnimationChannel(int32_t animationId, int32_t id): Ani
     
 }
 
-GLTFPrimitive::GLTFPrimitive(int32_t meshId, int32_t id, tinygltf::Primitive primitive) : MeshId(meshId), Id(id)
+GLTFPrimitive::GLTFPrimitive(int32_t meshId, int32_t id) : MeshId(meshId), Id(id)
 {
-    this->MaterialId = primitive.material;   
+
 }

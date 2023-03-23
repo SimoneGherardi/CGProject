@@ -8,7 +8,7 @@ struct GlobalData
 	glm::mat4 CameraProjection;
 	glm::mat4 CameraViewProjection;
 
-	glm::vec3 SunPosition;
+	glm::vec3 SunDirection;
 	glm::vec3 SunColor;
 
 	glm::vec3 AmbientLight;

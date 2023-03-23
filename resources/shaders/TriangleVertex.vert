@@ -17,7 +17,7 @@ layout(set = 0, binding = 0) uniform GlobalData{
     mat4 CameraProjection;
     mat4 CameraViewProjection;
 
-	vec3 SunPosition;
+	vec3 SunDirection;
 	vec3 SunColor;
 
 	vec3 AmbientLight;
@@ -27,5 +27,6 @@ void main()
 {
     mat4 transform = (globalData.CameraViewProjection); // * model.matrix;
 	gl_Position = transform * vec4(Position, 1.0f);
-	outColor = vec3(Color.x, Color.y, Color.z);
+	float factor = dot(globalData.SunDirection, Normal);
+	outColor = vec3(Color.x * factor, Color.y * factor, Color.z * factor);
 }

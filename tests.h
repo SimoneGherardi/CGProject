@@ -74,11 +74,14 @@ void TEST_INIT(const VulkanContext context)
 void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, Allocator* frameDataAllocator, FrameData* frameData)
 {
 	timer += delta;
-	float x = glm::sin(timer) * 0; // change 0 for spinning
-	float y = glm::cos(timer) * 0; // change 0 for spinning
-	glm::vec3 camPos = { x, y, -4.0f };
 
-	glm::mat4 view = glm::translate(glm::mat4(1.0f), camPos);
+	float xl = glm::sin(timer); // change 0 for spinning
+	float zl = glm::cos(timer); // change 0 for spinning
+
+	glm::vec3 camPos = { xl * -3, 0, zl * -3};
+	glm::vec3 camRotAxis = { 0, 1.0f, 0 };
+
+	glm::mat4 view = glm::rotate(-timer, camRotAxis) * glm::translate(glm::mat4(1.0f), camPos);
 	glm::mat4 projection = glm::perspective(glm::radians(70.f), width / height, 0.1f, 200.0f);
 	projection[1][1] *= -1;
 
@@ -87,9 +90,6 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	data->CameraProjection = projection;
 	data->CameraView = view;
 	data->CameraViewProjection = projection * view;
-
-	float xl = glm::sin(timer); // change 0 for spinning
-	float zl = glm::cos(timer); // change 0 for spinning
 
 	data->SunDirection = { xl, 0.0f, zl };
 

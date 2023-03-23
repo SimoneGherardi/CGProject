@@ -2,6 +2,7 @@
     #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
 #endif
 
+#include "game_engine.h"
 #include "rendering_engine.h"
 #include "window.h"
 
@@ -43,6 +44,7 @@ int main()
     try
     {
         initialize();
+        GameEngine::GetInstance().Loop();
         cleanup();
     }
     catch (const std::exception& e) {

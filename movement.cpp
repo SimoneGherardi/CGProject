@@ -2,47 +2,27 @@
 
 #include "game_engine.h"
 
-rp3d::Vector3 Transform::GetPosition()
+const rp3d::Transform Transform::LocalTransform() const
 {
-    return this->_Position;
+    return rp3d::Transform(this->Position, this->Rotation);
 }
-void Transform::SetPosition(rp3d::Vector3 position)
+
+void Move(flecs::iter it, Transform* transform, Velocity* velocity)
 {
-    this->_Position = position;
-    this->_UpdateTransform();
-}
-rp3d::Quaternion Transform::GetRotation()
-{
-    return this->_Rotation;
-}
-void Transform::SetRotation(rp3d::Quaternion rotation)
-{
-    this->_Rotation = rotation;
-    this->_UpdateTransform();
-}
-void Transform::_UpdateTransform()
-{
-    this->_LocalTransform = rp3d::Transform(this->_Position, this->_Rotation);
-}
-rp3d::Transform Transform::GetGlobalTransform()
-{
-    GameEngine& engine = GameEngine::GetInstance();
-    if (this->_LastGlobalTransformUpdate < engine.GetCurrentFrameTime())
+    auto delta = GameEngine::GetInstance().DeltaTime;
+    for (int i : it)
     {
-        this->_GlobalTransform = this->Parent->GetGlobalTransform() * this->_LocalTransform;
-        this->_LastGlobalTransformUpdate = engine.GetCurrentFrameTime();
+        transform[i].Position = transform[i].Position + (velocity[i].Direction * velocity[i].Magnitude) * delta.count();
     }
-    return this->_GlobalTransform;
 }
 
-void Move(flecs::entity e, Transform& transform, Velocity& speed)
+void Rotate(flecs::iter it, Transform* transform, AngularVelocity* speed)
 {
-    transform.SetPosition(transform.GetPosition() + (speed.Direction * speed.Magnitude));
-}
-
-void Rotate(flecs::entity e, Transform& transform, AngularVelocity& speed)
-{
-    transform.SetRotation(transform.GetRotation() + (speed.Direction * speed.Magnitude));
+    auto delta = GameEngine::GetInstance().DeltaTime;
+    for (int i : it)
+    {
+        transform[i].Rotation = transform[i].Rotation + (speed[i].Direction * speed[i].Magnitude) * delta.count();
+    }
 }
 
 Movement::Movement(flecs::world& world)
@@ -54,9 +34,9 @@ Movement::Movement(flecs::world& world)
     _AngularVelocity = world.component<AngularVelocity>();
 
     _Move = world.system<Transform, Velocity>()
-        .kind(flecs::PostUpdate)
-        .each(Move);
+        .kind(flecs::OnUpdate)
+        .iter(Move);
     _Rotate = world.system<Transform, AngularVelocity>()
-        .kind(flecs::PostUpdate)
-        .each(Rotate);
+        .kind(flecs::OnUpdate)
+        .iter(Rotate);
 }

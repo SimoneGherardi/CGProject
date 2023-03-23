@@ -4,22 +4,9 @@
 
 typedef struct Transform
 {
-public:
-    Transform* Parent;
-
-    rp3d::Vector3 GetPosition();
-    void SetPosition(rp3d::Vector3);
-    rp3d::Quaternion GetRotation();
-    void SetRotation(rp3d::Quaternion);
-    rp3d::Transform GetGlobalTransform();
-private:
-    rp3d::Vector3 _Position = {0, 0, 0};
-    rp3d::Quaternion _Rotation = rp3d::Quaternion::identity();
-    rp3d::Transform _LocalTransform;
-    rp3d::Transform _GlobalTransform;
-    std::chrono::system_clock::time_point _LastGlobalTransformUpdate = std::chrono::system_clock::time_point::min();
-
-    void _UpdateTransform();
+    rp3d::Vector3 Position = { 0, 0, 0 };
+    rp3d::Quaternion Rotation = rp3d::Quaternion::identity();
+    const rp3d::Transform LocalTransform() const;
 } Transform;
 
 typedef struct Velocity

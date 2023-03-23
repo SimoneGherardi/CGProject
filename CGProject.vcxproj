@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -164,6 +164,7 @@
     <ClCompile Include="physics.cpp" />
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
+    <ClCompile Include="rendering.cpp" />
     <ClCompile Include="render_passes.cpp" />
     <ClCompile Include="render_target.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -201,12 +202,14 @@
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
+    <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
     <ClInclude Include="physics.h" />
     <ClInclude Include="PipelineBuilder.h" />
     <ClInclude Include="movement.h" />
     <ClInclude Include="queue_families.h" />
+    <ClInclude Include="rendering.h" />
     <ClInclude Include="render_passes.h" />
     <ClInclude Include="render_target.h" />
     <ClInclude Include="Scene.h" />

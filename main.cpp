@@ -5,10 +5,12 @@
 #include "game_engine.h"
 #include "rendering_engine.h"
 #include "window.h"
+#include "gltf_loader.h"
+#include <chrono>
 
 const char* TITLE = "CG Project";
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1600;
+const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
 RenderingEngine ENGINE;
@@ -45,6 +47,16 @@ int main()
     {
         initialize();
         GameEngine::GetInstance().Loop();
+        float delta = 0;
+        using clock = std::chrono::system_clock;
+        using millisec = std::chrono::duration<double, std::milli>;
+        while (!glfwWindowShouldClose(Window)) {
+            const auto start = clock::now();
+            glfwPollEvents();
+            ENGINE.Render(delta);
+            const millisec duration = clock::now() - start;
+            delta = (float) duration.count() / 1000.0f;
+        }
         cleanup();
     }
     catch (const std::exception& e) {

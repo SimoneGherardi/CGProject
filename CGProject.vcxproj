@@ -104,14 +104,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;C:\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -137,21 +137,30 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Allocator.cpp" />
+    <ClCompile Include="asset_types.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
+    <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
     <ClCompile Include="defines.cpp" />
+    <ClCompile Include="descriptor_pool.cpp" />
+    <ClCompile Include="descriptor_set.cpp" />
     <ClCompile Include="descriptor_set_layout.cpp" />
+    <ClCompile Include="DeviceMemory.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
     <ClCompile Include="game_engine.cpp" />
     <ClCompile Include="GLTFLoader.cpp" />
+    <ClCompile Include="GlobalData.cpp" />
+    <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
+    <ClCompile Include="ImmediateCommandBuffer.cpp" />
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="ioutils.cpp" />
     <ClCompile Include="libraries\flecs\flecs.c" />
@@ -159,6 +168,7 @@
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="movement.cpp" />
+    <ClCompile Include="MemoryReference.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="physical_device.cpp" />
     <ClCompile Include="physics.cpp" />
@@ -176,33 +186,46 @@
     <ClCompile Include="swap_chain_info.cpp" />
     <ClCompile Include="swap_chains.cpp" />
     <ClCompile Include="swap_chain_support.cpp" />
+    <ClCompile Include="SyncStructures.cpp" />
     <ClCompile Include="test.cpp" />
     <ClCompile Include="validation_layers.cpp" />
     <ClCompile Include="viewport.cpp" />
+    <ClCompile Include="VulkanStructs.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Allocator.h" />
     <ClInclude Include="assets.h" />
+    <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />
+    <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="command_buffers.h" />
     <ClInclude Include="command_pool.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
+    <ClInclude Include="descriptor_pool.h" />
+    <ClInclude Include="descriptor_set.h" />
     <ClInclude Include="descriptor_set_layout.h" />
+    <ClInclude Include="DeviceMemory.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
     <ClInclude Include="game_engine.h" />
     <ClInclude Include="GLTFLoader.h" />
+    <ClInclude Include="FrameData.h" />
+    <ClInclude Include="GlobalData.h" />
+    <ClInclude Include="gltf_loader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
+    <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
+    <ClInclude Include="MemoryReference.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
     <ClInclude Include="physics.h" />
@@ -221,11 +244,16 @@
     <ClInclude Include="swap_chains.h" />
     <ClInclude Include="swap_chain_info.h" />
     <ClInclude Include="swap_chain_support.h" />
+    <ClInclude Include="SyncStructures.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="tests.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
+    <ClInclude Include="VertexData.h" />
     <ClInclude Include="viewport.h" />
     <ClInclude Include="rendering_engine.h" />
+    <ClInclude Include="game_engine.h" />
+    <ClInclude Include="VulkanStructs.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>
   <ItemGroup>

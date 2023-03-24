@@ -64,6 +64,12 @@
     <Filter Include="Header Files\utilities">
       <UniqueIdentifier>{3cad1fd4-01a0-4bf8-9069-6ae6011a4814}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\allocator">
+      <UniqueIdentifier>{1e1ef219-60aa-48b6-9a24-869cf64bd8cb}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\allocator">
+      <UniqueIdentifier>{b36a9b96-85b8-41e6-a6ed-23e3f78ceb95}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -81,7 +87,7 @@
     <ClCompile Include="test.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="GLTFLoader.cpp">
+    <ClCompile Include="gltf_loader.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
     <ClCompile Include="Loader3D.cpp">
@@ -194,13 +200,45 @@
     </ClCompile>
     <ClCompile Include="rendering.cpp">
       <Filter>Source Files\ecs</Filter>
+    <ClCompile Include="Allocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryReference.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="ImmediateCommandBuffer.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="VulkanStructs.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="DeviceMemory.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="asset_types.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="GlobalData.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="descriptor_pool.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="descriptor_set.cpp">
+      <Filter>Source Files\vulkan</Filter>
+    </ClCompile>
+    <ClCompile Include="SyncStructures.cpp">
+      <Filter>Source Files\utilities</Filter>
+    </ClCompile>
+    <ClCompile Include="CommandBuffer.cpp">
+      <Filter>Source Files\utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="GLTFLoader.h">
+    <ClInclude Include="gltf_loader.h">
       <Filter>Header Files\3d</Filter>
     </ClInclude>
     <ClInclude Include="Loader3D.h">
@@ -331,6 +369,45 @@
     </ClInclude>
     <ClInclude Include="ecs_modules.h">
       <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="Allocator.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="ImmediateCommandBuffer.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanStructs.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="DeviceMemory.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryReference.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="asset_types.hpp">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="VertexData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="GlobalData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="FrameData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_pool.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="descriptor_set.h">
+      <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="SyncStructures.h">
+      <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="CommandBuffer.h">
+      <Filter>Header Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

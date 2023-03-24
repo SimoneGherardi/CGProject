@@ -1,4 +1,5 @@
 #include "std_pipeline.h"
+#include "VulkanStructs.h"
 
 void initializeStdPipeline(
 	const VkDevice device,
@@ -13,7 +14,7 @@ void initializeStdPipeline(
 	const bool transparency,
 	const VkPipelineLayout pipelineLayout,
 	const VkRenderPass renderPass,
-	VertexDescriptor* vertexDescriptor,
+	// VertexDescriptor* vertexDescriptor,
 	VkPipeline* pipeline
 )
 {
@@ -30,8 +31,13 @@ void initializeStdPipeline(
 		vertexShaderStageInfo, fragmentShaderStageInfo
 	};
 
-	auto bindingDescription = vertexDescriptor->getBindingDescription();
-	auto attributeDescriptions = vertexDescriptor->getAttributeDescriptions();
+	auto bindingDescription = VulkanStructs::VertexInputBindingDescription(
+		0,
+		sizeof(VertexData),
+		VK_VERTEX_INPUT_RATE_VERTEX
+	);
+	
+	auto attributeDescriptions = VulkanStructs::VertexInputAttributeDescription(0);
 
 	auto vertexInputInfo = getPipelineVertexInputStateCreateInfo(
 		1, &bindingDescription,

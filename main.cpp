@@ -3,6 +3,7 @@
 #endif
 
 #include "game_engine.h"
+#include "rendering_engine.h"
 #include "window.h"
 #include "gltf_loader.h"
 #include <chrono>
@@ -12,12 +13,12 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-GameEngine ENGINE;
+RenderingEngine ENGINE;
 
 void onResize(GLFWwindow* window, int width, int height)
 {
     TRACESTART;
-    auto engine = reinterpret_cast<GameEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = reinterpret_cast<RenderingEngine*>(glfwGetWindowUserPointer(window));
     // TODO engine resize
     TRACEEND;
 }
@@ -45,6 +46,7 @@ int main()
     try
     {
         initialize();
+        GameEngine::GetInstance().Loop();
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<double, std::milli>;
@@ -55,7 +57,6 @@ int main()
             const millisec duration = clock::now() - start;
             delta = (float) duration.count() / 1000.0f;
         }
-        
         cleanup();
     }
     catch (const std::exception& e) {

@@ -189,6 +189,17 @@
     <ClCompile Include="image.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="movement.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="physics.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="game_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering.cpp">
+      <Filter>Source Files\ecs</Filter>
     <ClCompile Include="Allocator.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
@@ -329,7 +340,7 @@
     <ClInclude Include="surface_factory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_engine.h">
+    <ClInclude Include="rendering_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cleanup_stack.h">
@@ -343,6 +354,21 @@
     </ClInclude>
     <ClInclude Include="image.h">
       <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="movement.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="physics.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="game_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendering.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs_modules.h">
+      <Filter>Header Files\ecs</Filter>
     </ClInclude>
     <ClInclude Include="Allocator.h">
       <Filter>Header Files\allocator</Filter>

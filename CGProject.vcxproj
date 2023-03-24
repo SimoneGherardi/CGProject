@@ -172,6 +172,7 @@
     <ClCompile Include="queue_families.cpp" />
     <ClCompile Include="render_passes.cpp" />
     <ClCompile Include="render_target.cpp" />
+    <ClCompile Include="SaveToBin.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
     <ClCompile Include="shader_module.cpp" />
@@ -224,6 +225,7 @@
     <ClInclude Include="queue_families.h" />
     <ClInclude Include="render_passes.h" />
     <ClInclude Include="render_target.h" />
+    <ClInclude Include="SaveToBin.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
     <ClInclude Include="shader_module.h" />

@@ -21,10 +21,10 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	float xl = glm::sin(timer); // change 0 for spinning
 	float zl = glm::cos(timer); // change 0 for spinning
 
-	glm::vec3 camPos = { xl * -3, 0, zl * -3};
+	glm::vec3 camPos = { 0, 0, -3};
 	glm::vec3 camRotAxis = { 0, 1.0f, 0 };
 
-	glm::mat4 view = glm::rotate(-timer, camRotAxis) * glm::translate(glm::mat4(1.0f), camPos);
+	glm::mat4 view = glm::translate(glm::mat4(1.0f), camPos);
 	glm::mat4 projection = glm::perspective(glm::radians(70.f), width / height, 0.1f, 200.0f);
 	projection[1][1] *= -1;
 
@@ -40,15 +40,17 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	vkCmdBindDescriptorSets(
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr
 	);
+
+	frameData->Objects.Data[0].GPUData.ModelMatrix = glm::rotate(timer, glm::vec3(0,0,1));
+	frameData->Objects.MemoryReference.Transfer();
+
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(frameData->Objects.DescriptorSet), 0, nullptr
+	);
 }
 
 void TEST_RENDER(const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* data)
 {
-	data->Objects.Data[0].GPUData.ModelMatrix = glm::translate(glm::mat4(1.0f), { 0, 0, 0 });
-	data->Objects.MemoryReference.Transfer();
-	vkCmdBindDescriptorSets(
-		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(data->Objects.DescriptorSet), 0, nullptr
-	);
 	VkDeviceSize offset = 0;
 	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexMemoryReference.Buffer), &offset);
 	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexMemoryReference.Buffer, 0, VK_INDEX_TYPE_UINT16);

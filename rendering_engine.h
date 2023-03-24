@@ -65,7 +65,6 @@ private:
 
 	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
 	HostLocalAllocator* _FrameDataAllocator;
-	HostLocalAllocator* _FrameDataAllocator2;
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
@@ -196,11 +195,9 @@ private:
 	{
 		TRACESTART;
 		_FrameDataAllocator = new HostLocalAllocator(_Context, 8192*1024, false);
-		_FrameDataAllocator2 = new HostLocalAllocator(_Context, 8192 * 1024, false);
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up allocators");
 			_FrameDataAllocator->Cleanup();
-			_FrameDataAllocator2->Cleanup();
 			});
 		TRACEEND;
 	}
@@ -269,7 +266,7 @@ private:
 			);
 			_FrameData[i].Global.MemoryReference.Transfer();
 
-			_FrameData[i].Objects.MemoryReference = _FrameDataAllocator2->Allocate(
+			_FrameData[i].Objects.MemoryReference = _FrameDataAllocator->Allocate(
 				_FrameData[i].Objects.Data.data(),
 				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
 				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT

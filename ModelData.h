@@ -1,10 +1,20 @@
 #pragma once
+#include <vector>
+#include "VertexData.h"
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <stdint.h>
+#include "ModelId.h"
 
-struct ModelData
+
+struct BakedMeshInfo
 {
-	glm::vec3 Position;
-	glm::quat Rotation;
-	glm::vec3 Scale;
+	uint32_t VerticesOffset;
+	uint32_t IndicesOffset;
+	uint32_t IndicesCount;
+};
+
+struct BakedModelInfo
+{
+	ModelId Id;
+	std::vector<BakedMeshInfo> Meshes;
 };

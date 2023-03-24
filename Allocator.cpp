@@ -1,5 +1,7 @@
 #include "Allocator.h"
 
+#define ALIGNMENT 0x40
+
 template <typename T>
 Allocator<T>::Allocator(
 	const VulkanContext context,
@@ -7,7 +9,7 @@ Allocator<T>::Allocator(
 	const bool resizable
 ) :
 	_Context(context),
-	_ChunkSize(chunkSize),
+	_ChunkSize((int)ceil((float)chunkSize / ALIGNMENT) * ALIGNMENT),
 	_Resizable(resizable),
 	_Immediate(context),
 	_ChunksCount(1)
@@ -24,10 +26,11 @@ T Allocator<T>::Get(void* data)
 template <typename T>
 T Allocator<T>::Allocate(
 	void* data,
-	const VkDeviceSize size,
+	const VkDeviceSize sizeRaw,
 	const VkBufferUsageFlags usage
 )
 {
+	VkDeviceSize size = (int)ceil((float)sizeRaw / ALIGNMENT) * ALIGNMENT;
 	if (_MemoryOffset + size > _ChunksCount * _ChunkSize)
 	{
 		VkDeviceSize s = (_MemoryOffset + size) / _ChunkSize + 1;

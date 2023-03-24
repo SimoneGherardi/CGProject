@@ -238,6 +238,12 @@
     <ClCompile Include="HostLocalAllocator.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
+    <ClCompile Include="RenderContext.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelId.h">
+      <Filter>Header Files\3d</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -422,6 +428,15 @@
     </ClInclude>
     <ClInclude Include="HostLocalAllocator.h">
       <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderContext.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="InstanceData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="Models.h">
+      <Filter>Header Files\3d</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

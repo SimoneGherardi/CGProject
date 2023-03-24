@@ -23,6 +23,7 @@
 #include "SyncStructures.h"
 #include "CommandBuffer.h"
 #include "tests.h"
+#include "RenderContext.h"
 
 #define FRAME_OVERLAP 3
 
@@ -64,13 +65,16 @@ private:
 
 	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
 	HostLocalAllocator* _FrameDataAllocator;
+	HostLocalAllocator* _FrameDataAllocator2;
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
+	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
 
 	CleanupStack _CleanupStack;
 
 	const std::vector<const char*> _DeviceExtensions = {
-	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
+	VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
 	#ifdef __APPLE__
 		,"VK_KHR_portability_subset"
 	#endif
@@ -191,11 +195,12 @@ private:
 	void _InitializeAllocators()
 	{
 		TRACESTART;
-		_FrameDataAllocator = new HostLocalAllocator(_Context, sizeof(GlobalData) * FRAME_OVERLAP, false);
+		_FrameDataAllocator = new HostLocalAllocator(_Context, 8192*1024, false);
+		_FrameDataAllocator2 = new HostLocalAllocator(_Context, 8192 * 1024, false);
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up allocators");
 			_FrameDataAllocator->Cleanup();
-			delete _FrameDataAllocator;
+			_FrameDataAllocator2->Cleanup();
 			});
 		TRACEEND;
 	}
@@ -203,6 +208,15 @@ private:
 	void _InitializeDescriptorSet()
 	{
 		TRACESTART;
+
+		initializeDescriptorPool(
+			_Context,
+			{
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 }
+			},
+			&_FrameDataDescriptorPool
+		);
 
 		VkDescriptorSetLayoutBinding layoutBinding = getDescriptorSetLayoutBinding(
 			0,
@@ -212,13 +226,14 @@ private:
 			nullptr
 		);
 
-		initializeDescriptorPool(
-			_Context,
-			{
-				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 }
-			},
-			&_FrameDataDescriptorPool
+		auto objectLayoutBinding = getDescriptorSetLayoutBinding(
+			0,
+			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+			1,
+			VK_SHADER_STAGE_VERTEX_BIT,
+			nullptr
 		);
+
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up frame data descriptor pool");
 			cleanupDescriptorPool(_Context, _FrameDataDescriptorPool);
@@ -230,10 +245,19 @@ private:
 			&layoutBinding,
 			&_FrameDataDescriptorSetLayout
 		);
+
+		initializeDescriptorSetLayout(
+			_Context.Device,
+			1,
+			&objectLayoutBinding,
+			&_ObjectDescriptorSetLayout
+		);
+
 		_CleanupStack.push([=]() {
-			LOGDBG("cleaning up frame data descriptor set layout");
+			LOGDBG("cleaning up descriptor set layouts");
 			cleanupDescriptorSetLayout(_Context.Device, _FrameDataDescriptorSetLayout);
-			});
+			cleanupDescriptorSetLayout(_Context.Device, _ObjectDescriptorSetLayout);
+		});
 
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
@@ -245,12 +269,27 @@ private:
 			);
 			_FrameData[i].Global.MemoryReference.Transfer();
 
+			_FrameData[i].Objects.MemoryReference = _FrameDataAllocator2->Allocate(
+				_FrameData[i].Objects.Data.data(),
+				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+			);
+			_FrameData[i].Objects.MemoryReference.Transfer();
+
 			initializeDescriptorSet(
 				_Context,
 				_FrameDataDescriptorPool,
 				1,
 				&_FrameDataDescriptorSetLayout,
 				&(_FrameData[i].Global.DescriptorSet)
+			);
+
+			initializeDescriptorSet(
+				_Context,
+				_FrameDataDescriptorPool,
+				1,
+				&_ObjectDescriptorSetLayout,
+				&(_FrameData[i].Objects.DescriptorSet)
 			);
 
 			updateDescriptorSet(
@@ -262,6 +301,16 @@ private:
 				1,
 				VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 			);
+
+			updateDescriptorSet(
+				_Context,
+				_FrameData[i].Objects.MemoryReference.Buffer,
+				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
+				0,
+				_FrameData[i].Objects.DescriptorSet,
+				1,
+				VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+			);
 		}
 
 		TRACEEND;
@@ -270,10 +319,13 @@ private:
 	void _InitializePipeline()
 	{
 		TRACESTART;
+		std::vector<VkDescriptorSetLayout> layouts = {
+			_FrameDataDescriptorSetLayout, _ObjectDescriptorSetLayout
+		};
 		initializeGraphicsPipelineLayout(
 			_Context.Device,
-			1,
-			&_FrameDataDescriptorSetLayout,
+			layouts.size(),
+			layouts.data(),
 			0,
 			nullptr,
 			&_PipelineLayout
@@ -406,6 +458,18 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializeModels()
+	{
+		RenderContext::GetInstance().Initialize(_Context);
+		for (size_t i = 0; i < FRAME_OVERLAP; i++)
+		{
+			InstanceData d = {};
+			d.ModelId = Models::SUZANNE;
+			glm::vec3 pos = { 0,0,0 };
+			d.GPUData.ModelMatrix = glm::identity<glm::mat4>();
+			_FrameData[i].Objects.Data.push_back(d);
+		}
+	}
 public:
 
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
@@ -420,17 +484,6 @@ public:
 		_InitializePhysicalDevice();
 		_InitializeLogicalDevice();
 
-		//Test
-		const uint32_t arr1[] = { 1,2,3,4,5,6,7,8 };
-		const uint32_t arr2[] = { 10,20,30,40 };
-		const VulkanContext context = { _PhysicalDevice, _Device, _GraphicsQueue, _PresentationQueue };
-		HostLocalAllocator* a = new HostLocalAllocator(context, 4);
-		auto x = a->Allocate((void*)arr2, sizeof(uint32_t) * 4, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-		x.Transfer();
-		auto y = a->Allocate((void*)arr1, sizeof(uint32_t) * 8, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT);
-		y.Transfer();
-		//Fine test
-
 		_InitializeSwapchain(windowSize);
 		_InitializeRenderPass();
 
@@ -440,6 +493,7 @@ public:
 		_Context.PresentationQueue = _PresentationQueue;
 
 		_InitializeSyncStructures();
+		_InitializeModels();
 		_InitializeAllocators();
 		_InitializeDescriptorSet();
 		_InitializePipeline();
@@ -447,7 +501,6 @@ public:
 		_InitializeCommandBuffers();
 		_InitializeRenderTargets();
 		_InitializeFrameBuffer();
-		TEST_INIT(_Context);
 		TRACEEND;
 	}
 
@@ -490,8 +543,8 @@ public:
 		);
 
 		// TODO frame overlap?
-		TEST_CAMERA(_WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, _FrameDataAllocator, &(_FrameData[0]));
-		TEST_RENDER(_MainCommandBuffer->Buffer);
+		TEST_CAMERA(_WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
+		TEST_RENDER(_MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
 
 		vkCmdEndRenderPass(_MainCommandBuffer->Buffer);
 		_MainCommandBuffer->End();
@@ -520,7 +573,7 @@ public:
 	void Cleanup()
 	{
 		TRACESTART;
-		TEST_CLEANUP();
+		RenderContext::GetInstance().Cleanup(_Context);
 		_CleanupStack.flush();
 		TRACEEND;
 	}

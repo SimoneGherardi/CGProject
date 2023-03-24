@@ -52,7 +52,7 @@ int main()
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
             glfwPollEvents();
-            GameEngine::GetInstance().Loop(delta);
+            //GameEngine::GetInstance().Loop(delta);
             ENGINE.Render(delta);
             const millisec duration = clock::now() - start;
             delta = duration.count();

@@ -35,7 +35,7 @@
 //    }
 //}
 
-void ObjLoader::LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD)
+void ObjLoader::LoadMesh(const char* FName, ModelInfo& MD, VertexDescriptor& VD)
 {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;

@@ -171,6 +171,7 @@
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelId.h" />
     <ClCompile Include="movement.cpp" />
     <ClCompile Include="MemoryReference.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
@@ -178,6 +179,7 @@
     <ClCompile Include="physics.cpp" />
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
+    <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="rendering.cpp" />
     <ClCompile Include="render_passes.cpp" />
     <ClCompile Include="render_target.cpp" />
@@ -225,18 +227,21 @@
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />
+    <ClInclude Include="InstanceData.h" />
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="MemoryReference.h" />
     <ClInclude Include="ModelData.h" />
+    <ClInclude Include="Models.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
     <ClInclude Include="physics.h" />
     <ClInclude Include="PipelineBuilder.h" />
     <ClInclude Include="movement.h" />
     <ClInclude Include="queue_families.h" />
+    <ClInclude Include="RenderContext.h" />
     <ClInclude Include="rendering.h" />
     <ClInclude Include="render_passes.h" />
     <ClInclude Include="render_target.h" />

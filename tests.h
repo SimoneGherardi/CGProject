@@ -10,70 +10,11 @@
 #include "asset_types.hpp"
 #include <filesystem>
 #include "HostLocalAllocator.h"
-
-std::vector<VertexData> test_vertices;
-HostLocalAllocator* test_allocator;
-HostLocalMemoryReference test_reference;
+#include "RenderContext.h"
 
 float timer = 0;
 
-void TEST_RECT(std::vector<VertexData>* data, const float x, const float y, const float w, const float h, const float z, const glm::vec4 color)
-{
-	VertexData v = {};
-	v.Color = color;
-	v.Normal = { 0, 0, 1 };
-	v.Position = { x, y, z };
-	data->push_back(v);
-	v.Position = { x + w, y, z };
-	data->push_back(v);
-	v.Position = { x + w, y + h, z };
-	data->push_back(v);
-	v.Position = { x, y, z };
-	data->push_back(v);
-	v.Position = { x + w, y + h, z };
-	data->push_back(v);
-	v.Position = { x, y + h, z };
-	data->push_back(v);
-}
-
-void TEST_PRIMITIVE_TO_TRIANGLES(std::vector<VertexData>* data, const GLTFPrimitive* p, const size_t i, const glm::vec4 color)
-{
-	VertexData v = {};
-	v.Color = color;
-	v.Position = { p->Positions[i][0], p->Positions[i][1], p->Positions[i][2] };
-	v.Normal = { p->Normals[i][0], p->Normals[i][1], p->Normals[i][2] };
-	data->push_back(v);
-}
-
-void TEST_INIT(const VulkanContext context)
-{
-	loadDataFromGLTF("resources/models/gltf/untitled.gltf");
-	std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
-	std::string pathm = ".\\resources\\models\\gltf\\untitled\\GLTFMaterial";
-	std::vector<GLTFMaterial> mats = {};
-	for (const auto& entry : std::filesystem::directory_iterator(pathm)) {
-		mats.push_back(loadMaterialFromBin(entry.path().string()));
-	}
-	for (const auto& entry : std::filesystem::directory_iterator(path)) {
-		GLTFPrimitive pr = loadPrimitiveFromBin(entry.path().string());
-		for (auto i : pr.Indices)
-		{
-			auto mat = mats[pr.MaterialId];
-			glm::vec4 col = { mat.BaseColorFactor[0], mat.BaseColorFactor[1] , mat.BaseColorFactor[2] , mat.BaseColorFactor[3] };
-			TEST_PRIMITIVE_TO_TRIANGLES(&test_vertices, &pr, i, col);
-		}
-	};
-
-	test_allocator = new HostLocalAllocator(context, test_vertices.size() * sizeof(VertexData), false);
-	test_reference = test_allocator->Allocate(
-		test_vertices.data(),
-		test_vertices.size() * sizeof(VertexData),
-		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
-	);
-	test_reference.Transfer();
-}
-
-void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, HostLocalAllocator* frameDataAllocator, FrameData* frameData)
+void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {
 	timer += delta;
 
@@ -101,14 +42,15 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	);
 }
 
-void TEST_CLEANUP()
+void TEST_RENDER(const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* data)
 {
-	test_allocator->Cleanup();
-}
-
-void TEST_RENDER(const VkCommandBuffer cmd)
-{
+	data->Objects.Data[0].GPUData.ModelMatrix = glm::translate(glm::mat4(1.0f), { 0, 0, 0 });
+	data->Objects.MemoryReference.Transfer();
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(data->Objects.DescriptorSet), 0, nullptr
+	);
 	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &(test_reference.Buffer), &offset);
-	vkCmdDraw(cmd, test_vertices.size(), 1, 0, 0);
+	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexMemoryReference.Buffer), &offset);
+	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexMemoryReference.Buffer, 0, VK_INDEX_TYPE_UINT16);
+	RenderContext::GetInstance().QueueDraw(cmd, data->Objects.Data);
 }

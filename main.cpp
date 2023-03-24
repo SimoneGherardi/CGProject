@@ -46,16 +46,16 @@ int main()
     try
     {
         initialize();
-        GameEngine::GetInstance().Loop();
         float delta = 0;
         using clock = std::chrono::system_clock;
-        using millisec = std::chrono::duration<double, std::milli>;
+        using millisec = std::chrono::duration<float>;
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
             glfwPollEvents();
+            GameEngine::GetInstance().Loop(delta);
             ENGINE.Render(delta);
             const millisec duration = clock::now() - start;
-            delta = (float) duration.count() / 1000.0f;
+            delta = duration.count();
         }
         cleanup();
     }

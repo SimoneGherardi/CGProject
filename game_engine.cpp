@@ -83,15 +83,12 @@ std::chrono::system_clock::time_point GameEngine::GetCurrentFrameTime()
     return this->_CurrentFrameTime;
 }
 
-void GameEngine::Loop()
+void GameEngine::Loop(float delta)
 {
-    while (true)
-    {
-        _CurrentFrameTime = std::chrono::system_clock::now();
-        DeltaTime = _CurrentFrameTime - _PreviousFrameTime;
-        _PreviousFrameTime = _CurrentFrameTime;
-        Accumulator += DeltaTime;
+    _CurrentFrameTime = std::chrono::system_clock::now();
+    DeltaTime = _CurrentFrameTime - _PreviousFrameTime;
+    _PreviousFrameTime = _CurrentFrameTime;
+    Accumulator += DeltaTime;
 
-        ECSWorld.progress();
-    }
+    ECSWorld.progress();
 }

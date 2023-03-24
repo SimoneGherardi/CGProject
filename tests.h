@@ -9,10 +9,11 @@
 #include "gltf_loader.h"
 #include "asset_types.hpp"
 #include <filesystem>
+#include "HostLocalAllocator.h"
 
 std::vector<VertexData> test_vertices;
-Allocator* test_allocator;
-BufferMemoryReference test_reference;
+HostLocalAllocator* test_allocator;
+HostLocalMemoryReference test_reference;
 
 float timer = 0;
 
@@ -63,15 +64,16 @@ void TEST_INIT(const VulkanContext context)
 		}
 	};
 
-	test_allocator = new Allocator(context, test_vertices.size() * sizeof(VertexData), false);
-	test_reference = test_allocator->AllocateAndSet(
+	test_allocator = new HostLocalAllocator(context, test_vertices.size() * sizeof(VertexData), false);
+	test_reference = test_allocator->Allocate(
 		test_vertices.data(),
 		test_vertices.size() * sizeof(VertexData),
 		VK_BUFFER_USAGE_VERTEX_BUFFER_BIT
 	);
+	test_reference.Transfer();
 }
 
-void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, Allocator* frameDataAllocator, FrameData* frameData)
+void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, HostLocalAllocator* frameDataAllocator, FrameData* frameData)
 {
 	timer += delta;
 
@@ -92,8 +94,7 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	data->CameraViewProjection = projection * view;
 
 	data->SunDirection = { xl, 0.0f, zl };
-
-	frameDataAllocator->TransferFromHost(data, 0, sizeof(GlobalData));
+	frameData->Global.MemoryReference.Transfer();
 
 	vkCmdBindDescriptorSets(
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr

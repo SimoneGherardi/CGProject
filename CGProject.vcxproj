@@ -58,24 +58,16 @@
   <ImportGroup Label="Shared">
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
-      Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
-      Label="LocalAppDataPlatform" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
-      Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
-      Label="LocalAppDataPlatform" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
-      Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
-      Label="LocalAppDataPlatform" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props"
-      Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')"
-      Label="LocalAppDataPlatform" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -164,12 +156,12 @@
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
     <ClCompile Include="game_engine.cpp" />
-    <ClCompile Include="GLTFLoader.cpp" />
     <ClCompile Include="GlobalData.cpp" />
     <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
+    <ClCompile Include="HostLocalAllocator.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="ImmediateCommandBuffer.cpp" />
@@ -222,13 +214,13 @@
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
     <ClInclude Include="game_engine.h" />
-    <ClInclude Include="GLTFLoader.h" />
     <ClInclude Include="FrameData.h" />
     <ClInclude Include="GlobalData.h" />
     <ClInclude Include="gltf_loader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
+    <ClInclude Include="HostLocalAllocator.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
@@ -238,6 +230,7 @@
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="MemoryReference.h" />
+    <ClInclude Include="ModelData.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
     <ClInclude Include="physics.h" />

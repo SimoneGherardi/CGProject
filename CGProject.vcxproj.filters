@@ -235,6 +235,9 @@
     <ClCompile Include="CommandBuffer.cpp">
       <Filter>Source Files\utilities</Filter>
     </ClCompile>
+    <ClCompile Include="HostLocalAllocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -410,6 +413,15 @@
     </ClInclude>
     <ClInclude Include="CommandBuffer.h">
       <Filter>Header Files\utilities</Filter>
+    </ClInclude>
+    <ClInclude Include="tests.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="HostLocalAllocator.h">
+      <Filter>Header Files\allocator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

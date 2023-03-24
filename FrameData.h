@@ -8,7 +8,7 @@ struct FrameData
 	struct Global
 	{
 		GlobalData Data;
-		BufferMemoryReference MemoryReference;
+		HostLocalMemoryReference MemoryReference;
 		VkDescriptorSet DescriptorSet;
 	} Global;
 };

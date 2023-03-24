@@ -6,12 +6,12 @@ struct DeviceMemory
 	VulkanContext Context;
 	VkDeviceMemory Memory;
 	VkDeviceSize Size;
-	bool IsDeviceLocal;
+	VkMemoryPropertyFlags Flags;
 
 	DeviceMemory(
 		VulkanContext context,
 		VkDeviceSize size,
-		bool deviceLocal
+		VkMemoryPropertyFlags flags
 	);
 
 	void Cleanup();

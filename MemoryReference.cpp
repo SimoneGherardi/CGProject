@@ -1,14 +1,18 @@
 #include "MemoryReference.h"
 
-BufferMemoryReference BufferMemoryReference::Allocate(
+void AbstractMemoryReference::Allocate(
 	const VulkanContext context,
 	const VkDeviceMemory deviceMemory,
 	const VkDeviceSize size,
 	const VkBufferUsageFlags usage,
-	const VkDeviceSize memoryOffset
+	const VkDeviceSize memoryOffset,
+	void* data
 )
 {
-	BufferMemoryReference reference;
+	if (IsAllocated)
+	{
+		throw std::runtime_error("Memory reference already allocated");
+	}
 	auto device = context.Device;
 	// populate buffer info
 	VkBufferCreateInfo bufferInfo = {};
@@ -36,19 +40,25 @@ BufferMemoryReference BufferMemoryReference::Allocate(
 		)
 	);
 	// set references and update offset
-	reference.Buffer = buf;
-	reference.Memory = deviceMemory;
-	reference.Offset = memoryOffset;
-	reference.Size = size;
-	reference.Usage = usage;
-
-	return reference;
+	Context = context;
+	Buffer = buf;
+	Memory = deviceMemory;
+	Offset = memoryOffset;
+	Size = size;
+	Usage = usage;
+	Data = data;
+	IsAllocated = true;
 }
 
-void BufferMemoryReference::Cleanup(
-	const VulkanContext context,
-	const BufferMemoryReference reference
-)
+void AbstractMemoryReference::Cleanup()
 {
-	vkDestroyBuffer(context.Device, reference.Buffer, nullptr);
+	vkDestroyBuffer(Context.Device, Buffer, nullptr);
+}
+
+void HostLocalMemoryReference::Transfer()
+{
+	void* dst;
+	vkMapMemory(Context.Device, Memory, Offset, Size, 0, &dst);
+	memcpy((int8_t*)dst, (int8_t*)Data, Size);
+	vkUnmapMemory(Context.Device, Memory);
 }

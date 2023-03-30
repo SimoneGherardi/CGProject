@@ -1,4 +1,5 @@
 #include "render_passes.h"
+#include "imgui.h"
 
 VkAttachmentDescription getAttachmentDescription(
     const VkFormat format,
@@ -163,6 +164,7 @@ void initializeRenderPass(
         nullptr,
         renderPass
     );
+    //ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
     if (result != VK_SUCCESS) {
         PrintVkError(result);
         throw std::runtime_error("failed to create render pass!");

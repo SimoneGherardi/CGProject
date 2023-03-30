@@ -104,7 +104,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\imgui;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
@@ -123,7 +123,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\imgui;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
@@ -162,6 +162,13 @@
     <ClCompile Include="instance.cpp" />
     <ClCompile Include="ioutils.cpp" />
     <ClCompile Include="libraries\flecs\flecs.c" />
+    <ClCompile Include="libraries\imgui\imgui.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_impl_glfw.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_impl_vulkan.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp" />
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp" />
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
@@ -216,6 +223,14 @@
     <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />
     <ClInclude Include="ioutils.h" />
+    <ClInclude Include="libraries\imgui\imconfig.h" />
+    <ClInclude Include="libraries\imgui\imgui.h" />
+    <ClInclude Include="libraries\imgui\imgui_impl_glfw.h" />
+    <ClInclude Include="libraries\imgui\imgui_impl_vulkan.h" />
+    <ClInclude Include="libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="libraries\imgui\imstb_rectpack.h" />
+    <ClInclude Include="libraries\imgui\imstb_textedit.h" />
+    <ClInclude Include="libraries\imgui\imstb_truetype.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="MemoryReference.h" />

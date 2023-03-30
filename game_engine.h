@@ -23,8 +23,23 @@
 #include "SyncStructures.h"
 #include "CommandBuffer.h"
 #include "tests.h"
+#include "window.h"
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
 
 #define FRAME_OVERLAP 3
+
+#define VK_CHECK(x)                                                 \
+	do                                                              \
+	{                                                               \
+		VkResult err = x;                                           \
+		if (err)                                                    \
+		{                                                           \
+			std::cout <<"Detected Vulkan error: " << err << std::endl; \
+			abort();                                                \
+		}                                                           \
+	} while (0)
 
 struct WindowSize {
 	int Width, Height;
@@ -407,8 +422,75 @@ private:
 		TRACEEND;
 	}
 
+	void _InitializeImgui(GLFWwindow* window)
+	{
+		//1: create descriptor pool for IMGUI
+		// the size of the pool is very oversize, but it's copied from imgui demo itself.
+		VkDescriptorPoolSize pool_sizes[] =
+		{
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+			{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+		};
+
+		VkDescriptorPoolCreateInfo pool_info = {};
+		pool_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		pool_info.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
+		pool_info.maxSets = 1000;
+		pool_info.poolSizeCount = std::size(pool_sizes);
+		pool_info.pPoolSizes = pool_sizes;
+
+		VkDescriptorPool imguiPool;
+		VK_CHECK(vkCreateDescriptorPool(_Device, &pool_info, nullptr, &imguiPool));
+
+
+		// 2: initialize imgui library
+
+		//this initializes the core structures of imgui
+		ImGui::CreateContext();
+
+		//this initializes imgui for GLFW
+		ImGui_ImplGlfw_InitForVulkan(window, true);
+
+		//this initializes imgui for Vulkan
+		ImGui_ImplVulkan_InitInfo init_info = {};
+		init_info.Instance = _Instance;
+		init_info.PhysicalDevice = _PhysicalDevice;
+		init_info.Device = _Device;
+		init_info.Queue = _GraphicsQueue;
+		init_info.DescriptorPool = imguiPool;
+		init_info.MinImageCount = 3;
+		init_info.ImageCount = 3;
+		init_info.MSAASamples = VK_SAMPLE_COUNT_1_BIT;
+
+		ImGui_ImplVulkan_Init(&init_info, _RenderPass);
+
+		//execute a gpu command to upload imgui font textures
+		//immediate_submit([&](VkCommandBuffer cmd) {
+		//	ImGui_ImplVulkan_CreateFontsTexture(cmd);
+		//	});
+
+		//clear font textures from cpu data
+		ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+		//add the destroy the imgui created structures
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up gui");
+			vkDestroyDescriptorPool(_Device, imguiPool, nullptr);
+			ImGui_ImplVulkan_Shutdown();
+			});
+	}
+
 public:
-	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
+	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window)
 	{
 		TRACESTART;
 		_WindowSize = windowSize;
@@ -445,6 +527,7 @@ public:
 		_InitializeCommandBuffers();
 		_InitializeRenderTargets();
 		_InitializeFrameBuffer();
+		_InitializeImgui(window);
 		TEST_INIT(_Context);
 		TRACEEND;
 	}
@@ -461,6 +544,7 @@ public:
 				1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
 			)
 		);
+		ImGui::Render();
 		_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 		std::array<VkClearValue, 2> clearValues;
 		clearValues[0].color = {{.05f, .0f, .05f, 1.0f}};

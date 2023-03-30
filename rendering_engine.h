@@ -24,6 +24,8 @@
 #include "CommandBuffer.h"
 #include "tests.h"
 #include "RenderContext.h"
+#include "imgui.h"
+#include "backends/imgui_impl_vulkan.h"
 
 #define FRAME_OVERLAP 3
 
@@ -68,6 +70,9 @@ private:
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
+
+	VkDescriptorPool _GuiDescriptorPool;
+	ImmediateCommandBuffer* _GuiCommandBuffer;
 
 	CleanupStack _CleanupStack;
 
@@ -457,6 +462,7 @@ private:
 
 	void _InitializeModels()
 	{
+		TRACESTART;
 		RenderContext::GetInstance().Initialize(_Context);
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
@@ -466,6 +472,58 @@ private:
 			d.GPUData.ModelMatrix = glm::identity<glm::mat4>();
 			_FrameData[i].Objects.Data.push_back(d);
 		}
+		TRACEEND;
+	}
+
+	void _InitializeGui()
+	{
+		TRACESTART;
+		initializeDescriptorPool(
+			_Context,
+			{
+				{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+				{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER_DYNAMIC, 1000 },
+				{ VK_DESCRIPTOR_TYPE_INPUT_ATTACHMENT, 1000 }
+			},
+			&_GuiDescriptorPool
+		);
+
+		ImGui_ImplVulkan_InitInfo init_info = {};
+		init_info.Instance = _Instance;
+		init_info.PhysicalDevice = _PhysicalDevice;
+		init_info.Device = _Device;
+		init_info.Queue = _GraphicsQueue;
+		init_info.DescriptorPool = _GuiDescriptorPool;
+		init_info.MinImageCount = 3;
+		init_info.ImageCount = 3;
+		init_info.MSAASamples = VK_SAMPLE_COUNT_2_BIT;
+
+		ImGui_ImplVulkan_Init(&init_info, _RenderPass);
+
+		_GuiCommandBuffer = new ImmediateCommandBuffer(_Context);
+
+		_GuiCommandBuffer->Submit([&](VkCommandBuffer cmd) {
+			ImGui_ImplVulkan_CreateFontsTexture(cmd);
+		});
+		_GuiCommandBuffer->Wait();
+
+		ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up gui");
+			_GuiCommandBuffer->Cleanup();
+			cleanupDescriptorPool(_Context, _GuiDescriptorPool);
+			ImGui_ImplVulkan_Shutdown();
+		});
+		TRACEEND;
 	}
 public:
 
@@ -498,6 +556,7 @@ public:
 		_InitializeCommandBuffers();
 		_InitializeRenderTargets();
 		_InitializeFrameBuffer();
+		_InitializeGui();
 		TRACEEND;
 	}
 
@@ -506,6 +565,7 @@ public:
 		// TODO refactor
 		_RenderFence->Wait();
 		_RenderFence->Reset();
+		ImGui::Render();
 		uint32_t imageIndex;
 		CheckVkResult(
 			vkAcquireNextImageKHR(
@@ -542,6 +602,8 @@ public:
 		// TODO frame overlap?
 		TEST_CAMERA(_WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
 		TEST_RENDER(_MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
+
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _MainCommandBuffer->Buffer);
 
 		vkCmdEndRenderPass(_MainCommandBuffer->Buffer);
 		_MainCommandBuffer->End();

@@ -23,16 +23,12 @@ const uint32_t findMemoryType(
 	throw "Cannot find memory";
 }
 
-
-
-
 DeviceMemory::DeviceMemory(
 	VulkanContext context,
 	VkDeviceSize size,
-	bool deviceLocal
-) : Context(context), Size(size), IsDeviceLocal(deviceLocal), Memory(nullptr)
+	VkMemoryPropertyFlags flags
+) : Context(context), Size(size), Flags(flags), Memory(nullptr)
 {
-	auto flag = IsDeviceLocal ? VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT : VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
 	VkMemoryAllocateInfo memoryAllocateInfo = {};
 	memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -40,7 +36,7 @@ DeviceMemory::DeviceMemory(
 	memoryAllocateInfo.pNext = nullptr;
 	memoryAllocateInfo.memoryTypeIndex = findMemoryType(
 		Context.PhysicalDevice,
-		flag,
+		flags,
 		Size
 	);
 

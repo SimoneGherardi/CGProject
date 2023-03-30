@@ -11,7 +11,8 @@
     </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+      <Extensions>
+        rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
     <Filter Include="Source Files\utilities">
       <UniqueIdentifier>{0ce16b84-cbd3-4efb-8de3-a61a91f201de}</UniqueIdentifier>
@@ -189,6 +190,18 @@
     <ClCompile Include="image.cpp">
       <Filter>Source Files\vulkan</Filter>
     </ClCompile>
+    <ClCompile Include="movement.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="physics.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
+    <ClCompile Include="game_engine.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="rendering.cpp">
+      <Filter>Source Files\ecs</Filter>
+    </ClCompile>
     <ClCompile Include="Allocator.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
@@ -224,6 +237,15 @@
     </ClCompile>
     <ClCompile Include="SaveToBin.cpp">
       <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="HostLocalAllocator.cpp">
+      <Filter>Source Files\allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="RenderContext.cpp">
+      <Filter>Source Files\3d</Filter>
+    </ClCompile>
+    <ClCompile Include="ModelId.h">
+      <Filter>Header Files\3d</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -332,7 +354,7 @@
     <ClInclude Include="surface_factory.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="game_engine.h">
+    <ClInclude Include="rendering_engine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="cleanup_stack.h">
@@ -346,6 +368,21 @@
     </ClInclude>
     <ClInclude Include="image.h">
       <Filter>Header Files\vulkan</Filter>
+    </ClInclude>
+    <ClInclude Include="movement.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="physics.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="game_engine.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="rendering.h">
+      <Filter>Header Files\ecs</Filter>
+    </ClInclude>
+    <ClInclude Include="ecs_modules.h">
+      <Filter>Header Files\ecs</Filter>
     </ClInclude>
     <ClInclude Include="Allocator.h">
       <Filter>Header Files\allocator</Filter>
@@ -390,6 +427,21 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SaveToBin.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="ModelData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="HostLocalAllocator.h">
+      <Filter>Header Files\allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="RenderContext.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="InstanceData.h">
+      <Filter>Header Files\3d</Filter>
+    </ClInclude>
+    <ClInclude Include="Models.h">
       <Filter>Header Files\3d</Filter>
     </ClInclude>
   </ItemGroup>

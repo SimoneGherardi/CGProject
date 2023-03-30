@@ -177,7 +177,7 @@ struct VertexDescriptor {
     }
 };
 
-struct ModelData {
+struct ModelInfo {
     VertexDescriptor* vertDesc;
     std::vector<float> vertices;
     std::vector<uint32_t> indices;

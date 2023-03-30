@@ -520,7 +520,6 @@ void loadDataFromGLTF(const char* fileName){
     std::string warn, err;
     bool ret = loader.LoadASCIIFromFile(&model, &err, &warn, fileName);
 
-
     if (!ret) {
         std::cerr << err << std::endl;
         return;

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -104,14 +104,16 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>stdc11</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;C:\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+        $(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;C:\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -123,7 +125,8 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
     </ClCompile>
@@ -132,7 +135,8 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>
+        $(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\$(Configuration);$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
@@ -151,11 +155,13 @@
     <ClCompile Include="DeviceMemory.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
+    <ClCompile Include="game_engine.cpp" />
     <ClCompile Include="GlobalData.cpp" />
     <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
+    <ClCompile Include="HostLocalAllocator.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="ImmediateCommandBuffer.cpp" />
@@ -165,11 +171,16 @@
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelId.h" />
+    <ClCompile Include="movement.cpp" />
     <ClCompile Include="MemoryReference.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="physical_device.cpp" />
+    <ClCompile Include="physics.cpp" />
     <ClCompile Include="PipelineBuilder.cpp" />
     <ClCompile Include="queue_families.cpp" />
+    <ClCompile Include="RenderContext.cpp" />
+    <ClCompile Include="rendering.cpp" />
     <ClCompile Include="render_passes.cpp" />
     <ClCompile Include="render_target.cpp" />
     <ClCompile Include="Scene.cpp" />
@@ -204,24 +215,34 @@
     <ClInclude Include="DeviceMemory.h" />
     <ClInclude Include="extensions.h" />
     <ClInclude Include="framebuffers.h" />
+    <ClInclude Include="game_engine.h" />
     <ClInclude Include="FrameData.h" />
     <ClInclude Include="GlobalData.h" />
     <ClInclude Include="gltf_loader.h" />
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
+    <ClInclude Include="HostLocalAllocator.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />
+    <ClInclude Include="InstanceData.h" />
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
+    <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="MemoryReference.h" />
+    <ClInclude Include="ModelData.h" />
+    <ClInclude Include="Models.h" />
     <ClInclude Include="ObjLoader.h" />
     <ClInclude Include="physical_device.h" />
+    <ClInclude Include="physics.h" />
     <ClInclude Include="PipelineBuilder.h" />
+    <ClInclude Include="movement.h" />
     <ClInclude Include="queue_families.h" />
+    <ClInclude Include="RenderContext.h" />
+    <ClInclude Include="rendering.h" />
     <ClInclude Include="render_passes.h" />
     <ClInclude Include="render_target.h" />
     <ClInclude Include="Scene.h" />
@@ -235,11 +256,12 @@
     <ClInclude Include="swap_chain_support.h" />
     <ClInclude Include="SyncStructures.h" />
     <ClInclude Include="test.h" />
+    <ClInclude Include="tests.h" />
     <ClInclude Include="ThreeDimensionalDataTypes.h" />
     <ClInclude Include="validation_layers.h" />
     <ClInclude Include="VertexData.h" />
     <ClInclude Include="viewport.h" />
-    <ClInclude Include="game_engine.h" />
+    <ClInclude Include="rendering_engine.h" />
     <ClInclude Include="VulkanStructs.h" />
     <ClInclude Include="window.h" />
   </ItemGroup>

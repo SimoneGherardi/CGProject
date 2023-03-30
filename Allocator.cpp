@@ -1,74 +1,57 @@
 #include "Allocator.h"
 
-Allocator::Allocator(
+#define ALIGNMENT 0x40
+
+template <typename T>
+Allocator<T>::Allocator(
 	const VulkanContext context,
 	const VkDeviceSize chunkSize,
 	const bool resizable
 ) :
 	_Context(context),
-	_ChunkSize(chunkSize),
+	_ChunkSize((int)ceil((float)chunkSize / ALIGNMENT) * ALIGNMENT),
 	_Resizable(resizable),
 	_Immediate(context),
-	_Memory(DeviceMemory(context, chunkSize * 1, false)),
 	_ChunksCount(1)
-{}
+{
+	static_assert(std::is_base_of<AbstractMemoryReference, T>::value, "T must be derived from AbstractMemoryReference");
+}
 
-BufferMemoryReference Allocator::Get(void* data)
+template <typename T>
+T Allocator<T>::Get(void* data)
 {
 	return _Allocations[data];
 }
 
-BufferMemoryReference Allocator::Allocate(
+template <typename T>
+T Allocator<T>::Allocate(
 	void* data,
-	const VkDeviceSize size,
+	const VkDeviceSize sizeRaw,
 	const VkBufferUsageFlags usage
 )
 {
+	VkDeviceSize size = (int)ceil((float)sizeRaw / ALIGNMENT) * ALIGNMENT;
 	if (_MemoryOffset + size > _ChunksCount * _ChunkSize)
 	{
-		auto s = (_MemoryOffset + size) / _ChunkSize + 1;
+		VkDeviceSize s = (_MemoryOffset + size) / _ChunkSize + 1;
 		_ReallocateMemory(s);
 	}
-	auto newRef = BufferMemoryReference::Allocate(
-		_Context,
-		_Memory.Memory,
+	auto newRef = NewReference(
+		GetDeviceMemory().Memory,
 		size,
 		usage,
-		_MemoryOffset
+		_MemoryOffset,
+		data
 	);
 	_Allocations[data] = newRef;
 	_MemoryOffset += size;
 	return Get(data);
 }
 
-BufferMemoryReference Allocator::AllocateAndSet(
-	void* data,
-	const VkDeviceSize size,
-	const VkBufferUsageFlags usage
-)
-{
-	Allocate(data, size, usage);
-	auto dst = Get(data);
-	TransferFromHost(data, 0, size, dst);
-	return dst;
-}
-
-void Allocator::TransferFromHost(
-	void* data,
-	const VkDeviceSize offset,
-	const VkDeviceSize size,
-	const BufferMemoryReference destination
-)
-{
-	void* dst;
-	vkMapMemory(_Context.Device, _Memory.Memory, destination.Offset, destination.Size, 0, &dst);
-	memcpy((int8_t*) dst + offset, (int8_t*) data + offset, size);
-	vkUnmapMemory(_Context.Device, _Memory.Memory);
-}
-
-EnqueueFunction_T Allocator::_TransferFromMemoryReference(
-	const BufferMemoryReference source,
-	const BufferMemoryReference destination
+template <typename T>
+EnqueueFunction_T Allocator<T>::_TransferFromMemoryReference(
+	const T source,
+	const T destination
 ) const
 {
 	return [=](VkCommandBuffer cmd) {
@@ -80,27 +63,28 @@ EnqueueFunction_T Allocator::_TransferFromMemoryReference(
 	};
 }
 
-void Allocator::_ReallocateMemory(const VkDeviceSize chunks)
+template <typename T>
+void Allocator<T>::_ReallocateMemory(const VkDeviceSize chunks)
 {
 	LOGDBG("Reallocating " << chunks << " chunks");
 	if (!_Resizable) {
-		throw "Allocator is unresizable";
+		throw std::runtime_error("Allocator is unresizable");
 	}
-	auto oldMemory = _Memory;
+	auto oldMemory = GetDeviceMemory();
 	auto oldChunks = _ChunksCount;
 
-	auto newMemory = DeviceMemory(_Context, _ChunkSize * chunks, false);
+	auto newMemory = NewDeviceMemory(chunks);
 	std::vector<EnqueueFunction_T> funcs = {};
-	std::vector<BufferMemoryReference> oldRefs = {};
+	std::vector<T> oldRefs = {};
 	for (auto& r : _Allocations)
 	{
 		auto oldRef = r.second;
-		auto newRef = BufferMemoryReference::Allocate(
-			_Context,
+		auto newRef = NewReference(
 			newMemory.Memory,
 			oldRef.Size,
 			oldRef.Usage,
-			oldRef.Offset
+			oldRef.Offset,
+			oldRef.Data
 		);
 		oldRefs.push_back(oldRef);
 		r.second = newRef;
@@ -115,19 +99,20 @@ void Allocator::_ReallocateMemory(const VkDeviceSize chunks)
 	_Immediate.Wait();
 	for (auto r : oldRefs)
 	{
-		BufferMemoryReference::Cleanup(_Context, r);
+		r.Cleanup();
 	}
 	oldMemory.Cleanup();
-	_Memory = newMemory;
+	SetDeviceMemory(newMemory);
 	_ChunksCount = chunks;
 }
 
-void Allocator::Cleanup()
+template <typename T>
+void Allocator<T>::Cleanup()
 {
 	for (auto& r : _Allocations)
 	{
-		BufferMemoryReference::Cleanup(_Context, r.second);
+		r.second.Cleanup();
 	}
-	_Memory.Cleanup();
+	GetDeviceMemory().Cleanup();
 	_Immediate.Cleanup();
 }

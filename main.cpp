@@ -3,20 +3,22 @@
 #endif
 
 #include "game_engine.h"
+#include "rendering_engine.h"
 #include "window.h"
 #include "gltf_loader.h"
+#include <chrono>
 
 const char* TITLE = "CG Project";
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
+const uint32_t WIDTH = 1600;
+const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-GameEngine ENGINE;
+RenderingEngine ENGINE;
 
 void onResize(GLFWwindow* window, int width, int height)
 {
     TRACESTART;
-    auto engine = reinterpret_cast<GameEngine*>(glfwGetWindowUserPointer(window));
+    auto engine = reinterpret_cast<RenderingEngine*>(glfwGetWindowUserPointer(window));
     // TODO engine resize
     TRACEEND;
 }
@@ -44,13 +46,17 @@ int main()
     try
     {
         initialize();
-        loadDataFromGLTF("resources/models/gltf/untitled.gltf");
-
+        float delta = 0;
+        using clock = std::chrono::system_clock;
+        using millisec = std::chrono::duration<float>;
         while (!glfwWindowShouldClose(Window)) {
+            const auto start = clock::now();
             glfwPollEvents();
-            ENGINE.Render();
+            //GameEngine::GetInstance().Loop(delta);
+            ENGINE.Render(delta);
+            const millisec duration = clock::now() - start;
+            delta = duration.count();
         }
-        
         cleanup();
     }
     catch (const std::exception& e) {

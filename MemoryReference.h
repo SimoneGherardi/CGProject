@@ -1,25 +1,36 @@
 #pragma once
 #include "defines.h"
 
-struct BufferMemoryReference
+struct AbstractMemoryReference
 {
+protected:
+	AbstractMemoryReference() = default;
 public:
-	VkDeviceMemory Memory;
-	VkDeviceSize Size;
-	VkDeviceSize Offset;
-	VkBuffer Buffer;
-	VkBufferUsageFlags Usage;
 
-	static BufferMemoryReference Allocate(
+	void* Data = nullptr;
+	VulkanContext Context = {};
+	VkDeviceMemory Memory = {};
+	VkDeviceSize Size = {};
+	VkDeviceSize Offset = {};
+	VkBuffer Buffer = {};
+	VkBufferUsageFlags Usage = {};
+	bool IsAllocated = false;
+
+	void Allocate(
 		const VulkanContext context,
 		const VkDeviceMemory deviceMemory,
 		const VkDeviceSize size,
 		const VkBufferUsageFlags usage,
-		const VkDeviceSize memoryOffset
+		const VkDeviceSize memoryOffset,
+		void* data
 	);
 
-	static void Cleanup(
-		const VulkanContext context,
-		const BufferMemoryReference reference
-	);
+	void Cleanup();
+
+	virtual void Transfer() = 0;
+};
+
+struct HostLocalMemoryReference : public AbstractMemoryReference
+{
+	void Transfer();
 };

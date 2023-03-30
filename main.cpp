@@ -7,6 +7,9 @@
 #include "window.h"
 #include "gltf_loader.h"
 #include <chrono>
+#include <imgui.h>
+#include <backends/imgui_impl_glfw.h>
+#include <backends/imgui_impl_vulkan.h>
 
 const char* TITLE = "CG Project";
 const uint32_t WIDTH = 1600;
@@ -28,6 +31,8 @@ void initialize()
     TRACESTART;
     GLFWSurfaceFactory* surfaceFactory = new GLFWSurfaceFactory(&Window);
     Window = initializeWindow(TITLE, WIDTH, HEIGHT, &ENGINE, onResize);
+    ImGui::CreateContext();
+    ImGui_ImplGlfw_InitForVulkan(Window, true);
     ENGINE.Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
     TRACEEND;
 }
@@ -53,6 +58,10 @@ int main()
             const auto start = clock::now();
             glfwPollEvents();
             //GameEngine::GetInstance().Loop(delta);
+            ImGui_ImplVulkan_NewFrame();
+            ImGui_ImplGlfw_NewFrame();
+            ImGui::NewFrame();
+            ImGui::ShowDemoWindow();
             ENGINE.Render(delta);
             const millisec duration = clock::now() - start;
             delta = duration.count();

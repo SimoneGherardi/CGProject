@@ -175,6 +175,8 @@
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MemoryBlock.cpp" />
+    <ClCompile Include="MemoryTransferer.cpp" />
     <ClCompile Include="ModelId.h" />
     <ClCompile Include="movement.cpp" />
     <ClCompile Include="MemoryReference.cpp" />
@@ -237,7 +239,9 @@
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
+    <ClInclude Include="MemoryBlock.h" />
     <ClInclude Include="MemoryReference.h" />
+    <ClInclude Include="MemoryTransferer.h" />
     <ClInclude Include="ModelData.h" />
     <ClInclude Include="Models.h" />
     <ClInclude Include="ObjLoader.h" />

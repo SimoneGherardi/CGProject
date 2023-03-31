@@ -14,7 +14,7 @@
 #include "command_pool.h"
 #include "render_target.h"
 #include "framebuffers.h"
-#include "Allocator.h"
+// #include "Allocator.h"
 #include "FrameData.h"
 #include "descriptor_set_layout.h"
 #include "descriptor_pool.h"
@@ -28,6 +28,8 @@
 #include "backends/imgui_impl_vulkan.h"
 
 #define FRAME_OVERLAP 3
+#define HOST_VISIBLE_MEMORY_SIZE (4 * 1024 * 1024 * 1024)
+#define DEVICE_LOCAL_MEMORY_SIZE (4 * 1024 * 1024 * 1024)
 
 struct WindowSize {
 	int Width, Height;
@@ -66,13 +68,16 @@ private:
 	std::vector<VkFramebuffer> _SwapChainFramebuffers;
 
 	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
-	HostLocalAllocator* _FrameDataAllocator;
+	// HostLocalAllocator* _FrameDataAllocator;
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
 
 	VkDescriptorPool _GuiDescriptorPool;
 	ImmediateCommandBuffer* _GuiCommandBuffer;
+	
+	DeviceMemory* _HostVisibleMemory;
+	DeviceMemory* _DeviceLocalMemory;
 
 	CleanupStack _CleanupStack;
 
@@ -199,11 +204,15 @@ private:
 	void _InitializeAllocators()
 	{
 		TRACESTART;
-		_FrameDataAllocator = new HostLocalAllocator(_Context, 8192*1024, false);
+		// _FrameDataAllocator = new HostLocalAllocator(_Context, 8192*1024, false);
+		_HostVisibleMemory = new DeviceMemory(_Context, HOST_VISIBLE_MEMORY_SIZE, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		_DeviceLocalMemory = new DeviceMemory(_Context, DEVICE_LOCAL_MEMORY_SIZE, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up allocators");
-			_FrameDataAllocator->Cleanup();
-			});
+			// _FrameDataAllocator->Cleanup();
+			_HostVisibleMemory->Cleanup();
+			_DeviceLocalMemory->Cleanup();
+		});
 		TRACEEND;
 	}
 
@@ -266,6 +275,10 @@ private:
 			_FrameData[i].Global.Data = {};
 			_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
 				&(_FrameData[i].Global.Data),
+				sizeof(GlobalData),
+				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
+			);
+			_FrameData[i].Global.Buffer = _HostVisibleMemory->NewBuffer(
 				sizeof(GlobalData),
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 			);

@@ -34,4 +34,16 @@ void MemoryTransferer::TransferStaged(const Buffer stagingBuffer, const VkDevice
 		});
 		cmd.Wait();
 	}
+	if (remainder > 0) {
+		MemoryTransferer helper = MemoryTransferer(Context, stagingBuffer, (uint8_t*) Source + counts * stagingBufferSize, remainder);
+		helper.TransferMapped();
+		cmd.Submit([&](VkCommandBuffer cmd) {
+			VkBufferCopy copyRegion = {};
+			copyRegion.srcOffset = 0;
+			copyRegion.dstOffset = dstOffset + counts * stagingBufferSize;
+			copyRegion.size = remainder;
+			vkCmdCopyBuffer(cmd, stagingBuffer.Buffer, Destination.Buffer, 1, &copyRegion);
+		});
+		cmd.Wait();
+	}
 }

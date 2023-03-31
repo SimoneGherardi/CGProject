@@ -1,6 +1,11 @@
 #include "DeviceMemory.h"
 #include "VulkanStructs.h"
 
+VkDeviceSize _getAlignedSize(VkDeviceSize size)
+{
+	return (size / ALIGNMENT + 1) * ALIGNMENT;
+}
+
 const uint32_t findMemoryType(
 	VkPhysicalDevice physicalDevice,
 	VkMemoryPropertyFlags properties,
@@ -51,13 +56,14 @@ DeviceMemory::DeviceMemory(
 
 Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage)
 {
+	auto alignedSize = _getAlignedSize(size);
 	VkBufferCreateInfo bufferCreateInfo = {};
 	bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-	bufferCreateInfo.size = size;
+	bufferCreateInfo.size = alignedSize;
 	bufferCreateInfo.usage = usage;
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	VkBuffer b;
-	auto offset = Blocks.FindAvailableOffset(size);
+	auto offset = Blocks.FindAvailableOffset(alignedSize);
 	if (offset == -1) {
 		throw "Cannot allocate buffer";
 	}
@@ -73,8 +79,8 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 		Memory,
 		offset
 	));
-	Blocks.Allocate(size);
-	return Buffer{ b, size, offset, Memory };
+	Blocks.Allocate(alignedSize);
+	return Buffer{ b, size, alignedSize, offset, Memory };
 }
 
 void DeviceMemory::FreeBuffer(const Buffer buffer)

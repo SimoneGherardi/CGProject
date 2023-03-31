@@ -26,10 +26,11 @@
 #include "RenderContext.h"
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "MemoryTransferer.h"
 
 #define FRAME_OVERLAP 3
-#define HOST_VISIBLE_MEMORY_SIZE (4 * 1024 * 1024 * 1024)
-#define DEVICE_LOCAL_MEMORY_SIZE (4 * 1024 * 1024 * 1024)
+constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);
+constexpr auto DEVICE_LOCAL_MEMORY_SIZE = (4 * 1024 * 1024);
 
 struct WindowSize {
 	int Width, Height;
@@ -273,23 +274,29 @@ private:
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
 			_FrameData[i].Global.Data = {};
-			_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
+			/*_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
 				&(_FrameData[i].Global.Data),
 				sizeof(GlobalData),
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-			);
+			);*/
+			// _FrameData[i].Global.MemoryReference.Transfer();
 			_FrameData[i].Global.Buffer = _HostVisibleMemory->NewBuffer(
 				sizeof(GlobalData),
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 			);
-			_FrameData[i].Global.MemoryReference.Transfer();
+			_FrameData[i].Global.Update(_Context);
 
-			_FrameData[i].Objects.MemoryReference = _FrameDataAllocator->Allocate(
+			/*_FrameData[i].Objects.MemoryReference = _FrameDataAllocator->Allocate(
 				_FrameData[i].Objects.Data.data(),
 				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
 				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
 			);
-			_FrameData[i].Objects.MemoryReference.Transfer();
+			_FrameData[i].Objects.MemoryReference.Transfer();*/
+			_FrameData[i].Objects.Buffer = _HostVisibleMemory->NewBuffer(
+				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
+				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
+			);
+			_FrameData[i].Objects.Update(_Context);
 
 			initializeDescriptorSet(
 				_Context,
@@ -309,7 +316,7 @@ private:
 
 			updateDescriptorSet(
 				_Context,
-				_FrameData[i].Global.MemoryReference.Buffer,
+				_FrameData[i].Global.Buffer.Buffer,
 				sizeof(GlobalData),
 				0,
 				_FrameData[i].Global.DescriptorSet,
@@ -319,7 +326,7 @@ private:
 
 			updateDescriptorSet(
 				_Context,
-				_FrameData[i].Objects.MemoryReference.Buffer,
+				_FrameData[i].Objects.Buffer.Buffer,
 				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
 				0,
 				_FrameData[i].Objects.DescriptorSet,
@@ -613,7 +620,7 @@ public:
 		);
 
 		// TODO frame overlap?
-		TEST_CAMERA(_WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
+		TEST_CAMERA(_Context, _WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
 		TEST_RENDER(_MainCommandBuffer->Buffer, _PipelineLayout, &(_FrameData[0]));
 
 		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _MainCommandBuffer->Buffer);

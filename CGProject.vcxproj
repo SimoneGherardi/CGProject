@@ -157,6 +157,7 @@
     <ClCompile Include="DeviceMemory.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
+    <ClCompile Include="FrameData.cpp" />
     <ClCompile Include="game_engine.cpp" />
     <ClCompile Include="GlobalData.cpp" />
     <ClCompile Include="gltf_loader.cpp" />

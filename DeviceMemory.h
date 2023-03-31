@@ -2,10 +2,13 @@
 #include "defines.h"
 #include "MemoryBlock.h"
 
+#define ALIGNMENT 0x10
+
 struct Buffer
 {
 	VkBuffer Buffer;
 	VkDeviceSize Size;
+	VkDeviceSize AlignedSize;
 	VkDeviceSize Offset;
 	VkDeviceMemory Memory;
 };

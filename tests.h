@@ -14,7 +14,7 @@
 
 float timer = 0;
 
-void TEST_CAMERA(const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
+void TEST_CAMERA(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {
 	timer += delta;
 
@@ -35,14 +35,16 @@ void TEST_CAMERA(const float width, const float height, float delta, const VkCom
 	data->CameraViewProjection = projection * view;
 
 	data->SunDirection = { xl, 0.0f, zl };
-	frameData->Global.MemoryReference.Transfer();
+	//frameData->Global.MemoryReference.Transfer();
+	frameData->Global.Update(context);
 
 	vkCmdBindDescriptorSets(
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr
 	);
 
 	frameData->Objects.Data[0].GPUData.ModelMatrix = glm::rotate(timer, glm::vec3(0,0,1));
-	frameData->Objects.MemoryReference.Transfer();
+	// frameData->Objects.MemoryReference.Transfer();
+	frameData->Objects.Update(context);
 
 	vkCmdBindDescriptorSets(
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(frameData->Objects.DescriptorSet), 0, nullptr

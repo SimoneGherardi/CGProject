@@ -1,10 +1,11 @@
 #pragma once
 #include <flecs.h>
 #include "movement.h"
+#include "ModelId.h"
 
 typedef struct Renderer
 {
-    int Mesh;
+    ModelId Mesh;
     rp3d::Transform GlobalTransform;
 } Renderer;
 

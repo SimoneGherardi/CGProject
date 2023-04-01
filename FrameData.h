@@ -3,6 +3,7 @@
 #include "GlobalData.h"
 #include "InstanceData.h"
 #include "DeviceMemory.h"
+#include "InstanceDataStore.h"
 
 struct FrameData
 {
@@ -17,7 +18,11 @@ struct FrameData
 
 	struct Objects
 	{
-		std::vector<InstanceData> Data;
+		std::vector<VkDrawIndexedIndirectCommand> Commands;
+		InstanceDataStore InstanceDataStore;
+		Buffer CommandsBuffer;
+
+		std::vector<GPUInstanceData> Data;
 		Buffer Buffer;
 		VkDescriptorSet DescriptorSet;
 

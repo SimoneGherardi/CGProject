@@ -9,6 +9,12 @@ void FrameData::Global::Update(const VulkanContext context)
 
 void FrameData::Objects::Update(const VulkanContext context)
 {
-	MemoryTransferer mt = MemoryTransferer(context, Buffer, Data.data(), Data.size() * sizeof(InstanceData));
+	auto built = InstanceDataStore.Build();
+	Data = built.Data;
+	Commands = built.Commands;
+	MemoryTransferer mt = MemoryTransferer(context, Buffer, Data.data(), Data.size() * sizeof(GPUInstanceData));
 	mt.TransferMapped();
+	mt = MemoryTransferer(context, CommandsBuffer, Commands.data(), Commands.size() * sizeof(VkDrawIndexedIndirectCommand));
+	mt.TransferMapped();
+	InstanceDataStore.RemoveAll();
 }

@@ -16,7 +16,6 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-RenderingEngine ENGINE;
 
 void onResize(GLFWwindow* window, int width, int height)
 {
@@ -30,17 +29,17 @@ void initialize()
 {
     TRACESTART;
     GLFWSurfaceFactory* surfaceFactory = new GLFWSurfaceFactory(&Window);
-    Window = initializeWindow(TITLE, WIDTH, HEIGHT, &ENGINE, onResize);
+    Window = initializeWindow(TITLE, WIDTH, HEIGHT, &(RenderingEngine::GetInstance()), onResize);
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(Window, true);
-    ENGINE.Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
+    RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
     TRACEEND;
 }
 
 void cleanup()
 {
     TRACESTART;
-    ENGINE.Cleanup();
+    RenderingEngine::GetInstance().Cleanup();
     cleanupWindow(Window);
     TRACEEND;
 }
@@ -62,12 +61,12 @@ int main(int argc, char** argv)
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
             glfwPollEvents();
-            //GameEngine::GetInstance().Loop(delta);
+            GameEngine::GetInstance().Loop(delta);
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             ImGui::ShowDemoWindow();
-            ENGINE.Render(delta);
+            RenderingEngine::GetInstance().Render(delta);
             const millisec duration = clock::now() - start;
             delta = duration.count();
         }

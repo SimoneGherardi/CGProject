@@ -1,4 +1,5 @@
 #include "game_engine.h"
+#include "Models.h"
 
 GameEngine::GameEngine()
 {
@@ -21,26 +22,12 @@ GameEngine& GameEngine::GetInstance()
 
 void GameEngine::_TestEcs()
 {
-    /*ECSWorld.entity()
-        .set<Transform>({ {0, 0, 0} })
-        .set<Velocity>({ {1, 0.5, 0}, 1 })
-        .set<AngularVelocity>({ rp3d::Quaternion::fromEulerAngles(1, 0, 1), 5 })
-        .set<Renderer>({ 0 });*/
-    /*ECSWorld.entity("Falling")
-        .set<Transform>({ {0, 10, 0} })
-        .set<RigidBody>({10.0f, rp3d::BodyType::DYNAMIC, NULL})
-        .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::CAPSULE, NULL })
-        .set<Renderer>({});
-    ECSWorld.entity("Plane")
-        .set<Transform>({ {0, 0, 0} })
-        .set<RigidBody>({0, rp3d::BodyType::STATIC, NULL})
-        .set<Collider>({ {10, 1, 10}, rp3d::CollisionShapeName::BOX, NULL });*/
     ECSWorld.entity("Right")
         .set<Transform>({ {8, 4, 0} })
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
         .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
         .set<Velocity>({ {-1, 0, 0}, 1 })
-        .set<Renderer>({});
+        .set<Renderer>({ Models::SUZANNE });
     ECSWorld.entity("Left")
         .set<Transform>({ {-8, 4, 0} })
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
@@ -50,14 +37,6 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {0, 0, 0} })
         .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
         .set<Collider>({ {100, 1, 100}, rp3d::CollisionShapeName::BOX, NULL });
-    /*ECSWorld.entity("WallLeft")
-        .set<Transform>({ {-90, 0, 0} })
-        .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-        .set<Collider>({ {1, 100, 100}, rp3d::CollisionShapeName::BOX, NULL });
-    ECSWorld.entity("WallRight")
-        .set<Transform>({ {90, 0, 0} })
-        .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-        .set<Collider>({ {1, 100, 100}, rp3d::CollisionShapeName::BOX, NULL });*/
 }
 
 void GameEngine::_SetupPhysicsLogger()

@@ -8,8 +8,8 @@ struct GPUInstanceData
 	glm::mat4 ModelMatrix;
 };
 
-struct InstanceData
-{
-	GPUInstanceData GPUData;
-	ModelId ModelId;
-};
+//struct InstanceData
+//{
+//	GPUInstanceData GPUData;
+//	ModelId ModelId;
+//};

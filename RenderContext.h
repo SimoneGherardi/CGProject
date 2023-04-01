@@ -28,9 +28,6 @@ struct RenderContext
 	void Initialize(const VulkanContext context, const Buffer stagingBuffer, DeviceMemory* memory);
 	void Cleanup(const VulkanContext context);
 
-	void QueueDraw(VkCommandBuffer cmd, std::vector<InstanceData> instances);
-	void DrawModel(VkCommandBuffer commandBuffer, const ModelId id);
-
 	static RenderContext& GetInstance();
 
 private:

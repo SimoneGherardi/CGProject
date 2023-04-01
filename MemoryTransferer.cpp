@@ -1,5 +1,6 @@
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
+#include <glm/gtx/string_cast.hpp>
 
 MemoryTransferer::MemoryTransferer(const VulkanContext context, const Buffer destination, const void* source, const VkDeviceSize srcSize) :
 	Context(context),

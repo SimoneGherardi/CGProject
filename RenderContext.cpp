@@ -103,30 +103,6 @@ void RenderContext::Cleanup(const VulkanContext context)
 	Memory->FreeBuffer(IndexBuffer);
 }
 
-void RenderContext::QueueDraw(VkCommandBuffer cmd, std::vector<InstanceData> instances)
-{
-	for (const auto& instance : instances)
-	{
-		DrawModel(cmd, instance.ModelId);
-	}
-}
-
-void RenderContext::DrawModel(VkCommandBuffer commandBuffer, const ModelId id)
-{
-	auto m = Models[id];
-	for (auto mesh : m.Meshes)
-	{
-		vkCmdDrawIndexed(
-			commandBuffer,
-			mesh.IndicesCount,
-			1,
-			mesh.IndicesOffset,
-			mesh.VerticesOffset,
-			0
-		);
-	}
-}
-
 RenderContext& RenderContext::GetInstance()
 {
 	static RenderContext instance;

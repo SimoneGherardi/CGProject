@@ -40,13 +40,13 @@ DeviceMemory::DeviceMemory(
 	memoryAllocateInfo.allocationSize = Size;
 	memoryAllocateInfo.pNext = nullptr;
 	memoryAllocateInfo.memoryTypeIndex = findMemoryType(
-		Context.PhysicalDevice,
+		Context->PhysicalDevice,
 		flags,
 		Size
 	);
 	VkDeviceMemory m;
 	CheckVkResult(vkAllocateMemory(
-		Context.Device,
+		Context->Device,
 		&memoryAllocateInfo,
 		nullptr,
 		&m
@@ -68,13 +68,13 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 		throw "Cannot allocate buffer";
 	}
 	CheckVkResult(vkCreateBuffer(
-		Context.Device,
+		Context->Device,
 		&bufferCreateInfo,
 		nullptr,
 		&b
 	));
 	CheckVkResult(vkBindBufferMemory(
-		Context.Device,
+		Context->Device,
 		b,
 		Memory,
 		offset
@@ -85,11 +85,11 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 
 void DeviceMemory::FreeBuffer(const Buffer buffer)
 {
-	vkDestroyBuffer(Context.Device, buffer.Buffer, nullptr);
+	vkDestroyBuffer(Context->Device, buffer.Buffer, nullptr);
 	Blocks.Free(buffer.Offset);
 }
 
 void DeviceMemory::Cleanup()
 {
-	vkFreeMemory(Context.Device, Memory, nullptr);
+	vkFreeMemory(Context->Device, Memory, nullptr);
 }

@@ -49,11 +49,3 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(frameData->Objects.DescriptorSet), 0, nullptr
 	);
 }
-
-void TEST_RENDER(const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* data)
-{
-	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexBuffer.Buffer), &offset);
-	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
-	vkCmdDrawIndexedIndirect(cmd, data->Objects.CommandsBuffer.Buffer, 0, data->Objects.Commands.size(), sizeof(VkDrawIndexedIndirectCommand));
-}

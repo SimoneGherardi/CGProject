@@ -15,10 +15,10 @@ void RenderingEngine::_InitializeInstance(const char* title)
 	auto createInfo = getInstanceCreateInfo(
 		&_ValidationLayers, &requiredExtensions, &appInfo, &debugCreateInfo
 	);
-	initializeInstance(&createInfo, &_Instance);
+	initializeInstance(&createInfo, &_Context.Instance);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up instance");
-		cleanupInstance(_Instance);
+		cleanupInstance(_Context.Instance);
 		});
 	TRACEEND;
 }
@@ -32,10 +32,10 @@ void RenderingEngine::_InitializeDebugMessenger()
 		DEBUG_MESSENGER_TYPE_MASK(1, 1, 1),
 		nullptr
 	);
-	initializeDebugMessenger(_Instance, &createInfo, nullptr, &_DebugMessenger);
+	initializeDebugMessenger(_Context.Instance, &createInfo, nullptr, &_DebugMessenger);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up debug messenger");
-		cleanupDebugMessenger(_Instance, _DebugMessenger, nullptr);
+		cleanupDebugMessenger(_Context.Instance, _DebugMessenger, nullptr);
 		});
 	TRACEEND;
 }
@@ -43,35 +43,35 @@ void RenderingEngine::_InitializeDebugMessenger()
 void RenderingEngine::_InitializeSurface(SurfaceFactory* factory)
 {
 	TRACESTART;
-	initializeSurface(_Instance, &_Surface, factory);
+	initializeSurface(_Context.Instance, &_Context.Surface, factory);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up surface");
-		cleanupSurface(_Instance, _Surface);
+		cleanupSurface(_Context.Instance, _Context.Surface);
 		});
 	TRACEEND;
 }
 
 void RenderingEngine::_InitializePhysicalDevice() {
 	TRACESTART;
-	auto devices = getPhysicalDevices(_Instance);
-	_PhysicalDevice = getOptimalPhysicalDevice(devices, _Surface, _DeviceExtensions);
+	auto devices = getPhysicalDevices(_Context.Instance);
+	_Context.PhysicalDevice = getOptimalPhysicalDevice(devices, _Context.Surface, _DeviceExtensions);
 	TRACEEND;
 }
 
 void RenderingEngine::_InitializeLogicalDevice() {
 	TRACESTART;
 	initializeLogicalDevice(
-		_PhysicalDevice,
-		_Surface,
+		_Context.PhysicalDevice,
+		_Context.Surface,
 		_ValidationLayers,
 		_DeviceExtensions,
-		&_Device,
-		&_GraphicsQueue,
-		&_PresentationQueue
+		&_Context.Device,
+		&_Context.GraphicsQueue,
+		&_Context.PresentationQueue
 	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up logical device");
-		cleanupLogicalDevice(_Device);
+		cleanupLogicalDevice(_Context.Device);
 		});
 	TRACEEND;
 }
@@ -80,7 +80,7 @@ void RenderingEngine::_InitializeSwapchain(WindowSize windowSize) {
 	TRACESTART;
 	_Swapchain.Initialize(
 		windowSize.Width, windowSize.Height,
-		_PhysicalDevice, _Device, _Surface
+		_Context.PhysicalDevice, _Context.Device, _Context.Surface
 	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up logical device");
@@ -92,15 +92,15 @@ void RenderingEngine::_InitializeSwapchain(WindowSize windowSize) {
 void RenderingEngine::_InitializeRenderPass() {
 	TRACESTART;
 	initializeRenderPass(
-		_PhysicalDevice,
-		_Device,
+		_Context.PhysicalDevice,
+		_Context.Device,
 		_Swapchain.GetFormat(),
 		VK_SAMPLE_COUNT_2_BIT,
 		&_RenderPass
 	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up render pass");
-		cleanupRenderPass(_Device, _RenderPass);
+		cleanupRenderPass(_Context.Device, _RenderPass);
 		});
 	TRACEEND;
 }
@@ -109,8 +109,8 @@ void RenderingEngine::_InitializeAllocators()
 {
 	TRACESTART;
 	// _FrameDataAllocator = new HostLocalAllocator(_Context, 8192*1024, false);
-	_HostVisibleMemory = new DeviceMemory(_Context, HOST_VISIBLE_MEMORY_SIZE, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
-	_DeviceLocalMemory = new DeviceMemory(_Context, DEVICE_LOCAL_MEMORY_SIZE, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+	_HostVisibleMemory = new DeviceMemory(&_Context, HOST_VISIBLE_MEMORY_SIZE, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+	_DeviceLocalMemory = new DeviceMemory(&_Context, DEVICE_LOCAL_MEMORY_SIZE, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up allocators");
 		// _FrameDataAllocator->Cleanup();
@@ -125,7 +125,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 	TRACESTART;
 
 	initializeDescriptorPool(
-		_Context,
+		&_Context,
 		{
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 }
@@ -151,7 +151,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up frame data descriptor pool");
-		cleanupDescriptorPool(_Context, _FrameDataDescriptorPool);
+		cleanupDescriptorPool(&_Context, _FrameDataDescriptorPool);
 		});
 
 	initializeDescriptorSetLayout(
@@ -182,7 +182,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 			sizeof(GlobalData),
 			VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 		);
-		f->Global.Update(_Context);
+		f->Global.Update(&_Context);
 
 		f->Objects.Buffer = _HostVisibleMemory->NewBuffer(
 			sizeof(GPUInstanceData) * MAX_INSTANCES,
@@ -193,10 +193,10 @@ void RenderingEngine::_InitializeDescriptorSet()
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
 		);
 
-		f->Objects.Update(_Context);
+		f->Objects.Update(&_Context);
 
 		initializeDescriptorSet(
-			_Context,
+			&_Context,
 			_FrameDataDescriptorPool,
 			1,
 			&_FrameDataDescriptorSetLayout,
@@ -204,7 +204,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 		);
 
 		initializeDescriptorSet(
-			_Context,
+			&_Context,
 			_FrameDataDescriptorPool,
 			1,
 			&_ObjectDescriptorSetLayout,
@@ -212,7 +212,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 		);
 
 		updateDescriptorSet(
-			_Context,
+			&_Context,
 			f->Global.Buffer.Buffer,
 			sizeof(GlobalData),
 			0,
@@ -263,9 +263,9 @@ void RenderingEngine::_InitializePipeline()
 void RenderingEngine::_InitializeSyncStructures()
 {
 	TRACESTART;
-	_RenderFence = new Fence(_Context, true);
-	_PresentSemaphore = new Semaphore(_Context);
-	_RenderSemaphore = new Semaphore(_Context);
+	_RenderFence = new Fence(&_Context, true);
+	_PresentSemaphore = new Semaphore(&_Context);
+	_RenderSemaphore = new Semaphore(&_Context);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up sync structures");
 		_RenderFence->Cleanup();
@@ -277,15 +277,15 @@ void RenderingEngine::_InitializeSyncStructures()
 
 void RenderingEngine::_InitializeCommandPool() {
 	TRACESTART;
-	auto queueFamilyIndices = findQueueFamilies(_PhysicalDevice, _Surface);
+	auto queueFamilyIndices = findQueueFamilies(_Context.PhysicalDevice, _Context.Surface);
 	initializeCommandPool(
-		_Device,
+		_Context.Device,
 		queueFamilyIndices,
 		&_CommandPool
 	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command pool");
-		cleanupCommandPool(_Device, _CommandPool);
+		cleanupCommandPool(_Context.Device, _CommandPool);
 		});
 	TRACEEND;
 }
@@ -293,7 +293,7 @@ void RenderingEngine::_InitializeCommandPool() {
 void RenderingEngine::_InitializeCommandBuffers()
 {
 	TRACESTART;
-	_MainCommandBuffer = new CommandBuffer(_Context, _CommandPool);
+	_MainCommandBuffer = new CommandBuffer(&_Context, _CommandPool);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command buffers");
 		_MainCommandBuffer->Cleanup();
@@ -305,8 +305,8 @@ void RenderingEngine::_InitializeRenderTargets()
 {
 	TRACESTART;
 	_ColorRenderTarget.Initialize(
-		_PhysicalDevice,
-		_Device,
+		_Context.PhysicalDevice,
+		_Context.Device,
 		_Swapchain.GetExtent(),
 		_Swapchain.GetFormat(),
 		1,
@@ -317,10 +317,10 @@ void RenderingEngine::_InitializeRenderTargets()
 		VK_IMAGE_ASPECT_COLOR_BIT
 	);
 	_DepthRenderTarget.Initialize(
-		_PhysicalDevice,
-		_Device,
+		_Context.PhysicalDevice,
+		_Context.Device,
 		_Swapchain.GetExtent(),
-		findDepthFormat(_PhysicalDevice),
+		findDepthFormat(_Context.PhysicalDevice),
 		1,
 		VK_SAMPLE_COUNT_2_BIT,
 		VK_IMAGE_TILING_OPTIMAL,
@@ -347,7 +347,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		};
 
 		initializeFrameBuffer(
-			_Device,
+			_Context.Device,
 			static_cast<uint32_t>(attachments.size()),
 			attachments.data(),
 			_RenderPass,
@@ -358,7 +358,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		_CleanupStack.push([=]() {
 			LOGDBG("cleaning up framebuffer");
 			cleanupFrameBuffer(
-				_Device,
+				_Context.Device,
 				_SwapChainFramebuffers[i]
 			);
 			});
@@ -370,7 +370,7 @@ void RenderingEngine::_InitializeModels()
 {
 	TRACESTART;
 	Buffer stagingBuffer = _HostVisibleMemory->NewBuffer(1024 * 1024, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-	RenderContext::GetInstance().Initialize(_Context, stagingBuffer, _DeviceLocalMemory);
+	RenderContext::GetInstance().Initialize(&_Context, stagingBuffer, _DeviceLocalMemory);
 	_HostVisibleMemory->FreeBuffer(stagingBuffer);
 	TRACEEND;
 }
@@ -379,7 +379,7 @@ void RenderingEngine::_InitializeGui()
 {
 	TRACESTART;
 	initializeDescriptorPool(
-		_Context,
+		&_Context,
 		{
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
 			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
@@ -397,10 +397,10 @@ void RenderingEngine::_InitializeGui()
 	);
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
-	init_info.Instance = _Instance;
-	init_info.PhysicalDevice = _PhysicalDevice;
-	init_info.Device = _Device;
-	init_info.Queue = _GraphicsQueue;
+	init_info.Instance = _Context.Instance;
+	init_info.PhysicalDevice = _Context.PhysicalDevice;
+	init_info.Device = _Context.Device;
+	init_info.Queue = _Context.GraphicsQueue;
 	init_info.DescriptorPool = _GuiDescriptorPool;
 	init_info.MinImageCount = 3;
 	init_info.ImageCount = 3;
@@ -408,7 +408,7 @@ void RenderingEngine::_InitializeGui()
 
 	ImGui_ImplVulkan_Init(&init_info, _RenderPass);
 
-	_GuiCommandBuffer = new ImmediateCommandBuffer(_Context);
+	_GuiCommandBuffer = new ImmediateCommandBuffer(&_Context);
 
 	_GuiCommandBuffer->Submit([&](VkCommandBuffer cmd) {
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
@@ -420,7 +420,7 @@ void RenderingEngine::_InitializeGui()
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
 		_GuiCommandBuffer->Cleanup();
-		cleanupDescriptorPool(_Context, _GuiDescriptorPool);
+		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
 		ImGui_ImplVulkan_Shutdown();
 		});
 	TRACEEND;
@@ -440,11 +440,6 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 
 	_InitializeSwapchain(windowSize);
 	_InitializeRenderPass();
-
-	_Context.PhysicalDevice = _PhysicalDevice;
-	_Context.Device = _Device;
-	_Context.GraphicsQueue = _GraphicsQueue;
-	_Context.PresentationQueue = _PresentationQueue;
 
 	_InitializeSyncStructures();
 	_InitializeAllocators();
@@ -473,6 +468,8 @@ void RenderingEngine::Render(float delta)
 		)
 	);
 	_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+	VkCommandBuffer cmd = _MainCommandBuffer->Buffer;
+
 	std::array<VkClearValue, 2> clearValues;
 	clearValues[0].color = { {.05f, .0f, .05f, 1.0f} };
 	clearValues[1].depthStencil = { 1.0f, 0 };
@@ -487,28 +484,32 @@ void RenderingEngine::Render(float delta)
 	rpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	rpInfo.pClearValues = clearValues.data();
 	vkCmdBeginRenderPass(
-		_MainCommandBuffer->Buffer,
+		cmd,
 		&rpInfo,
 		VK_SUBPASS_CONTENTS_INLINE
 	);
 
 	vkCmdBindPipeline(
-		_MainCommandBuffer->Buffer,
+		cmd,
 		VK_PIPELINE_BIND_POINT_GRAPHICS,
 		_Pipeline
 	);
 
 	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
-	TEST_CAMERA(_Context, _WindowSize.Width, _WindowSize.Height, delta, _MainCommandBuffer->Buffer, _PipelineLayout, f);
-	TEST_RENDER(_MainCommandBuffer->Buffer, _PipelineLayout, f);
+	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), _MainCommandBuffer->Buffer);
+	VkDeviceSize offset = 0;
+	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexBuffer.Buffer), &offset);
+	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdDrawIndexedIndirect(cmd, f->Objects.CommandsBuffer.Buffer, 0, f->Objects.Commands.size(), sizeof(VkDrawIndexedIndirectCommand));
 
-	vkCmdEndRenderPass(_MainCommandBuffer->Buffer);
+	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+
+	vkCmdEndRenderPass(cmd);
 	_MainCommandBuffer->End();
 	_MainCommandBuffer->Submit(
-		_GraphicsQueue,
+		_Context.GraphicsQueue,
 		VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
 		1,
 		&(_PresentSemaphore->Instance),
@@ -526,13 +527,13 @@ void RenderingEngine::Render(float delta)
 	presentInfo.pWaitSemaphores = &(_RenderSemaphore->Instance);
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pImageIndices = &imageIndex;
-	CheckVkResult(vkQueuePresentKHR(_GraphicsQueue, &presentInfo));
+	CheckVkResult(vkQueuePresentKHR(_Context.GraphicsQueue, &presentInfo));
 }
 
 void RenderingEngine::Cleanup()
 {
 	TRACESTART;
-	RenderContext::GetInstance().Cleanup(_Context);
+	RenderContext::GetInstance().Cleanup(&_Context);
 	_CleanupStack.flush();
 	TRACEEND;
 }

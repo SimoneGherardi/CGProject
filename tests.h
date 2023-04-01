@@ -10,5 +10,3 @@
 #include "RenderContext.h"
 
 extern void TEST_CAMERA(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData);
-
-extern void TEST_RENDER(const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* data);

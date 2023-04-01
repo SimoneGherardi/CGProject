@@ -6,26 +6,26 @@ Fence::Fence(const VulkanContext context, const bool signaled)
 {
 	auto info = VulkanStructs::FenceCreateInfo(VK_FENCE_CREATE_SIGNALED_BIT);
 	CheckVkResult(
-		vkCreateFence(_Context.Device, &info, nullptr, &Instance)
+		vkCreateFence(_Context->Device, &info, nullptr, &Instance)
 	);
 }
 
 void Fence::Wait()
 {
 	CheckVkResult(
-		vkWaitForFences(_Context.Device, 1, &Instance, true, 1000000000)
+		vkWaitForFences(_Context->Device, 1, &Instance, true, 1000000000)
 	);
 }
 
 void Fence::Reset()
 {
 	CheckVkResult(
-		vkResetFences(_Context.Device, 1, &Instance)
+		vkResetFences(_Context->Device, 1, &Instance)
 	);
 }
 void Fence::Cleanup()
 {
-	vkDestroyFence(_Context.Device, Instance, nullptr);
+	vkDestroyFence(_Context->Device, Instance, nullptr);
 }
 
 
@@ -34,11 +34,11 @@ Semaphore::Semaphore(const VulkanContext context)
 {
 	auto info = VulkanStructs::SemaphoreCreateInfo();
 	CheckVkResult(
-		vkCreateSemaphore(_Context.Device, &info, nullptr, &Instance)
+		vkCreateSemaphore(_Context->Device, &info, nullptr, &Instance)
 	);
 }
 
 void Semaphore::Cleanup()
 {
-	vkDestroySemaphore(_Context.Device, Instance, nullptr);
+	vkDestroySemaphore(_Context->Device, Instance, nullptr);
 }

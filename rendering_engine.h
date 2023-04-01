@@ -43,19 +43,13 @@ class RenderingEngine
 {
 private:
 	WindowSize _WindowSize;
-	VkInstance _Instance;
 	VkDebugUtilsMessengerEXT _DebugMessenger;
-	VkSurfaceKHR _Surface;
-	VkPhysicalDevice _PhysicalDevice;
-	VkDevice _Device;
 
-	VkQueue _GraphicsQueue;
-	VkQueue _PresentationQueue;
 	SwapchainInfo _Swapchain;
 	RenderTarget _ColorRenderTarget;
 	RenderTarget _DepthRenderTarget;
 
-	VulkanContext _Context;
+	VulkanContext_T _Context;
 
 	VkRenderPass _RenderPass;
 

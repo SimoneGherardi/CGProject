@@ -13,9 +13,9 @@ MemoryTransferer::MemoryTransferer(const VulkanContext context, const Buffer des
 void MemoryTransferer::TransferMapped(const VkDeviceSize dstOffset)
 {
 	void* data;
-	vkMapMemory(Context.Device, Destination.Memory, Destination.Offset + dstOffset, SourceSize, 0, &data);
+	vkMapMemory(Context->Device, Destination.Memory, Destination.Offset + dstOffset, SourceSize, 0, &data);
 	memcpy(data, Source, SourceSize);
-	vkUnmapMemory(Context.Device, Destination.Memory);
+	vkUnmapMemory(Context->Device, Destination.Memory);
 }
 
 void MemoryTransferer::TransferStaged(const Buffer stagingBuffer, const VkDeviceSize dstOffset)

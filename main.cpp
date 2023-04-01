@@ -45,9 +45,14 @@ void cleanup()
     TRACEEND;
 }
 
-int main()
+int main(int argc, char** argv)
 {
     TRACESTART;
+    if (argc > 1 && strcmp(argv[1], "--build-assets") == 0) {
+        LOGDBG("Building assets");
+        RenderContext::GetInstance().BuildAssets();
+		return EXIT_SUCCESS;
+	}
     try
     {
         initialize();

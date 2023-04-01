@@ -43,11 +43,18 @@ BakedModelInfo RenderContext::BakeModel(const ModelId id, const std::vector<GLTF
 	return modelInfo;
 }
 
-void RenderContext::Initialize(const VulkanContext context)
+void RenderContext::BuildAssets()
 {
 	for (auto m : Models::ModelsToLoad)
 	{
 		loadDataFromGLTF((ASSET_PATH + m.Name + ".gltf").c_str());
+	}
+}
+
+void RenderContext::Initialize(const VulkanContext context)
+{
+	for (auto m : Models::ModelsToLoad)
+	{
 		std::vector<GLTFPrimitive> primitives = {};
 		std::vector<GLTFMaterial> materials = {};
 		std::vector<GLTFModel> models = {};

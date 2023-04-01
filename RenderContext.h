@@ -24,6 +24,7 @@ struct RenderContext
 
 	BakedModelInfo BakeModel(const ModelId id, std::vector<GLTFModel> models, const std::vector<GLTFPrimitive> primitives, const std::vector<GLTFMaterial> materials);
 
+	void BuildAssets();
 	void Initialize(const VulkanContext context);
 	void Cleanup(const VulkanContext context);
 

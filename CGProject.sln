@@ -7,12 +7,18 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CGProject", "CGProject.vcxp
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Build Assets|x64 = Build Assets|x64
+		Build Assets|x86 = Build Assets|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Build Assets|x64.ActiveCfg = Build Assets|x64
+		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Build Assets|x64.Build.0 = Build Assets|x64
+		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Build Assets|x86.ActiveCfg = Build Assets|Win32
+		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Build Assets|x86.Build.0 = Build Assets|Win32
 		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Debug|x64.ActiveCfg = Debug|x64
 		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Debug|x64.Build.0 = Debug|x64
 		{3F3ADF86-FC9E-4719-B9B2-8E0B19D9507A}.Debug|x86.ActiveCfg = Debug|Win32

@@ -17,8 +17,9 @@ void MemoryTransferer::TransferMapped(const VkDeviceSize dstOffset)
 	vkUnmapMemory(Context.Device, Destination.Memory);
 }
 
-void MemoryTransferer::TransferStaged(const Buffer stagingBuffer, const VkDeviceSize stagingBufferSize, const VkDeviceSize dstOffset)
+void MemoryTransferer::TransferStaged(const Buffer stagingBuffer, const VkDeviceSize dstOffset)
 {
+	auto stagingBufferSize = stagingBuffer.Size;
 	ImmediateCommandBuffer cmd = ImmediateCommandBuffer(Context);
 	VkDeviceSize counts = SourceSize / stagingBufferSize;
 	VkDeviceSize remainder = SourceSize % stagingBufferSize;

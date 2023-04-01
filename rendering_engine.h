@@ -27,6 +27,7 @@
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
 #include "MemoryTransferer.h"
+#include "ImmediateCommandBuffer.h"
 
 #define FRAME_OVERLAP 3
 constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);
@@ -234,7 +235,7 @@ private:
 			0,
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
 			1,
-			VK_SHADER_STAGE_VERTEX_BIT,
+			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			nullptr
 		);
 
@@ -242,7 +243,7 @@ private:
 			0,
 			VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 			1,
-			VK_SHADER_STAGE_VERTEX_BIT,
+			VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
 			nullptr
 		);
 
@@ -274,24 +275,12 @@ private:
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
 			_FrameData[i].Global.Data = {};
-			/*_FrameData[i].Global.MemoryReference = _FrameDataAllocator->Allocate(
-				&(_FrameData[i].Global.Data),
-				sizeof(GlobalData),
-				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
-			);*/
-			// _FrameData[i].Global.MemoryReference.Transfer();
 			_FrameData[i].Global.Buffer = _HostVisibleMemory->NewBuffer(
 				sizeof(GlobalData),
 				VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT
 			);
 			_FrameData[i].Global.Update(_Context);
 
-			/*_FrameData[i].Objects.MemoryReference = _FrameDataAllocator->Allocate(
-				_FrameData[i].Objects.Data.data(),
-				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
-				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
-			);
-			_FrameData[i].Objects.MemoryReference.Transfer();*/
 			_FrameData[i].Objects.Buffer = _HostVisibleMemory->NewBuffer(
 				sizeof(GPUInstanceData) * _FrameData[i].Objects.Data.size(),
 				VK_BUFFER_USAGE_STORAGE_BUFFER_BIT
@@ -483,7 +472,9 @@ private:
 	void _InitializeModels()
 	{
 		TRACESTART;
-		RenderContext::GetInstance().Initialize(_Context);
+		Buffer stagingBuffer = _HostVisibleMemory->NewBuffer(1024 * 1024, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+		RenderContext::GetInstance().Initialize(_Context, stagingBuffer, _DeviceLocalMemory);
+		_HostVisibleMemory->FreeBuffer(stagingBuffer);
 		for (size_t i = 0; i < FRAME_OVERLAP; i++)
 		{
 			InstanceData d = {};
@@ -568,8 +559,8 @@ public:
 		_Context.PresentationQueue = _PresentationQueue;
 
 		_InitializeSyncStructures();
-		_InitializeModels();
 		_InitializeAllocators();
+		_InitializeModels();
 		_InitializeDescriptorSet();
 		_InitializePipeline();
 		_InitializeCommandPool();

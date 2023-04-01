@@ -1,15 +1,12 @@
 #pragma once
 #include "defines.h"
 #include "VertexData.h"
-#include "Allocator.h"
-#include "MemoryReference.h"
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include "FrameData.h"
 #include "gltf_loader.h"
 #include "asset_types.hpp"
 #include <filesystem>
-#include "HostLocalAllocator.h"
 #include "RenderContext.h"
 
 float timer = 0;
@@ -35,7 +32,6 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 	data->CameraViewProjection = projection * view;
 
 	data->SunDirection = { xl, 0.0f, zl };
-	//frameData->Global.MemoryReference.Transfer();
 	frameData->Global.Update(context);
 
 	vkCmdBindDescriptorSets(
@@ -43,7 +39,6 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 	);
 
 	frameData->Objects.Data[0].GPUData.ModelMatrix = glm::rotate(timer, glm::vec3(0,0,1));
-	// frameData->Objects.MemoryReference.Transfer();
 	frameData->Objects.Update(context);
 
 	vkCmdBindDescriptorSets(
@@ -54,7 +49,7 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 void TEST_RENDER(const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* data)
 {
 	VkDeviceSize offset = 0;
-	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexMemoryReference.Buffer), &offset);
-	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexMemoryReference.Buffer, 0, VK_INDEX_TYPE_UINT16);
+	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexBuffer.Buffer), &offset);
+	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	RenderContext::GetInstance().QueueDraw(cmd, data->Objects.Data);
 }

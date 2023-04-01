@@ -1,13 +1,14 @@
 #include "RenderContext.h"
 #include "gltf_loader.h"
 #include <filesystem>
+#include "MemoryTransferer.h"
 
 #define PACK_VEC3(v) glm::vec3(v[0], v[1], v[2])
 #define PACK_VEC4(v) glm::vec4(v[0], v[1], v[2], v[3])
 
 #define ASSET_PATH "resources/models/gltf/"
 
-BakedModelInfo RenderContext::BakeModel(const ModelId id, const std::vector<GLTFModel> models, const std::vector<GLTFPrimitive> primitives, const std::vector<GLTFMaterial> materials)
+BakedModelInfo RenderContext::_BakeModel(const ModelId id, const std::vector<GLTFModel> models, const std::vector<GLTFPrimitive> primitives, const std::vector<GLTFMaterial> materials)
 {
 	BakedModelInfo modelInfo;
 	modelInfo.Id = id;
@@ -51,8 +52,12 @@ void RenderContext::BuildAssets()
 	}
 }
 
-void RenderContext::Initialize(const VulkanContext context)
+void RenderContext::Initialize(const VulkanContext context, const Buffer stagingBuffer, DeviceMemory* memory)
 {
+	if (IsInitialized)
+	{
+		throw std::runtime_error("RenderContext already initialized");
+	}
 	for (auto m : Models::ModelsToLoad)
 	{
 		std::vector<GLTFPrimitive> primitives = {};
@@ -71,23 +76,31 @@ void RenderContext::Initialize(const VulkanContext context)
 			models.push_back(loadModelFromBin (entry.path().string()));
 		}
 
-		BakeModel(m.Id, models, primitives, materials);
+		_BakeModel(m.Id, models, primitives, materials);
 	}
 
-	Allocator = new HostLocalAllocator(
-		context, Vertices.size() * sizeof(VertexData) + Indices.size() * sizeof(uint16_t), false
-	);
+	auto vsize = Vertices.size() * sizeof(VertexData);
+	auto isize = Indices.size() * sizeof(uint16_t);
+	VertexBuffer = memory->NewBuffer(vsize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+	IndexBuffer = memory->NewBuffer(isize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-	VertexMemoryReference = Allocator->Allocate(Vertices.data(), Vertices.size() * sizeof(VertexData), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-	VertexMemoryReference.Transfer();
-	IndexMemoryReference = Allocator->Allocate(Indices.data(), Indices.size() * sizeof(uint16_t), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
-	IndexMemoryReference.Transfer();
+	MemoryTransferer m = MemoryTransferer(context, VertexBuffer, Vertices.data(), vsize);
+	m.TransferStaged(stagingBuffer, 0);
+	m = MemoryTransferer(context, IndexBuffer, Indices.data(), isize);
+	m.TransferStaged(stagingBuffer, 0);
+	Memory = memory;
+	IsInitialized = true;
 }
 
 
 void RenderContext::Cleanup(const VulkanContext context)
 {
-	Allocator->Cleanup();
+	if (!IsInitialized)
+	{
+		throw std::runtime_error("RenderContext not initialized");
+	}
+	Memory->FreeBuffer(VertexBuffer);
+	Memory->FreeBuffer(IndexBuffer);
 }
 
 void RenderContext::QueueDraw(VkCommandBuffer cmd, std::vector<InstanceData> instances)

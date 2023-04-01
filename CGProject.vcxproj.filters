@@ -202,12 +202,6 @@
     <ClCompile Include="rendering.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
-    <ClCompile Include="Allocator.cpp">
-      <Filter>Source Files\allocator</Filter>
-    </ClCompile>
-    <ClCompile Include="MemoryReference.cpp">
-      <Filter>Source Files\allocator</Filter>
-    </ClCompile>
     <ClCompile Include="ImmediateCommandBuffer.cpp">
       <Filter>Source Files\allocator</Filter>
     </ClCompile>
@@ -238,16 +232,22 @@
     <ClCompile Include="SaveToBin.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
-    <ClCompile Include="HostLocalAllocator.cpp">
-      <Filter>Source Files\allocator</Filter>
-    </ClCompile>
     <ClCompile Include="RenderContext.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
     <ClCompile Include="ModelId.h">
       <Filter>Header Files\3d</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
@@ -262,7 +262,7 @@
     <ClCompile Include="libraries\imgui\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
+    <ClCompile Include="libraries\imgui\backends\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\backends\*.cpp">
@@ -277,20 +277,77 @@
     <ClCompile Include="FrameData.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\imgui_impl_vulkan.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\libraries</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\libraries</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\libraries</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
+      <Filter>Source Files\libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files\libraries</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files\libraries</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -429,9 +486,6 @@
     <ClInclude Include="ecs_modules.h">
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
-    <ClInclude Include="Allocator.h">
-      <Filter>Header Files\allocator</Filter>
-    </ClInclude>
     <ClInclude Include="ImmediateCommandBuffer.h">
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
@@ -439,9 +493,6 @@
       <Filter>Header Files\utilities</Filter>
     </ClInclude>
     <ClInclude Include="DeviceMemory.h">
-      <Filter>Header Files\allocator</Filter>
-    </ClInclude>
-    <ClInclude Include="MemoryReference.h">
       <Filter>Header Files\allocator</Filter>
     </ClInclude>
     <ClInclude Include="asset_types.hpp">
@@ -476,9 +527,6 @@
     </ClInclude>
     <ClInclude Include="ModelData.h">
       <Filter>Header Files\3d</Filter>
-    </ClInclude>
-    <ClInclude Include="HostLocalAllocator.h">
-      <Filter>Header Files\allocator</Filter>
     </ClInclude>
     <ClInclude Include="RenderContext.h">
       <Filter>Header Files\3d</Filter>

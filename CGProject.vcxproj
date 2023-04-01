@@ -201,7 +201,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="asset_types.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
     <ClCompile Include="CommandBuffer.cpp" />
@@ -222,7 +221,6 @@
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
-    <ClCompile Include="HostLocalAllocator.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="ImmediateCommandBuffer.cpp" />
@@ -238,7 +236,6 @@
     <ClCompile Include="MemoryTransferer.cpp" />
     <ClCompile Include="ModelId.h" />
     <ClCompile Include="movement.cpp" />
-    <ClCompile Include="MemoryReference.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="physical_device.cpp" />
     <ClCompile Include="physics.cpp" />
@@ -266,7 +263,6 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Allocator.h" />
     <ClInclude Include="assets.h" />
     <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />
@@ -288,7 +284,6 @@
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
-    <ClInclude Include="HostLocalAllocator.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
@@ -299,7 +294,6 @@
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="MemoryBlock.h" />
-    <ClInclude Include="MemoryReference.h" />
     <ClInclude Include="MemoryTransferer.h" />
     <ClInclude Include="ModelData.h" />
     <ClInclude Include="Models.h" />

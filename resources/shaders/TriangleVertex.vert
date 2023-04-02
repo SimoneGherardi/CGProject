@@ -10,7 +10,7 @@ layout (location = 6) in uint WeightsCount;
 layout (location = 7) in uint BonesOffset;
 layout (location = 8) in uint BonesCount;
 
-layout (location = 0) out vec3 outColor;
+layout (location = 0) out vec4 outColor;
 
 layout(set = 0, binding = 0) uniform GlobalData{
     mat4 CameraView;
@@ -37,6 +37,7 @@ void main()
 	mat4 model = objectBuffer.objects[gl_BaseInstance].model;
     mat4 transform = globalData.CameraViewProjection * model;
 	gl_Position = transform * vec4(Position, 1.0f);
-	float factor = dot(globalData.SunDirection, Normal);
-	outColor = vec3(Color.x * factor, Color.y * factor, Color.z * factor);
+	float factor = dot(Normal, globalData.SunDirection);
+
+	outColor = vec4(factor * Color.x, factor * Color.y, factor * Color.z, 1.0f);
 }

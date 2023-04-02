@@ -14,7 +14,7 @@ void initializeDescriptorSet(
 	allocInfo.descriptorPool = pool;
 	allocInfo.descriptorSetCount = layoutsCount;
 	allocInfo.pSetLayouts = layouts;
-	vkAllocateDescriptorSets(context.Device, &allocInfo, descriptorSet);
+	vkAllocateDescriptorSets(context->Device, &allocInfo, descriptorSet);
 }
 
 void updateDescriptorSet(
@@ -43,5 +43,5 @@ void updateDescriptorSet(
 	setWrite.pBufferInfo = &binfo;
 
 
-	vkUpdateDescriptorSets(context.Device, 1, &setWrite, 0, nullptr);
+	vkUpdateDescriptorSets(context->Device, 1, &setWrite, 0, nullptr);
 }

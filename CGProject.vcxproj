@@ -1,6 +1,14 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Build Assets|Win32">
+      <Configuration>Build Assets</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Build Assets|x64">
+      <Configuration>Build Assets</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
       <Platform>Win32</Platform>
@@ -32,6 +40,12 @@
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
@@ -40,6 +54,12 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v143</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
@@ -60,10 +80,16 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|x64'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -73,7 +99,22 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <SourcePath>$(ProjectDir)\libraries\imgui\*.cpp;$(ProjectDir)\libraries\imgui\backends;$(SourcePath)</SourcePath>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|x64'">
+    <SourcePath>$(ProjectDir)\libraries\imgui\*.cpp;$(ProjectDir)\libraries\imgui\backends;$(SourcePath)</SourcePath>
+  </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
@@ -119,6 +160,23 @@
       <AdditionalDependencies>vulkan-1.lib;glfw3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Build Assets|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\include;$(ProjectDir)\libraries\glm;$(ProjectDir)\libraries\flecs;$(ProjectDir)\libraries\reactphysics3d\sources\include;$(ProjectDir)\libraries\headers;$(SystemDrive)\VulkanSDK\1.3.224.1\Include;C:\VulkanSDK\1.3.224.1\Include;E:\VulkanSDK\1.3.224.1\Include;D:\Programs_Data\VulkanSDK\1.3.224.1\Include;$(ProjectDir)\libraries\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <LanguageStandard_C>stdc11</LanguageStandard_C>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalLibraryDirectories>$(ProjectDir)\libraries\glfw-3.3.8.bin.WIN64\lib-vc2015;$(ProjectDir)\libraries\reactphysics3d\builds\Debug;$(SystemDrive)\VulkanSDK\1.3.224.1\Lib;E:\VulkanSDK\1.3.224.1\Lib;D:\Programs_Data\VulkanSDK\1.3.224.1\Lib;C:\VulkanSDK\1.3.224.1\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;glfw3.lib;reactphysics3d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
@@ -143,7 +201,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Allocator.cpp" />
     <ClCompile Include="asset_types.cpp" />
     <ClCompile Include="cleanup_stack.cpp" />
     <ClCompile Include="CommandBuffer.cpp" />
@@ -157,17 +214,18 @@
     <ClCompile Include="DeviceMemory.cpp" />
     <ClCompile Include="extensions.cpp" />
     <ClCompile Include="framebuffers.cpp" />
+    <ClCompile Include="FrameData.cpp" />
     <ClCompile Include="game_engine.cpp" />
     <ClCompile Include="GlobalData.cpp" />
     <ClCompile Include="gltf_loader.cpp" />
     <ClCompile Include="graphics_pipeline.cpp" />
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
-    <ClCompile Include="HostLocalAllocator.cpp" />
     <ClCompile Include="image.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="ImmediateCommandBuffer.cpp" />
     <ClCompile Include="instance.cpp" />
+    <ClCompile Include="InstanceDataStore.cpp" />
     <ClCompile Include="ioutils.cpp" />
     <ClCompile Include="libraries\flecs\flecs.c" />
     <ClCompile Include="libraries\imgui\*.cpp" />
@@ -175,9 +233,10 @@
     <ClCompile Include="Loader3D.cpp" />
     <ClCompile Include="logical_device.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="MemoryBlock.cpp" />
+    <ClCompile Include="MemoryTransferer.cpp" />
     <ClCompile Include="ModelId.h" />
     <ClCompile Include="movement.cpp" />
-    <ClCompile Include="MemoryReference.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
     <ClCompile Include="physical_device.cpp" />
     <ClCompile Include="physics.cpp" />
@@ -185,6 +244,7 @@
     <ClCompile Include="queue_families.cpp" />
     <ClCompile Include="RenderContext.cpp" />
     <ClCompile Include="rendering.cpp" />
+    <ClCompile Include="rendering_engine.cpp" />
     <ClCompile Include="render_passes.cpp" />
     <ClCompile Include="render_target.cpp" />
     <ClCompile Include="SaveToBin.cpp" />
@@ -199,13 +259,13 @@
     <ClCompile Include="swap_chain_support.cpp" />
     <ClCompile Include="SyncStructures.cpp" />
     <ClCompile Include="test.cpp" />
+    <ClCompile Include="tests.cpp" />
     <ClCompile Include="validation_layers.cpp" />
     <ClCompile Include="viewport.cpp" />
     <ClCompile Include="VulkanStructs.cpp" />
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Allocator.h" />
     <ClInclude Include="assets.h" />
     <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />
@@ -227,17 +287,18 @@
     <ClInclude Include="graphics_pipeline.h" />
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
-    <ClInclude Include="HostLocalAllocator.h" />
     <ClInclude Include="image.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />
     <ClInclude Include="InstanceData.h" />
+    <ClInclude Include="InstanceDataStore.h" />
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />
-    <ClInclude Include="MemoryReference.h" />
+    <ClInclude Include="MemoryBlock.h" />
+    <ClInclude Include="MemoryTransferer.h" />
     <ClInclude Include="ModelData.h" />
     <ClInclude Include="Models.h" />
     <ClInclude Include="ObjLoader.h" />

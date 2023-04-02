@@ -7,7 +7,7 @@ CommandBuffer::CommandBuffer(const VulkanContext context, const VkCommandPool po
 	_Pool(pool)
 {
 	initializeCommandBuffer(
-		_Context.Device, _Pool, 1, &Buffer
+		_Context->Device, _Pool, 1, &Buffer
 	);
 }
 
@@ -58,5 +58,5 @@ void CommandBuffer::Reset()
 
 void CommandBuffer::Cleanup()
 {
-	cleanupCommandBuffer(_Context.Device, _Pool, 1, &Buffer);
+	cleanupCommandBuffer(_Context->Device, _Pool, 1, &Buffer);
 }

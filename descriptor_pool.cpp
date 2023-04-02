@@ -12,7 +12,7 @@ void initializeDescriptorPool(
 	pool_info.maxSets = 10;
 	pool_info.poolSizeCount = (uint32_t)sizes.size();
 	pool_info.pPoolSizes = sizes.data();
-	vkCreateDescriptorPool(context.Device, &pool_info, nullptr, pool);
+	vkCreateDescriptorPool(context->Device, &pool_info, nullptr, pool);
 }
 
 void cleanupDescriptorPool(
@@ -20,5 +20,5 @@ void cleanupDescriptorPool(
 	const VkDescriptorPool pool
 )
 {
-	vkDestroyDescriptorPool(context.Device, pool, nullptr);
+	vkDestroyDescriptorPool(context->Device, pool, nullptr);
 }

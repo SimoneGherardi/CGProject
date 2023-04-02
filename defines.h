@@ -38,12 +38,16 @@ struct ErrorCode_t {
     std::string meaning;
 };
 
-struct VulkanContext {
+struct VulkanContext_T {
+    VkInstance Instance;
     VkPhysicalDevice PhysicalDevice;
     VkDevice Device;
     VkQueue GraphicsQueue;
     VkQueue PresentationQueue;
+    VkSurfaceKHR Surface;
 };
+
+typedef VulkanContext_T* VulkanContext;
 
 extern VKAPI_ATTR VkBool32 VKAPI_CALL DEBUG_CALLBACK(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,

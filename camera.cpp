@@ -1,6 +1,17 @@
 #include "camera.h"
 
+double global_yoffset = 0;
 
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	global_yoffset = yoffset;
+}
+
+void CameraTest::CameraZoom(double offset)
+{
+	// Zooms in and out
+	Position += Orientation * (float)offset * sensitivityScroll;
+}
 
 CameraTest::CameraTest(int width, int height, glm::vec3 position)
 {
@@ -75,4 +86,12 @@ void CameraTest::Inputs(GLFWwindow* window)
 		firstClick = true;
 	}
 
+	double yoffset = 0;
+	glfwSetScrollCallback(window, scroll_callback);
+	yoffset = global_yoffset;
+	if (yoffset != 0)
+	{
+		CameraZoom(yoffset);
+		global_yoffset = 0;
+	};
 }

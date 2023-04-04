@@ -28,6 +28,7 @@ public:
 	// Adjust the speed of the camera and it's sensitivity when looking around
 	float speed = 0.1f;
 	float sensitivity = 100.0f;
+	float sensitivityScroll = 0.1f;
 
 	// Camera constructor to set up initial values
 	CameraTest(int width, int height, glm::vec3 position);
@@ -36,5 +37,7 @@ public:
 	glm::mat4 Matrix(float FOVdeg, float nearPlane, float farPlane);
 	// Handles camera inputs
 	void Inputs(GLFWwindow* window);
+
+	void CameraZoom(double offset);
 };
 #endif

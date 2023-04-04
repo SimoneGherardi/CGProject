@@ -18,7 +18,7 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-Camera Camera = Camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
+CameraTest Camera = CameraTest(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
 void inputHandler(GLFWwindow* window, float delta_time) {
     // TODO here we will handle the inputs

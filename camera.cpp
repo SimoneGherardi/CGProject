@@ -2,15 +2,15 @@
 
 
 
-Camera::Camera(int width, int height, glm::vec3 position)
+CameraTest::CameraTest(int width, int height, glm::vec3 position)
 {
-	Camera::width = width;
-	Camera::height = height;
+	CameraTest::width = width;
+	CameraTest::height = height;
 	Position = position;
 }
 
 
-glm::mat4 Camera::Matrix(float FOVdeg, float nearPlane, float farPlane)
+glm::mat4 CameraTest::Matrix(float FOVdeg, float nearPlane, float farPlane)
 {
 	// Initializes matrices since otherwise they will be the null matrix
 	glm::mat4 view = glm::mat4(1.0f);
@@ -26,7 +26,7 @@ glm::mat4 Camera::Matrix(float FOVdeg, float nearPlane, float farPlane)
 }
 
 
-void Camera::Inputs(GLFWwindow* window)
+void CameraTest::Inputs(GLFWwindow* window)
 {
 	// Handles mouse inputs
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)

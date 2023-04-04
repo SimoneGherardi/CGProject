@@ -1,5 +1,6 @@
 #pragma once
 #include "rendering_engine.h"
+#include "camera.h"
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -454,7 +455,7 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	TRACEEND;
 }
 
-void RenderingEngine::Render(float delta)
+void RenderingEngine::Render(float delta, Camera* camera)
 {
 	// TODO refactor
 	_RenderFence->Wait();
@@ -497,6 +498,8 @@ void RenderingEngine::Render(float delta)
 
 	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
+	f->Global.Data.CameraViewProjection = camera->Matrix(70, 0.1f, 200);
+
 	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 
 	VkDeviceSize offset = 0;

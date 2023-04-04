@@ -5,8 +5,8 @@
 #include "game_engine.h"
 #include "rendering_engine.h"
 #include "window.h"
+#include "camera.h"
 #include "gltf_loader.h"
-#include "scene_elements.h"
 #include <chrono>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
@@ -18,8 +18,9 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
+Camera Camera = Camera(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
 
-void inputHandler(GLFWwindow* window, Camera camera, float delta_time) {
+void inputHandler(GLFWwindow* window, float delta_time) {
     // TODO here we will handle the inputs
     
 }
@@ -65,18 +66,25 @@ int main(int argc, char** argv)
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
+        
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
             glfwPollEvents();
+            
             GameEngine::GetInstance().Loop(delta);
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             ImGui::ShowDemoWindow();
-            // inputs
+            
+            Camera.Inputs(Window);
+            
 
+            
 
-            RenderingEngine::GetInstance().Render(delta);
+            
+
+            RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;
             delta = duration.count();
         }

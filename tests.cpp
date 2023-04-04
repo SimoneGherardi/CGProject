@@ -19,9 +19,9 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 
 	GlobalData* data = &(frameData->Global.Data);
 
-	data->CameraProjection = projection;
-	data->CameraView = view;
-	data->CameraViewProjection = projection * view;
+	//data->CameraProjection = projection;
+	//data->CameraView = view;
+	//data->CameraViewProjection = projection * view;
 
 	data->SunDirection = { xl, 0.0f, zl };
 	frameData->Global.Update(context);

@@ -286,18 +286,6 @@
     <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
       <Filter>Source Files\libraries</Filter>
     </ClCompile>
@@ -391,9 +379,6 @@
     <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\imgui_impl_vulkan.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
       <Filter>Source Files\libraries</Filter>
     </ClCompile>
@@ -430,10 +415,22 @@
     <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="scene_elements.cpp">
+    <ClCompile Include="camera.cpp">
       <Filter>Source Files\scene_elements</Filter>
     </ClCompile>
-    <ClCompile Include="input_handler.cpp">
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -633,11 +630,8 @@
     <ClInclude Include="InstanceDataStore.h">
       <Filter>Header Files\3d</Filter>
     </ClInclude>
-    <ClInclude Include="scene_elements.h">
+    <ClInclude Include="camera.h">
       <Filter>Header Files\scene_elements</Filter>
-    </ClInclude>
-    <ClInclude Include="input_handler.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

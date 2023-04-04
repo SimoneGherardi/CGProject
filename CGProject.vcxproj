@@ -250,6 +250,7 @@
     <ClCompile Include="SaveToBin.cpp" />
     <ClCompile Include="Scene.cpp" />
     <ClCompile Include="ScenesManager.cpp" />
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="shader_module.cpp" />
     <ClCompile Include="std_pipeline.cpp" />
     <ClCompile Include="surface.cpp" />
@@ -314,6 +315,7 @@
     <ClInclude Include="SaveToBin.h" />
     <ClInclude Include="Scene.h" />
     <ClInclude Include="ScenesManager.h" />
+    <ClInclude Include="camera.h" />
     <ClInclude Include="shader_module.h" />
     <ClInclude Include="std_pipeline.h" />
     <ClInclude Include="surface.h" />

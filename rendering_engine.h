@@ -28,6 +28,7 @@
 #include "backends/imgui_impl_vulkan.h"
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
+#include "camera.h"
 
 #define FRAME_OVERLAP 3
 constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);
@@ -119,7 +120,7 @@ private:
 public:
 	FrameData* GetCurrentFrameData();
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize);
-	void Render(float delta);
+	void Render(float delta, CameraTest* camera);
 	void Cleanup();
 
 	static RenderingEngine& GetInstance();

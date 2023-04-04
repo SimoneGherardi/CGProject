@@ -6,16 +6,23 @@
 #include "rendering_engine.h"
 #include "window.h"
 #include "gltf_loader.h"
+#include "scene_elements.h"
 #include <chrono>
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+
 
 const char* TITLE = "CG Project";
 const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
+
+void inputHandler(GLFWwindow* window, Camera camera, float delta_time) {
+    // TODO here we will handle the inputs
+    
+}
 
 void onResize(GLFWwindow* window, int width, int height)
 {
@@ -66,6 +73,9 @@ int main(int argc, char** argv)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             ImGui::ShowDemoWindow();
+            // inputs
+
+
             RenderingEngine::GetInstance().Render(delta);
             const millisec duration = clock::now() - start;
             delta = duration.count();

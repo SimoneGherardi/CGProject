@@ -120,7 +120,7 @@ private:
 public:
 	FrameData* GetCurrentFrameData();
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize);
-	void Render(float delta, Camera* camera);
+	void Render(float delta, CameraTest* camera);
 	void Cleanup();
 
 	static RenderingEngine& GetInstance();

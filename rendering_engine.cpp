@@ -455,7 +455,7 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	TRACEEND;
 }
 
-void RenderingEngine::Render(float delta, Camera* camera)
+void RenderingEngine::Render(float delta, CameraTest* camera)
 {
 	// TODO refactor
 	_RenderFence->Wait();

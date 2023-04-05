@@ -53,8 +53,8 @@ void CameraTest::Inputs(GLFWwindow* window)
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
 		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
@@ -92,6 +92,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 	{
 		// Unhides cursor since camera is not looking around anymore
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		
 		// Makes sure the next time the camera looks around it doesn't jump
 		firstClick = true;
 	}
@@ -102,8 +103,8 @@ void CameraTest::Inputs(GLFWwindow* window)
 		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
 		{
 		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
@@ -121,7 +122,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		float translationX = sensitivityTranslation * (float)(mouseX - (width / 2)) / width;
 
 		// Calculates upcoming change in the Position
-		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Orientation) * translationY;
+		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;
 
 		// Update Position
 		Position += translation;
@@ -133,6 +134,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		{
 			// Unhides cursor since camera is not looking around anymore
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			
 			// Makes sure the next time the camera looks around it doesn't jump
 			firstClick = true;
 		}

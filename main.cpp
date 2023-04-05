@@ -18,7 +18,7 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-CameraTest Camera = CameraTest(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
+//CameraInfos Camera = CameraInfos(WIDTH, HEIGHT, 110, glm::vec3(0.0f, 0.0f, 3.0f));
 
 void inputHandler(GLFWwindow* window, float delta_time) {
     // TODO here we will handle the inputs
@@ -66,6 +66,8 @@ int main(int argc, char** argv)
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
+        GameEngine& engine = GameEngine::GetInstance();
+        CameraInfos Camera = engine.Camera();
         
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
@@ -79,11 +81,6 @@ int main(int argc, char** argv)
             
             Camera.Inputs(Window);
             
-
-            
-
-            
-
             RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;
             delta = duration.count();

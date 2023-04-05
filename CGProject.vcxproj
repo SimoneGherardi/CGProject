@@ -235,6 +235,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MemoryBlock.cpp" />
     <ClCompile Include="MemoryTransferer.cpp" />
+    <ClCompile Include="math.cpp" />
     <ClCompile Include="ModelId.h" />
     <ClCompile Include="movement.cpp" />
     <ClCompile Include="ObjLoader.cpp" />
@@ -300,6 +301,8 @@
     <ClInclude Include="ecs_modules.h" />
     <ClInclude Include="MemoryBlock.h" />
     <ClInclude Include="MemoryTransferer.h" />
+    <ClInclude Include="math.h" />
+    <ClInclude Include="MemoryReference.h" />
     <ClInclude Include="ModelData.h" />
     <ClInclude Include="Models.h" />
     <ClInclude Include="ObjLoader.h" />

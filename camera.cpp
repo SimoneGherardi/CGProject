@@ -1,16 +1,25 @@
 #include "camera.h"
 
 double global_yoffset = 0;
+double global_xoffset = 0;
 
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
 	global_yoffset = yoffset;
+	global_xoffset = xoffset;
 }
 
 void CameraTest::CameraZoom(double offset)
 {
 	// Zooms in and out
 	Position += Orientation * (float)offset * sensitivityScroll;
+}
+
+void CameraTest::CameraHorizontalSlide(double offset)
+{
+	// Zooms in and out
+	glm::vec3 Horizontal = glm::cross(Orientation, Up);
+	Position += Horizontal * (float)offset * sensitivityScroll;
 }
 
 CameraTest::CameraTest(int width, int height, glm::vec3 position)
@@ -87,11 +96,18 @@ void CameraTest::Inputs(GLFWwindow* window)
 	}
 
 	double yoffset = 0;
+	double xoffset = 0;
 	glfwSetScrollCallback(window, scroll_callback);
 	yoffset = global_yoffset;
+	xoffset = global_xoffset;
 	if (yoffset != 0)
 	{
 		CameraZoom(yoffset);
 		global_yoffset = 0;
+	};
+	if (xoffset != 0)
+	{
+		CameraHorizontalSlide(xoffset);
+		global_xoffset = 0;
 	};
 }

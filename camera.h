@@ -39,5 +39,6 @@ public:
 	void Inputs(GLFWwindow* window);
 
 	void CameraZoom(double offset);
+	void CameraHorizontalSlide(double offset);
 };
 #endif

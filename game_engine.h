@@ -6,7 +6,7 @@
 
 class GatherAllRaycastCallback : public rp3d::RaycastCallback {
 public:
-	std::vector <rp3d::RaycastInfo> Infos;
+	std::vector <rp3d::RaycastInfo*> Infos;
 	virtual rp3d::decimal notifyRaycastHit(const rp3d::RaycastInfo& info);
 };
 
@@ -46,5 +46,5 @@ public:
 	glm::vec3 WorldToScreenSpace(rp3d::Vector3 position);
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec2 screenPoint);
 
-	std::vector<rp3d::RaycastInfo> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
+	std::vector<rp3d::RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 };

@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "game_engine.h"
 
 CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg), Position(position)
 {}
@@ -75,4 +76,19 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		firstClick = true;
 	}
 
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	{
+		double mouseX;
+		double mouseY;
+		// Fetches the coordinates of the cursor
+		glfwGetCursorPos(window, &mouseX, &mouseY);
+		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(glm::vec2(mouseX / Width, mouseY / Height), 10);
+
+		printf("Raycast results: %d\n", raycasts.size());
+
+		for (rp3d::RaycastInfo* raycast : raycasts)
+		{
+			std::cout << raycast->worldPoint.to_string();
+		}
+	}
 }

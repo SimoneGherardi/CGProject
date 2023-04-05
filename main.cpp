@@ -2,8 +2,8 @@
     #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
 #endif
 
-#include "game_engine.h"
 #include "rendering_engine.h"
+#include "game_engine.h"
 #include "window.h"
 #include "camera.h"
 #include "gltf_loader.h"

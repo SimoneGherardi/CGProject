@@ -3,7 +3,7 @@
 #include "math.h"
 #include <glm/gtx/transform.hpp>
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.0f, 0.0f, 3.0f)))
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.0f, 0.0f, 0.0f)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -39,7 +39,8 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {-8, 4, 0} })
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
         .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
-        .set<Velocity>({ {1, 0, 0}, 1 });
+        .set<Velocity>({ {1, 0, 0}, 1 })
+        .set<Renderer>({ Models::SUZANNE });
     ECSWorld.entity("Plane")
         .set<Transform>({ {0, 0, 0} })
         .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
@@ -113,19 +114,32 @@ rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec2 screenPoint)
 
 rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
 {
-    Infos.push_back(info);
+    rp3d::RaycastInfo* raycastInfo = new rp3d::RaycastInfo();
+    raycastInfo->body = info.body;
+    raycastInfo->worldPoint = info.worldPoint;
+    raycastInfo->worldNormal = info.worldNormal;
+    raycastInfo->hitFraction = info.hitFraction;
+    raycastInfo->collider = info.collider;
+    raycastInfo->meshSubpart = info.meshSubpart;
+    raycastInfo->triangleIndex = info.triangleIndex;
+    
+    Infos.push_back(raycastInfo);
     return rp3d::decimal(1.0);
 }
 
-std::vector<rp3d::RaycastInfo> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
+std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
 {
+    printf("screen %f %f", screenPoint.x, screenPoint.y);
     GameEngine &engine = GameEngine::GetInstance();
     CameraInfos camera = engine._Camera;
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
+    printf("origin %f %f %f", origin.x, origin.y, origin.z);
     rp3d::Vector3 screenPointInWorld = engine.ScreenToWorldSpace(screenPoint);
+    printf("screenPointInWorld %f %f %f", screenPointInWorld.x, screenPointInWorld.y, screenPointInWorld.z);
     rp3d::Vector3 direction = screenPointInWorld - origin;
     direction.normalize();
     rp3d::Vector3 end = origin + direction * maxDistance;
+    printf("end %f %f %f", end.x, end.y, end.z);
     rp3d::Ray ray{ origin, end };
 
     GatherAllRaycastCallback callback;

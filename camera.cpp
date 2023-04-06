@@ -76,8 +76,22 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		firstClick = true;
 	}
 
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 	{
+		glm::vec3 a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, 0, 0));
+		printf("Position 1 %f, %f", a.x, a.y);
+		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(10, 0, 1));
+		printf("Position 2 %f, %f", a.x, a.y);
+		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(-10, 0, 1));
+		printf("Position 3 %f, %f", a.x, a.y);
+		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, 10, 1));
+		printf("Position 4 %f, %f", a.x, a.y);
+		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, -10, 1));
+		printf("Position 5 %f, %f", a.x, a.y);
+
+		rp3d::Vector3 b = GameEngine::GetInstance().ScreenToWorldSpace(glm::vec2(-0.358061, 0.000000));
+		printf("Screen 1 %f, %f, %f", b.x, b.y, b.z);
+
 		double mouseX;
 		double mouseY;
 		// Fetches the coordinates of the cursor
@@ -91,4 +105,6 @@ void CameraInfos::Inputs(GLFWwindow* window)
 			std::cout << raycast->worldPoint.to_string();
 		}
 	}
+
+	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 }

@@ -3,7 +3,7 @@
 #include "math.h"
 #include <glm/gtx/transform.hpp>
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.0f, 0.0f, 0.0f)))
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.0f, 0.0f, -10.0f)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -39,8 +39,7 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {-8, 4, 0} })
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
         .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
-        .set<Velocity>({ {1, 0, 0}, 1 })
-        .set<Renderer>({ Models::SUZANNE });
+        .set<Velocity>({ {1, 0, 0}, 1 });
     ECSWorld.entity("Plane")
         .set<Transform>({ {0, 0, 0} })
         .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })

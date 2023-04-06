@@ -100,14 +100,17 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
     GameEngine &engine = GameEngine::GetInstance();
 	glm::vec4 positionFromScreen = engine._Camera.Matrix() * glm::vec4(position.x, position.y, position.z, 1);
 	positionFromScreen = positionFromScreen / positionFromScreen.w;
+    printf("%.20f, %.20f, %.20f, %.20f \n", positionFromScreen.x, positionFromScreen.y, positionFromScreen.z, positionFromScreen.w);
 	return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
 
 rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec2 screenPoint)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    glm::vec4 positionInWorldOnScreen = glm::inverse(engine._Camera.Matrix()) * glm::vec4(screenPoint.x, screenPoint.y, 0, 1); // O ci va -1 per la z?
+    //printf("screen %f, %f", screenPoint.x, screenPoint.y);
+    glm::vec4 positionInWorldOnScreen = glm::inverse(engine._Camera.Matrix()) * glm::vec4(-0.35806068778038024902, 0.00000000000000000000, -1, 1.00000000000000000000);
     positionInWorldOnScreen = positionInWorldOnScreen / positionInWorldOnScreen.w;
+    //printf("world %f, %f, %f", positionInWorldOnScreen.x, positionInWorldOnScreen.y, positionInWorldOnScreen.z);
     return rp3d::Vector3(positionInWorldOnScreen.x, positionInWorldOnScreen.y, positionInWorldOnScreen.z);
 }
 
@@ -134,7 +137,6 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
     printf("origin %f %f %f", origin.x, origin.y, origin.z);
     rp3d::Vector3 screenPointInWorld = engine.ScreenToWorldSpace(screenPoint);
-    printf("screenPointInWorld %f %f %f", screenPointInWorld.x, screenPointInWorld.y, screenPointInWorld.z);
     rp3d::Vector3 direction = screenPointInWorld - origin;
     direction.normalize();
     rp3d::Vector3 end = origin + direction * maxDistance;

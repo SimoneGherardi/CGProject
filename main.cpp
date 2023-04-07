@@ -67,7 +67,7 @@ int main(int argc, char** argv)
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
         GameEngine& engine = GameEngine::GetInstance();
-        CameraInfos Camera = engine.Camera();
+        CameraInfos& Camera = engine.Camera();
         
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();

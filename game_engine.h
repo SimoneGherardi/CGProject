@@ -33,7 +33,7 @@ public:
 	rp3d::PhysicsWorld* PhysicsWorld;
 	std::chrono::system_clock::time_point GetCurrentFrameTime();
 
-	CameraInfos Camera();
+	CameraInfos& Camera();
 
 	void Loop(float delta);
 

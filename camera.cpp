@@ -80,17 +80,6 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 	{
-		/*std::cout << "Camera position: " << glm::to_string(Position) << std::endl;
-		glm::vec3 point = glm::vec3(10, 10, 1);
-		std::cout << "Point of interest: " << glm::to_string(point) << std::endl;
-		auto ddd = glm::normalize(point - Position);
-		std::cout << "Direction of point from camera: " << glm::to_string(ddd) << std::endl;
-		glm::vec3 a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(point.x, point.y, point.z));
-		a /= a.z;
-		std::cout << "Point2Screen: " << glm::to_string(a) << std::endl;
-		auto dir = GameEngine::GetInstance().ScreenToWorldSpace(glm::vec2(a.x, a.y));
-		std::cout << "Direction from camera: " << glm::to_string(dir) << std::endl;*/
-		
 		double mouseX;
 		double mouseY;
 		// Fetches the coordinates of the cursor

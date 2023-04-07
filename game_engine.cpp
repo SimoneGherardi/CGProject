@@ -111,29 +111,12 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
     return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
 
-glm::vec3 GameEngine::ScreenToWorldSpace(glm::vec2 screenPoint)
+glm::vec3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
 {
-    /*
-    * Il mapping da punto 2D a 3D restituisce una direzione.
-    * In particolare è necessario procedere in 2 fasi, prima
-    * de-proiettando il punto in 2D in modo da ottenere la direzione
-    * in 3D (forzare .w=0 e normalizzare).
-    * Questa direzione però non tiene conto della rotazione
-    * della camera; pertanto è necessario moltiplicare la direzione
-    * per l'inverso della view matrix.
-    * (nota: visto che .w=0 la direzione non dipende dalla traslazione)
-    */
     GameEngine& engine = GameEngine::GetInstance();
-    auto V = engine._Camera.ViewMatrix();
-    auto P = engine._Camera.ProjectionMatrix();
-    auto iV = glm::inverse(V);
-    auto iP = glm::inverse(P);
-    // DO NOT CHANGE 177013.950320 ***IT IS EXTREMELY IMPORTANT***
-    auto d0 = iP * glm::vec4(screenPoint.x, screenPoint.y, 177013.950320, 1.0);
-    d0.w = 0;
-    d0 = glm::normalize(d0);
-    auto d = iV * d0;
-    d = glm::normalize(d); // prob inutile
+    auto I = glm::inverse(engine._Camera.Matrix());
+    auto d = I * glm::vec4(screenPoint.x, screenPoint.y, screenPoint.z, 1.0);
+    d /= d.w;
     return glm::vec3(d.x, d.y, d.z);
 }
 
@@ -157,9 +140,9 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
     GameEngine &engine = GameEngine::GetInstance();
     CameraInfos camera = engine._Camera;
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
-    auto dir = engine.ScreenToWorldSpace(screenPoint);
+    auto dir = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
     auto camPos = glm::vec3(origin.x, origin.y, origin.z);
-    auto pos = camPos + dir * maxDistance;
+    auto pos = dir ;
     std::cout << "distance from camera: " << glm::length(camPos - pos) << std::endl;
     DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(
         pos.x, pos.y, pos.z

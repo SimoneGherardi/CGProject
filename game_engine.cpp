@@ -2,8 +2,10 @@
 #include "Models.h"
 #include "math.h"
 #include <glm/gtx/transform.hpp>
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.0f, 0.0f, -10.0f)))
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.4f, 1.2f, -10.0f)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -44,6 +46,9 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {0, 0, 0} })
         .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
         .set<Collider>({ {100, 1, 100}, rp3d::CollisionShapeName::BOX, NULL });
+    ECSWorld.entity("Debuggo")
+        .set<Transform>({ {10, 10, 1} })
+        .set<Renderer>({ Models::DEBUG });
 }
 
 void GameEngine::_SetupPhysicsLogger()
@@ -98,20 +103,28 @@ rp3d::Vector3 GameEngine::CameraToWorldSpace(rp3d::Vector3 position)
 glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
 {
     GameEngine &engine = GameEngine::GetInstance();
-	glm::vec4 positionFromScreen = engine._Camera.Matrix() * glm::vec4(position.x, position.y, position.z, 1);
+    auto x = glm::vec4(position.x, position.y, position.z, 1);
+	glm::vec4 positionFromScreen = engine._Camera.Matrix() * x;
 	positionFromScreen = positionFromScreen / positionFromScreen.w;
-    printf("%.20f, %.20f, %.20f, %.20f \n", positionFromScreen.x, positionFromScreen.y, positionFromScreen.z, positionFromScreen.w);
-	return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
+    return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
 
-rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec2 screenPoint)
+glm::vec3 GameEngine::ScreenToWorldSpace(glm::vec2 screenPoint)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    //printf("screen %f, %f", screenPoint.x, screenPoint.y);
-    glm::vec4 positionInWorldOnScreen = glm::inverse(engine._Camera.Matrix()) * glm::vec4(-0.35806068778038024902, 0.00000000000000000000, -1, 1.00000000000000000000);
-    positionInWorldOnScreen = positionInWorldOnScreen / positionInWorldOnScreen.w;
-    //printf("world %f, %f, %f", positionInWorldOnScreen.x, positionInWorldOnScreen.y, positionInWorldOnScreen.z);
-    return rp3d::Vector3(positionInWorldOnScreen.x, positionInWorldOnScreen.y, positionInWorldOnScreen.z);
+    auto V = engine._Camera.ViewMatrix();
+    auto P = engine._Camera.ProjectionMatrix();
+    P[1][1] *= -1;
+    auto iV = glm::inverse(V);
+    auto iP = glm::inverse(P);
+    // DO NOT CHANGE 177013.950320 ***IT IS EXTREMELY IMPORTANT***
+    auto d0 = iP * glm::vec4(screenPoint.x, screenPoint.y, 177013.950320, 1.0);
+    d0.w = 0;
+    d0 = glm::normalize(d0);
+    auto d = iV * d0;
+    d = glm::normalize(d);
+    std::cout << glm::to_string(d) << std::endl;
+    return glm::vec3(d.x, d.y, d.z);
 }
 
 rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
@@ -136,7 +149,8 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
     CameraInfos camera = engine._Camera;
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
     printf("origin %f %f %f", origin.x, origin.y, origin.z);
-    rp3d::Vector3 screenPointInWorld = engine.ScreenToWorldSpace(screenPoint);
+    // rp3d::Vector3 screenPointInWorld = engine.ScreenToWorldSpace(screenPoint);
+    rp3d::Vector3 screenPointInWorld = { 0,0,0 };
     rp3d::Vector3 direction = screenPointInWorld - origin;
     direction.normalize();
     rp3d::Vector3 end = origin + direction * maxDistance;

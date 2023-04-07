@@ -44,7 +44,7 @@ public:
 	rp3d::Vector3 CameraToWorldSpace(rp3d::Vector3 position);
 
 	glm::vec3 WorldToScreenSpace(rp3d::Vector3 position);
-	rp3d::Vector3 ScreenToWorldSpace(glm::vec2 screenPoint);
+	glm::vec3 ScreenToWorldSpace(glm::vec2 screenPoint);
 
 	std::vector<rp3d::RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 };

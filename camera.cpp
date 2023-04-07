@@ -80,27 +80,24 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 	{
-		glm::vec3 a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, 0, 0));
-		printf("Position 1 %f, %f \n", a.x, a.y);
-		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(10, 0, 1));
-		printf("Position 2 %.10f, %f \n", a.x / a.z, a.y / a.z);
-		/*a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(-10, 0, 1));
-		printf("Position 3 %f, %f \n", a.x, a.y);
-		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, 10, 1));
-		printf("Position 4 %f, %f \n", a.x, a.y);
-		a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(0, -10, 1));
-		printf("Position 5 %f, %f \n", a.x, a.y);*/
-		rp3d::Vector3 b = GameEngine::GetInstance().ScreenToWorldSpace(glm::vec2(a.x, 0));
-		printf("Screen 1 %f, %f, %f \n", b.x, b.y, b.z);
-		rp3d::Vector3 direction = b - rp3d::Vector3(Position.x, Position.y, Position.z);
-		direction.normalize();
-		rp3d::Vector3 end = rp3d::Vector3(Position.x, Position.y, Position.z) + (direction * 14.1421356237f);
-		printf("end %f %f %f \n", end.x, end.y, end.z);
+		std::cout << "Camera position: " << glm::to_string(Position) << std::endl;
+		glm::vec3 point = glm::vec3(10, 10, 1);
+		std::cout << "Point of interest: " << glm::to_string(point) << std::endl;
+		auto ddd = glm::normalize(point - Position);
+		std::cout << "Direction of point from camera: " << glm::to_string(ddd) << std::endl;
+		glm::vec3 a = GameEngine::GetInstance().WorldToScreenSpace(rp3d::Vector3(10, 0, 1));
+		a /= a.z;
+		std::cout << "Point2Screen: " << glm::to_string(a) << std::endl;
+		auto dir = GameEngine::GetInstance().ScreenToWorldSpace(glm::vec2(a.x, a.y));
+		std::cout << "Direction from camera: " << glm::to_string(dir) << std::endl;
+
 
 		//double mouseX;
 		//double mouseY;
-		//// Fetches the coordinates of the cursor
+		// Fetches the coordinates of the cursor
 		//glfwGetCursorPos(window, &mouseX, &mouseY);
+		//auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
+		//std::cout << "Mouse position: " << glm::to_string(mousePosition) << std::endl;
 		//std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1), 10);
 
 		//printf("Raycast results: %d\n", raycasts.size());

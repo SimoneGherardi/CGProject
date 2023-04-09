@@ -29,14 +29,37 @@ glm::mat4 CameraInfos::Matrix()
 	return projection * view;
 }
 
+double global_yoffset = 0;
+double global_xoffset = 0;
+
+void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	global_yoffset = yoffset;
+	global_xoffset = xoffset;
+}
+
+void CameraInfos::CameraZoom(double offset)
+{
+	// Zooms in and out
+	Position += Orientation * (float)offset * sensitivityScroll;
+}
+
+void CameraInfos::CameraHorizontalSlide(double offset)
+{
+	// Slide left and right
+	glm::vec3 Horizontal = glm::normalize(glm::cross(Orientation, Up));
+	Position += Horizontal * (float)offset * sensitivityScroll;
+}
+
 void CameraInfos::Inputs(GLFWwindow* window)
 {
 	// Handles mouse inputs
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+	// Camera rotation
+	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
 		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN);
-
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
@@ -52,8 +75,8 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = Sensitivity * (float)(mouseY - ((float)Height / 2)) / Height;
-		float rotY = Sensitivity * (float)(mouseX - ((float)Width / 2)) / Width;
+		float rotX = sensitivityRotation * (float)(mouseY - (height / 2)) / height;
+		float rotY = sensitivityRotation * (float)(mouseX - (width / 2)) / width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
@@ -70,20 +93,78 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 	}
-	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
+	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
 		// Unhides cursor since camera is not looking around anymore
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		
 		// Makes sure the next time the camera looks around it doesn't jump
 		firstClick = true;
 	}
 
-	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	// Camera translation
+	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
 	{
+		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+		{
+		// Hides mouse cursor
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		
+		// Prevents camera from jumping on the first click
+		if (firstClick)
+		{
+			glfwSetCursorPos(window, (width / 2), (height / 2));
+			firstClick = false;
+		}
+
+		// Stores the coordinates of the cursor
 		double mouseX;
 		double mouseY;
 		// Fetches the coordinates of the cursor
 		glfwGetCursorPos(window, &mouseX, &mouseY);
+ 
+		float translationY = -(float)(mouseY - (height / 2)) / height;
+		float translationX = (float)(mouseX - (width / 2)) / width;
+
+		// Calculates upcoming change in the Position
+		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;
+
+		// Update Position
+		Position += sensitivityTranslation * translation;
+
+		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
+		glfwSetCursorPos(window, (width / 2), (height / 2));
+		}
+		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
+		{
+			// Unhides cursor since camera is not looking around anymore
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+			
+			// Makes sure the next time the camera looks around it doesn't jump
+			firstClick = true;
+		}
+	}
+	
+
+	// Handles scroll and swipe inputs
+	double yoffset = 0;
+	double xoffset = 0;
+	glfwSetScrollCallback(window, scroll_callback);
+	yoffset = global_yoffset;
+	xoffset = global_xoffset;
+	if (yoffset != 0)
+	{
+		CameraZoom(yoffset);
+		global_yoffset = 0;
+	};
+	if (xoffset != 0)
+	{
+		CameraHorizontalSlide(xoffset);
+		global_xoffset = 0;
+	};
+
+	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	{
 		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
 		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
 		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);

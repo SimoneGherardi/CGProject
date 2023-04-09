@@ -47,12 +47,21 @@ private:
 	VkDebugUtilsMessengerEXT _DebugMessenger;
 
 	SwapchainInfo _Swapchain;
+	std::vector<VkImageView> _SceneImageViews;
 	RenderTarget _ColorRenderTarget;
 	RenderTarget _DepthRenderTarget;
+	RenderTarget _ColorResolveRenderTarget;
+	RenderTarget _ColorGUIRenderTarget;
+	RenderTarget _DepthGUIRenderTarget;
+
+	RenderTarget _GUIColorRenderTarget;
+	RenderTarget _GUIDepthRenderTarget;
 
 	VulkanContext_T _Context;
 
 	VkRenderPass _RenderPass;
+	VkSampler renderSamplerForGUI;
+	VkRenderPass _GUIRenderPass;
 
 	VkPipelineLayout _PipelineLayout;
 	VkPipeline _Pipeline;
@@ -62,9 +71,12 @@ private:
 	Semaphore* _RenderSemaphore;
 
 	VkCommandPool _CommandPool;
+	VkCommandPool _GUICommandPool;
 	CommandBuffer* _MainCommandBuffer;
+	CommandBuffer* _GUICommandBuffer;
 
 	std::vector<VkFramebuffer> _SwapChainFramebuffers;
+	std::vector<VkFramebuffer> _GUISwapChainFramebuffers;
 
 	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
 	uint8_t _CurrentFrameIndex = 0;
@@ -72,6 +84,9 @@ private:
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
+
+	//Imgui render descriptor set
+	VkDescriptorSet renderTextureId;
 
 	VkDescriptorPool _GuiDescriptorPool;
 	ImmediateCommandBuffer* _GuiCommandBuffer;
@@ -105,14 +120,18 @@ private:
 	void _InitializeLogicalDevice();
 	void _InitializeSwapchain(WindowSize windowSize);
 	void _InitializeRenderPass();
+	void _InitializeGUIRenderPass();
 	void _InitializeAllocators();
 	void _InitializeDescriptorSet();
 	void _InitializePipeline();
 	void _InitializeSyncStructures();
 	void _InitializeCommandPool();
+	void _InitializeGUICommandPool();
 	void _InitializeCommandBuffers();
+	void _InitializeGUICommandBuffers();
 	void _InitializeRenderTargets();
 	void _InitializeFrameBuffer();
+	void _InitializeGUIFrameBuffer();
 	void _InitializeModels();
 	void _InitializeGui();
 

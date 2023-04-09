@@ -37,7 +37,7 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {8, 4, 0} })
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
         .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
-        .set<Velocity>({ {-1, 0, 0}, 1 })
+        .set<Velocity>({ {0, 0, 0}, 1 })
         .set<Renderer>({ Models::SUZANNE });
     ECSWorld.entity("Left")
         .set<Transform>({ {-8, 4, 0} })

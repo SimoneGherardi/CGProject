@@ -203,6 +203,7 @@
     <ClCompile Include="CommandBuffer.cpp" />
     <ClCompile Include="command_buffers.cpp" />
     <ClCompile Include="command_pool.cpp" />
+    <ClCompile Include="custom_GUI.cpp" />
     <ClCompile Include="debug_messenger.cpp" />
     <ClCompile Include="defines.cpp" />
     <ClCompile Include="descriptor_pool.cpp" />
@@ -271,6 +272,7 @@
     <ClInclude Include="CommandBuffer.h" />
     <ClInclude Include="command_buffers.h" />
     <ClInclude Include="command_pool.h" />
+    <ClInclude Include="custom_GUI.h" />
     <ClInclude Include="debug_messenger.h" />
     <ClInclude Include="defines.h" />
     <ClInclude Include="descriptor_pool.h" />

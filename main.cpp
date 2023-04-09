@@ -18,7 +18,6 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-//CameraInfos Camera = CameraInfos(WIDTH, HEIGHT, 110, glm::vec3(0.0f, 0.0f, 3.0f));
 
 void inputHandler(GLFWwindow* window, float delta_time) {
     // TODO here we will handle the inputs
@@ -41,6 +40,7 @@ void initialize()
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(Window, true);
     RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
+    
     TRACEEND;
 }
 
@@ -77,10 +77,9 @@ int main(int argc, char** argv)
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
-            ImGui::ShowDemoWindow();
             
             Camera.Inputs(Window);
-            
+
             RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;
             delta = duration.count();

@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering_engine.h"
 #include "camera.h"
+#include "VulkanStructs.h"
+#include "custom_GUI.h"
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -102,6 +104,24 @@ void RenderingEngine::_InitializeRenderPass() {
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up render pass");
 		cleanupRenderPass(_Context.Device, _RenderPass);
+		});
+	TRACEEND;
+}
+
+void RenderingEngine::_InitializeGUIRenderPass() {
+	TRACESTART;
+	VkSamplerCreateInfo samplerInfo = VulkanStructs::SamplerCreateInfo(VK_FILTER_LINEAR);
+	CheckVkResult(vkCreateSampler(_Context.Device, &samplerInfo, nullptr, &renderSamplerForGUI));
+	initializeGUIRenderPass(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetFormat(),
+		VK_SAMPLE_COUNT_2_BIT,
+		&_GUIRenderPass
+	);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up render pass");
+		cleanupRenderPass(_Context.Device, _GUIRenderPass);
 		});
 	TRACEEND;
 }
@@ -222,6 +242,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 		);
 	}
+
 	TRACEEND;
 }
 
@@ -291,6 +312,21 @@ void RenderingEngine::_InitializeCommandPool() {
 	TRACEEND;
 }
 
+void RenderingEngine::_InitializeGUICommandPool() {
+	TRACESTART;
+	auto queueFamilyIndices = findQueueFamilies(_Context.PhysicalDevice, _Context.Surface);
+	initializeCommandPool(
+		_Context.Device,
+		queueFamilyIndices,
+		&_GUICommandPool
+	);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up command pool");
+		cleanupCommandPool(_Context.Device, _GUICommandPool);
+		});
+	TRACEEND;
+}
+
 void RenderingEngine::_InitializeCommandBuffers()
 {
 	TRACESTART;
@@ -298,6 +334,17 @@ void RenderingEngine::_InitializeCommandBuffers()
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command buffers");
 		_MainCommandBuffer->Cleanup();
+		});
+	TRACEEND;
+}
+
+void RenderingEngine::_InitializeGUICommandBuffers()
+{
+	TRACESTART;
+	_GUICommandBuffer = new CommandBuffer(&_Context, _CommandPool);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up command buffers");
+		_GUICommandBuffer->Cleanup();
 		});
 	TRACEEND;
 }
@@ -329,8 +376,47 @@ void RenderingEngine::_InitializeRenderTargets()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
+	_ColorResolveRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		_Swapchain.GetFormat(),
+		1,
+		VK_SAMPLE_COUNT_1_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT
+	);
+	_ColorGUIRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		_Swapchain.GetFormat(),
+		1,
+		VK_SAMPLE_COUNT_2_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT
+	);
+	_DepthGUIRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		findDepthFormat(_Context.PhysicalDevice),
+		1,
+		VK_SAMPLE_COUNT_2_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_DEPTH_BIT
+	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up render targets");
+		_ColorGUIRenderTarget.Cleanup();
+		_DepthGUIRenderTarget.Cleanup();
+		_ColorResolveRenderTarget.Cleanup();
 		_DepthRenderTarget.Cleanup();
 		_ColorRenderTarget.Cleanup();
 		});
@@ -344,7 +430,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		std::array<VkImageView, 3> attachments = {
 			_ColorRenderTarget.GetImageView(),
 			_DepthRenderTarget.GetImageView(),
-			_Swapchain.GetImagesViews()[i]
+			_ColorResolveRenderTarget.GetImageView(),
 		};
 
 		initializeFrameBuffer(
@@ -367,6 +453,36 @@ void RenderingEngine::_InitializeFrameBuffer() {
 	TRACEEND;
 }
 
+void RenderingEngine::_InitializeGUIFrameBuffer() {
+	TRACESTART;
+	_GUISwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
+	for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
+		std::array<VkImageView, 3> attachments = {
+			_ColorGUIRenderTarget.GetImageView(),
+			_DepthGUIRenderTarget.GetImageView(),
+			_Swapchain.GetImagesViews()[i]
+		};
+
+		initializeFrameBuffer(
+			_Context.Device,
+			static_cast<uint32_t>(attachments.size()),
+			attachments.data(),
+			_GUIRenderPass,
+			_Swapchain.GetExtent(),
+			&_GUISwapChainFramebuffers[i]
+		);
+
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up framebuffer");
+			cleanupFrameBuffer(
+				_Context.Device,
+				_GUISwapChainFramebuffers[i]
+			);
+			});
+	}
+	TRACEEND;
+}
+
 void RenderingEngine::_InitializeModels()
 {
 	TRACESTART;
@@ -379,11 +495,14 @@ void RenderingEngine::_InitializeModels()
 void RenderingEngine::_InitializeGui()
 {
 	TRACESTART;
+
+	
+
 	initializeDescriptorPool(
 		&_Context,
 		{
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2000 },
 			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
@@ -396,6 +515,26 @@ void RenderingEngine::_InitializeGui()
 		},
 		&_GuiDescriptorPool
 	);
+
+	/*
+	std::array<VkCommandBuffer, 3> submitCommandBuffers = {
+	environmentalcommandBuffers[imageIndex].handle,
+	commandBuffers[imageIndex].handle,
+	imGuiCommandBuffers[imageIndex].handle
+				};
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
+	submitInfo.pCommandBuffers = submitCommandBuffers.data();
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	if (vkQueueSubmit(graphicsQueue_, 1, &submitInfo, synchronization.inFlightFences[imageIndex].handle) != VK_SUCCESS)
+	throw std::runtime_error("failed to submit draw command buffer!");
+	*/
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = _Context.Instance;
@@ -417,6 +556,10 @@ void RenderingEngine::_InitializeGui()
 	_GuiCommandBuffer->Wait();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
+
+	//ImGui Render texture
+	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	//Maso devo fare il cleanup? <3
 
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
@@ -441,6 +584,7 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 
 	_InitializeSwapchain(windowSize);
 	_InitializeRenderPass();
+	_InitializeGUIRenderPass();
 
 	_InitializeSyncStructures();
 	_InitializeAllocators();
@@ -448,9 +592,12 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	_InitializeDescriptorSet();
 	_InitializePipeline();
 	_InitializeCommandPool();
+	_InitializeGUICommandPool();
 	_InitializeCommandBuffers();
+	_InitializeGUICommandBuffers();
 	_InitializeRenderTargets();
 	_InitializeFrameBuffer();
+	_InitializeGUIFrameBuffer();
 	_InitializeGui();
 	TRACEEND;
 }
@@ -460,7 +607,6 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	// TODO refactor
 	_RenderFence->Wait();
 	_RenderFence->Reset();
-	ImGui::Render();
 	uint32_t imageIndex;
 	CheckVkResult(
 		vkAcquireNextImageKHR(
@@ -507,9 +653,30 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexedIndirect(cmd, f->Objects.CommandsBuffer.Buffer, 0, f->Objects.Commands.size(), sizeof(VkDrawIndexedIndirectCommand));
 
+	vkCmdEndRenderPass(cmd);
+
+	VkRenderPassBeginInfo uiRpInfo = {};
+	uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	uiRpInfo.pNext = nullptr;
+	uiRpInfo.renderPass = _RenderPass;
+	uiRpInfo.renderArea.offset.x = 0;
+	uiRpInfo.renderArea.offset.y = 0;
+	uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
+	uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
+	uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	uiRpInfo.pClearValues = clearValues.data();
+	vkCmdBeginRenderPass(
+		cmd,
+		&uiRpInfo,
+		VK_SUBPASS_CONTENTS_INLINE
+	);
+	showCustomWindow(renderTextureId);
+
+	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
 	vkCmdEndRenderPass(cmd);
+
 	_MainCommandBuffer->End();
 	_MainCommandBuffer->Submit(
 		_Context.GraphicsQueue,

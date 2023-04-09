@@ -506,6 +506,7 @@
     </ClInclude>
     <ClInclude Include="custom_GUI.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="math.h">
       <Filter>Header Files\utilities</Filter>
     </ClInclude>

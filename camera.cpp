@@ -75,8 +75,8 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = sensitivityRotation * (float)(mouseY - (height / 2)) / height;
-		float rotY = sensitivityRotation * (float)(mouseX - (width / 2)) / width;
+		float rotX = - sensitivityRotation * (float)(mouseY - (Height / 2)) / Height;
+		float rotY = - sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
@@ -113,7 +113,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
-			glfwSetCursorPos(window, (width / 2), (height / 2));
+			glfwSetCursorPos(window, (Width / 2), (Height / 2));
 			firstClick = false;
 		}
 
@@ -123,8 +123,8 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Fetches the coordinates of the cursor
 		glfwGetCursorPos(window, &mouseX, &mouseY);
  
-		float translationY = -(float)(mouseY - (height / 2)) / height;
-		float translationX = (float)(mouseX - (width / 2)) / width;
+		float translationY = (float)(mouseY - (Height / 2)) / Height;
+		float translationX = -(float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming change in the Position
 		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;
@@ -133,7 +133,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		Position += sensitivityTranslation * translation;
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (width / 2), (height / 2));
+		glfwSetCursorPos(window, (Width / 2), (Height / 2));
 		}
 		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
 		{
@@ -165,6 +165,13 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 	{
+
+		// Stores the coordinates of the cursor
+		double mouseX;
+		double mouseY;
+		// Fetches the coordinates of the cursor
+		glfwGetCursorPos(window, &mouseX, &mouseY);
+
 		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
 		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
 		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);

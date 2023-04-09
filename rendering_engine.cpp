@@ -516,26 +516,6 @@ void RenderingEngine::_InitializeGui()
 		&_GuiDescriptorPool
 	);
 
-	/*
-	std::array<VkCommandBuffer, 3> submitCommandBuffers = {
-	environmentalcommandBuffers[imageIndex].handle,
-	commandBuffers[imageIndex].handle,
-	imGuiCommandBuffers[imageIndex].handle
-				};
-	VkSubmitInfo submitInfo{};
-	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	submitInfo.waitSemaphoreCount = 1;
-	submitInfo.pWaitSemaphores = waitSemaphores;
-	submitInfo.pWaitDstStageMask = waitStages;
-	submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
-	submitInfo.pCommandBuffers = submitCommandBuffers.data();
-	submitInfo.signalSemaphoreCount = 1;
-	submitInfo.pSignalSemaphores = signalSemaphores;
-
-	if (vkQueueSubmit(graphicsQueue_, 1, &submitInfo, synchronization.inFlightFences[imageIndex].handle) != VK_SUCCESS)
-	throw std::runtime_error("failed to submit draw command buffer!");
-	*/
-
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = _Context.Instance;
 	init_info.PhysicalDevice = _Context.PhysicalDevice;

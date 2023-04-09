@@ -1,4 +1,33 @@
 #include "camera.h"
+#include "game_engine.h"
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
+
+CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg), Position(position)
+{}
+
+glm::mat4 CameraInfos::ProjectionMatrix()
+{
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(this->FOVDeg), (float)Width / Height, NEAR_PLANE, FAR_PLANE);
+	projection[1][1] *= -1; // Inverts the Y axis
+	return projection;
+}
+
+glm::mat4 CameraInfos::ViewMatrix()
+{
+	glm::mat4 view = glm::mat4(1.0f);
+	view = glm::lookAt(Position, Position + Orientation, Up);
+	return view;
+}
+
+glm::mat4 CameraInfos::Matrix()
+{
+	glm::mat4 projection = ProjectionMatrix();
+	glm::mat4 view = ViewMatrix();
+
+	return projection * view;
+}
 
 double global_yoffset = 0;
 double global_xoffset = 0;
@@ -9,44 +38,20 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	global_xoffset = xoffset;
 }
 
-void CameraTest::CameraZoom(double offset)
+void CameraInfos::CameraZoom(double offset)
 {
 	// Zooms in and out
 	Position += Orientation * (float)offset * sensitivityScroll;
 }
 
-void CameraTest::CameraHorizontalSlide(double offset)
+void CameraInfos::CameraHorizontalSlide(double offset)
 {
 	// Slide left and right
 	glm::vec3 Horizontal = glm::normalize(glm::cross(Orientation, Up));
 	Position += Horizontal * (float)offset * sensitivityScroll;
 }
 
-CameraTest::CameraTest(int width, int height, glm::vec3 position)
-{
-	CameraTest::width = width;
-	CameraTest::height = height;
-	Position = position;
-}
-
-
-glm::mat4 CameraTest::Matrix(float FOVdeg, float nearPlane, float farPlane)
-{
-	// Initializes matrices since otherwise they will be the null matrix
-	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 projection = glm::mat4(1.0f);
-
-	// Makes camera look in the right direction from the right position
-	view = glm::lookAt(Position, Position + Orientation, Up);
-	// Adds perspective to the scene
-	projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, nearPlane, farPlane);
-	projection[1][1] *= -1; // Inverts the Y axis
-
-	return projection * view;
-}
-
-
-void CameraTest::Inputs(GLFWwindow* window)
+void CameraInfos::Inputs(GLFWwindow* window)
 {
 	// Handles mouse inputs
 	// Camera rotation
@@ -58,7 +63,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
-			glfwSetCursorPos(window, (width / 2), (height / 2));
+			glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 			firstClick = false;
 		}
 
@@ -86,7 +91,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (width / 2), (height / 2));
+		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 	}
 	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
@@ -157,4 +162,20 @@ void CameraTest::Inputs(GLFWwindow* window)
 		CameraHorizontalSlide(xoffset);
 		global_xoffset = 0;
 	};
+
+	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	{
+		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
+		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
+		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
+
+		printf("Raycast results: %d\n", raycasts.size());
+
+		for (rp3d::RaycastInfo* raycast : raycasts)
+		{
+			std::cout << raycast->worldPoint.to_string();
+		}
+	}
+
+	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 }

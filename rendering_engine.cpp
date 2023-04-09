@@ -602,7 +602,7 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	TRACEEND;
 }
 
-void RenderingEngine::Render(float delta, CameraTest* camera)
+void RenderingEngine::Render(float delta, CameraInfos* camera)
 {
 	// TODO refactor
 	_RenderFence->Wait();
@@ -644,9 +644,7 @@ void RenderingEngine::Render(float delta, CameraTest* camera)
 
 	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
-	f->Global.Data.CameraViewProjection = camera->Matrix(70, 0.1f, 200);
-	// TODO update projection
-	// TODO update view
+	f->Global.Data.CameraViewProjection = camera->Matrix();
 
 	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 

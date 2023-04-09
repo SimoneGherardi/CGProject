@@ -88,12 +88,12 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
 		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
 
-		//printf("Raycast results: %d\n", raycasts.size());
+		printf("Raycast results: %d\n", raycasts.size());
 
-		//for (rp3d::RaycastInfo* raycast : raycasts)
-		//{
-		//	std::cout << raycast->worldPoint.to_string();
-		//}
+		for (rp3d::RaycastInfo* raycast : raycasts)
+		{
+			std::cout << raycast->worldPoint.to_string();
+		}
 	}
 
 	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);

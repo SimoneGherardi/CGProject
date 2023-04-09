@@ -7,7 +7,7 @@
 
 flecs::entity DEBUGGO;
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 110, glm::vec3(0.4f, 1.2f, -10.0f)))
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0.4f, 1.2f, -10.0f)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -111,13 +111,13 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
     return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
 
-glm::vec3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
+rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
 {
     GameEngine& engine = GameEngine::GetInstance();
     auto I = glm::inverse(engine._Camera.Matrix());
     auto d = I * glm::vec4(screenPoint.x, screenPoint.y, screenPoint.z, 1.0);
     d /= d.w;
-    return glm::vec3(d.x, d.y, d.z);
+    return rp3d::Vector3(d.x, d.y, d.z);
 }
 
 rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
@@ -140,17 +140,12 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
     GameEngine &engine = GameEngine::GetInstance();
     CameraInfos camera = engine._Camera;
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
-    auto dir = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
-    auto camPos = glm::vec3(origin.x, origin.y, origin.z);
-    auto pos = dir ;
-    std::cout << "distance from camera: " << glm::length(camPos - pos) << std::endl;
+    auto pos = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
     DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(
         pos.x, pos.y, pos.z
     );
 
-    // rp3d::Vector3 screenPointInWorld = engine.ScreenToWorldSpace(screenPoint);
-    rp3d::Vector3 screenPointInWorld = { 0,0,0 };
-    rp3d::Vector3 direction = screenPointInWorld - origin;
+    rp3d::Vector3 direction = pos - origin;
     direction.normalize();
     rp3d::Vector3 end = origin + direction * maxDistance;
     rp3d::Ray ray{ origin, end };

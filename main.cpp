@@ -11,7 +11,6 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
-#include "custom_GUI.h"
 
 
 const char* TITLE = "CG Project";
@@ -19,7 +18,7 @@ const uint32_t WIDTH = 1600;
 const uint32_t HEIGHT = 900;
 
 GLFWwindow* Window;
-CameraTest Camera = CameraTest(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 3.0f));
+CameraTest Camera = CameraTest(WIDTH, HEIGHT, glm::vec3(0.0f, 0.0f, 10.0f));
 
 void inputHandler(GLFWwindow* window, float delta_time) {
     // TODO here we will handle the inputs
@@ -68,7 +67,6 @@ int main(int argc, char** argv)
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
-        ImGuiIO& io = ImGui::GetIO();
         
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
@@ -78,14 +76,8 @@ int main(int argc, char** argv)
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
-            showCustomWindow(io);
             
             Camera.Inputs(Window);
-            
-
-            
-
-            
 
             RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;

@@ -47,12 +47,20 @@ private:
 	VkDebugUtilsMessengerEXT _DebugMessenger;
 
 	SwapchainInfo _Swapchain;
+	std::vector<VkImageView> _SceneImageViews;
 	RenderTarget _ColorRenderTarget;
 	RenderTarget _DepthRenderTarget;
+	RenderTarget _ColorResolveRenderTarget;
+	RenderTarget _ColorGUIRenderTarget;
+	RenderTarget _DepthGUIRenderTarget;
+
+	RenderTarget _GUIColorRenderTarget;
+	RenderTarget _GUIDepthRenderTarget;
 
 	VulkanContext_T _Context;
 
 	VkRenderPass _RenderPass;
+	VkSampler renderSamplerForGUI;
 	VkRenderPass _GUIRenderPass;
 
 	VkPipelineLayout _PipelineLayout;
@@ -76,6 +84,9 @@ private:
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
+
+	//Imgui render descriptor set
+	VkDescriptorSet renderTextureId;
 
 	VkDescriptorPool _GuiDescriptorPool;
 	ImmediateCommandBuffer* _GuiCommandBuffer;

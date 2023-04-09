@@ -1,6 +1,8 @@
 #pragma once
 #include "rendering_engine.h"
 #include "camera.h"
+#include "VulkanStructs.h"
+#include "custom_GUI.h"
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -108,7 +110,9 @@ void RenderingEngine::_InitializeRenderPass() {
 
 void RenderingEngine::_InitializeGUIRenderPass() {
 	TRACESTART;
-	initializeRenderPass(
+	VkSamplerCreateInfo samplerInfo = VulkanStructs::SamplerCreateInfo(VK_FILTER_LINEAR);
+	CheckVkResult(vkCreateSampler(_Context.Device, &samplerInfo, nullptr, &renderSamplerForGUI));
+	initializeGUIRenderPass(
 		_Context.PhysicalDevice,
 		_Context.Device,
 		_Swapchain.GetFormat(),
@@ -238,6 +242,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
 		);
 	}
+
 	TRACEEND;
 }
 
@@ -371,8 +376,47 @@ void RenderingEngine::_InitializeRenderTargets()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
+	_ColorResolveRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		_Swapchain.GetFormat(),
+		1,
+		VK_SAMPLE_COUNT_1_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT
+	);
+	_ColorGUIRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		_Swapchain.GetFormat(),
+		1,
+		VK_SAMPLE_COUNT_2_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_COLOR_BIT
+	);
+	_DepthGUIRenderTarget.Initialize(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetExtent(),
+		findDepthFormat(_Context.PhysicalDevice),
+		1,
+		VK_SAMPLE_COUNT_2_BIT,
+		VK_IMAGE_TILING_OPTIMAL,
+		VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
+		VK_IMAGE_ASPECT_DEPTH_BIT
+	);
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up render targets");
+		_ColorGUIRenderTarget.Cleanup();
+		_DepthGUIRenderTarget.Cleanup();
+		_ColorResolveRenderTarget.Cleanup();
 		_DepthRenderTarget.Cleanup();
 		_ColorRenderTarget.Cleanup();
 		});
@@ -386,7 +430,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		std::array<VkImageView, 3> attachments = {
 			_ColorRenderTarget.GetImageView(),
 			_DepthRenderTarget.GetImageView(),
-			_Swapchain.GetImagesViews()[i]
+			_ColorResolveRenderTarget.GetImageView(),
 		};
 
 		initializeFrameBuffer(
@@ -414,8 +458,8 @@ void RenderingEngine::_InitializeGUIFrameBuffer() {
 	_GUISwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
 	for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
 		std::array<VkImageView, 3> attachments = {
-			_ColorRenderTarget.GetImageView(),
-			_DepthRenderTarget.GetImageView(),
+			_ColorGUIRenderTarget.GetImageView(),
+			_DepthGUIRenderTarget.GetImageView(),
 			_Swapchain.GetImagesViews()[i]
 		};
 
@@ -423,7 +467,7 @@ void RenderingEngine::_InitializeGUIFrameBuffer() {
 			_Context.Device,
 			static_cast<uint32_t>(attachments.size()),
 			attachments.data(),
-			_RenderPass,
+			_GUIRenderPass,
 			_Swapchain.GetExtent(),
 			&_GUISwapChainFramebuffers[i]
 		);
@@ -458,7 +502,7 @@ void RenderingEngine::_InitializeGui()
 		&_Context,
 		{
 			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
-			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2000 },
 			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
 			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
 			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
@@ -513,6 +557,10 @@ void RenderingEngine::_InitializeGui()
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 
+	//ImGui Render texture
+	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	//Maso devo fare il cleanup? <3
+
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
 		_GuiCommandBuffer->Cleanup();
@@ -559,7 +607,6 @@ void RenderingEngine::Render(float delta, CameraTest* camera)
 	// TODO refactor
 	_RenderFence->Wait();
 	_RenderFence->Reset();
-	ImGui::Render();
 	uint32_t imageIndex;
 	CheckVkResult(
 		vkAcquireNextImageKHR(
@@ -608,9 +655,30 @@ void RenderingEngine::Render(float delta, CameraTest* camera)
 	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexedIndirect(cmd, f->Objects.CommandsBuffer.Buffer, 0, f->Objects.Commands.size(), sizeof(VkDrawIndexedIndirectCommand));
 
+	vkCmdEndRenderPass(cmd);
+
+	VkRenderPassBeginInfo uiRpInfo = {};
+	uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+	uiRpInfo.pNext = nullptr;
+	uiRpInfo.renderPass = _RenderPass;
+	uiRpInfo.renderArea.offset.x = 0;
+	uiRpInfo.renderArea.offset.y = 0;
+	uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
+	uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
+	uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+	uiRpInfo.pClearValues = clearValues.data();
+	vkCmdBeginRenderPass(
+		cmd,
+		&uiRpInfo,
+		VK_SUBPASS_CONTENTS_INLINE
+	);
+	showCustomWindow(renderTextureId);
+
+	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
 	vkCmdEndRenderPass(cmd);
+
 	_MainCommandBuffer->End();
 	_MainCommandBuffer->Submit(
 		_Context.GraphicsQueue,

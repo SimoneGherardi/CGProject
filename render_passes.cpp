@@ -169,6 +169,105 @@ void initializeRenderPass(
     }
 }
 
+void initializeGUIRenderPass(
+    const VkPhysicalDevice physicalDevice,
+    const VkDevice device,
+    const VkFormat format,
+    const VkSampleCountFlagBits msaaSamples,
+    VkRenderPass* renderPass
+) {
+    auto colorAttachmentResolve = getAttachmentDescription(
+        format,
+        VK_SAMPLE_COUNT_1_BIT,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_STORE,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
+    );
+
+    auto colorAttachmentResolveRef = getAttachmentReference(
+        2,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    );
+
+    auto depthAttachment = getAttachmentDescription(
+        findDepthFormat(physicalDevice),
+        msaaSamples,
+        VK_ATTACHMENT_LOAD_OP_CLEAR,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    );
+
+    auto depthAttachmentRef = getAttachmentReference(
+        1,
+        VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    );
+
+    auto colorAttachment = getAttachmentDescription(
+        format,
+        msaaSamples,
+        VK_ATTACHMENT_LOAD_OP_CLEAR,
+        VK_ATTACHMENT_STORE_OP_STORE,
+        VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        VK_IMAGE_LAYOUT_UNDEFINED,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    );
+
+    auto colorAttachmentRef = getAttachmentReference(
+        0,
+        VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    );
+
+    auto subpass = getSubpassDescription(
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        1,
+        &colorAttachmentRef,
+        &depthAttachmentRef,
+        &colorAttachmentResolveRef
+    );
+
+    auto dependency = getSubpassDependency(
+        VK_SUBPASS_EXTERNAL,
+        0,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        0,
+        VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT
+    );
+
+    std::vector<VkAttachmentDescription> attachments = {
+        colorAttachment,
+        depthAttachment,
+        colorAttachmentResolve
+    };
+
+    VkRenderPassCreateInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());;
+    renderPassInfo.pAttachments = attachments.data();
+    renderPassInfo.subpassCount = 1;
+    renderPassInfo.pSubpasses = &subpass;
+    renderPassInfo.dependencyCount = 1;
+    renderPassInfo.pDependencies = &dependency;
+
+    VkResult result = vkCreateRenderPass(
+        device,
+        &renderPassInfo,
+        nullptr,
+        renderPass
+    );
+    if (result != VK_SUCCESS) {
+        PrintVkError(result);
+        throw std::runtime_error("failed to create render pass!");
+    }
+}
+
 void cleanupRenderPass(const VkDevice device, VkRenderPass renderPass)
 {
     vkDestroyRenderPass(device, renderPass, nullptr);

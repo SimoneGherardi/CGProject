@@ -1,7 +1,7 @@
 #include "custom_GUI.h"
 
 
-void showCustomWindow(ImGuiIO& io) {
+void showCustomWindow(ImTextureID renderTexture) {
     {
         static float f = 0.0f;
         static int counter = 0;
@@ -23,7 +23,7 @@ void showCustomWindow(ImGuiIO& io) {
         ImGui::SameLine();
         ImGui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / io.Framerate, io.Framerate);
+        ImGui::Image(renderTexture, ImVec2(800, 450));
         ImGui::End();
     }
 }

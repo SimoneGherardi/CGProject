@@ -44,6 +44,8 @@ public:
 	glm::mat4 Matrix();
 	// Handles camera inputs
 	void Inputs(GLFWwindow* window);
+	void CameraZoom(double offset);
+	void CameraHorizontalSlide(double offset);
 private:
 	char _LastLeftEvent = GLFW_RELEASE;
 };

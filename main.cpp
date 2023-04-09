@@ -11,6 +11,7 @@
 #include <imgui.h>
 #include <backends/imgui_impl_glfw.h>
 #include <backends/imgui_impl_vulkan.h>
+#include "custom_GUI.h"
 
 
 const char* TITLE = "CG Project";
@@ -41,6 +42,7 @@ void initialize()
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(Window, true);
     RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
+    
     TRACEEND;
 }
 
@@ -66,6 +68,7 @@ int main(int argc, char** argv)
         float delta = 0;
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
+        ImGuiIO& io = ImGui::GetIO();
         
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
@@ -75,7 +78,7 @@ int main(int argc, char** argv)
             ImGui_ImplVulkan_NewFrame();
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
-            ImGui::ShowDemoWindow();
+            showCustomWindow(io);
             
             Camera.Inputs(Window);
             

@@ -10,7 +10,7 @@ void showCustomWindow(ImTextureID renderTexture) {
         bool show_another_window = true;
 
         ImGui::SetNextWindowSize(ImVec2(1600, 900));
-        ImGui::SetNextWindowPos(ImVec2((1600 - 900) / 2, 20));
+        ImGui::SetNextWindowPos(ImVec2(0,0));
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
         ImGui::Begin("Hello, world!", NULL, flags);                          // Create a window called "Hello, world!" and append into it.

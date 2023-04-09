@@ -244,15 +244,6 @@
     <ClCompile Include="ModelId.h">
       <Filter>Header Files\3d</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="MemoryBlock.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -261,66 +252,6 @@
     </ClCompile>
     <ClCompile Include="FrameData.cpp">
       <Filter>Source Files\3d</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="InstanceDataStore.cpp">
       <Filter>Source Files\3d</Filter>
@@ -343,77 +274,8 @@
     <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_demo.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_draw.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_tables.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\imgui_widgets.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
     <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files\libraries</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="camera.cpp">
       <Filter>Source Files\scene_elements</Filter>
@@ -421,17 +283,8 @@
     <ClCompile Include="libraries\imgui\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\*.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\imgui\backends\*.cpp">
-      <Filter>Source Files</Filter>
+    <ClCompile Include="math.cpp">
+      <Filter>Source Files\utilities</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -632,6 +485,9 @@
     </ClInclude>
     <ClInclude Include="camera.h">
       <Filter>Header Files\scene_elements</Filter>
+    </ClInclude>
+    <ClInclude Include="math.h">
+      <Filter>Header Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

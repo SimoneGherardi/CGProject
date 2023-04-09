@@ -1,7 +1,13 @@
 #include "game_engine.h"
 #include "Models.h"
+#include "math.h"
+#include <glm/gtx/transform.hpp>
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
 
-GameEngine::GameEngine()
+flecs::entity DEBUGGO;
+
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0.4f, 1.2f, -10.0f)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -18,6 +24,11 @@ GameEngine& GameEngine::GetInstance()
 {
     static GameEngine instance;
     return instance;
+}
+
+CameraInfos& GameEngine::Camera()
+{
+	return _Camera;
 }
 
 void GameEngine::_TestEcs()
@@ -37,6 +48,9 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {0, 0, 0} })
         .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
         .set<Collider>({ {100, 1, 100}, rp3d::CollisionShapeName::BOX, NULL });
+    DEBUGGO = ECSWorld.entity("Debuggo")
+        .set<Transform>({ {10, 10, 1} })
+        .set<Renderer>({ Models::DEBUG });
 }
 
 void GameEngine::_SetupPhysicsLogger()
@@ -70,4 +84,74 @@ void GameEngine::Loop(float delta)
     Accumulator += DeltaTime;
 
     ECSWorld.progress();
+}
+
+rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
+{
+    GameEngine &engine = GameEngine::GetInstance();
+    glm::vec4 positionFromCamera = engine._Camera.ViewMatrix() * glm::vec4(position.x, position.y, position.z, 1);
+    positionFromCamera = positionFromCamera / positionFromCamera.w;
+    return rp3d::Vector3(positionFromCamera.x, positionFromCamera.y, positionFromCamera.z);
+}
+
+rp3d::Vector3 GameEngine::CameraToWorldSpace(rp3d::Vector3 position)
+{
+    GameEngine& engine = GameEngine::GetInstance();
+    glm::vec4 positionInWorld = glm::inverse(engine._Camera.ViewMatrix()) * glm::vec4(position.x, position.y, position.z, 1);
+    positionInWorld = positionInWorld / positionInWorld.w;
+    return rp3d::Vector3(positionInWorld.x, positionInWorld.y, positionInWorld.z);
+}
+
+glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
+{
+    GameEngine &engine = GameEngine::GetInstance();
+    auto x = glm::vec4(position.x, position.y, position.z, 1);
+	glm::vec4 positionFromScreen = engine._Camera.Matrix() * x;
+	positionFromScreen = positionFromScreen / positionFromScreen.w;
+    return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
+}
+
+rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
+{
+    GameEngine& engine = GameEngine::GetInstance();
+    auto I = glm::inverse(engine._Camera.Matrix());
+    auto d = I * glm::vec4(screenPoint.x, screenPoint.y, screenPoint.z, 1.0);
+    d /= d.w;
+    return rp3d::Vector3(d.x, d.y, d.z);
+}
+
+rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
+{
+    rp3d::RaycastInfo* raycastInfo = new rp3d::RaycastInfo();
+    raycastInfo->body = info.body;
+    raycastInfo->worldPoint = info.worldPoint;
+    raycastInfo->worldNormal = info.worldNormal;
+    raycastInfo->hitFraction = info.hitFraction;
+    raycastInfo->collider = info.collider;
+    raycastInfo->meshSubpart = info.meshSubpart;
+    raycastInfo->triangleIndex = info.triangleIndex;
+    
+    Infos.push_back(raycastInfo);
+    return rp3d::decimal(1.0);
+}
+
+std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
+{
+    GameEngine &engine = GameEngine::GetInstance();
+    CameraInfos camera = engine._Camera;
+    rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
+    auto pos = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
+    DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(
+        pos.x, pos.y, pos.z
+    );
+
+    rp3d::Vector3 direction = pos - origin;
+    direction.normalize();
+    rp3d::Vector3 end = origin + direction * maxDistance;
+    rp3d::Ray ray{ origin, end };
+
+    GatherAllRaycastCallback callback;
+    PhysicsWorld->raycast(ray, &callback);
+
+	return callback.Infos;
 }

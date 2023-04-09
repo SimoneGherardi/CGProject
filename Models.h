@@ -14,10 +14,12 @@ namespace Models
 
 	enum Ids : ModelId
 	{
-		SUZANNE
+		SUZANNE,
+		DEBUG
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
-		{SUZANNE, "untitled"}
+		{SUZANNE, "untitled"},
+		{DEBUG, "debug"}
 	};
 }

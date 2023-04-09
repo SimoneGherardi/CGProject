@@ -1,32 +1,35 @@
 #include "camera.h"
+#include "game_engine.h"
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
 
+CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg), Position(position)
+{}
 
-
-CameraTest::CameraTest(int width, int height, glm::vec3 position)
+glm::mat4 CameraInfos::ProjectionMatrix()
 {
-	CameraTest::width = width;
-	CameraTest::height = height;
-	Position = position;
+	glm::mat4 projection = glm::mat4(1.0f);
+	projection = glm::perspective(glm::radians(this->FOVDeg), (float)Width / Height, NEAR_PLANE, FAR_PLANE);
+	projection[1][1] *= -1; // Inverts the Y axis
+	return projection;
 }
 
-
-glm::mat4 CameraTest::Matrix(float FOVdeg, float nearPlane, float farPlane)
+glm::mat4 CameraInfos::ViewMatrix()
 {
-	// Initializes matrices since otherwise they will be the null matrix
 	glm::mat4 view = glm::mat4(1.0f);
-	glm::mat4 projection = glm::mat4(1.0f);
-
-	// Makes camera look in the right direction from the right position
 	view = glm::lookAt(Position, Position + Orientation, Up);
-	// Adds perspective to the scene
-	projection = glm::perspective(glm::radians(FOVdeg), (float)width / height, nearPlane, farPlane);
-	projection[1][1] *= -1; // Inverts the Y axis
+	return view;
+}
+
+glm::mat4 CameraInfos::Matrix()
+{
+	glm::mat4 projection = ProjectionMatrix();
+	glm::mat4 view = ViewMatrix();
 
 	return projection * view;
 }
 
-
-void CameraTest::Inputs(GLFWwindow* window)
+void CameraInfos::Inputs(GLFWwindow* window)
 {
 	// Handles mouse inputs
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
@@ -37,7 +40,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		// Prevents camera from jumping on the first click
 		if (firstClick)
 		{
-			glfwSetCursorPos(window, (width / 2), (height / 2));
+			glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 			firstClick = false;
 		}
 
@@ -49,8 +52,8 @@ void CameraTest::Inputs(GLFWwindow* window)
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = sensitivity * (float)(mouseY - (height / 2)) / height;
-		float rotY = sensitivity * (float)(mouseX - (width / 2)) / width;
+		float rotX = Sensitivity * (float)(mouseY - ((float)Height / 2)) / Height;
+		float rotY = Sensitivity * (float)(mouseX - ((float)Width / 2)) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
@@ -65,7 +68,7 @@ void CameraTest::Inputs(GLFWwindow* window)
 		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (width / 2), (height / 2));
+		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 	}
 	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
 	{
@@ -75,4 +78,23 @@ void CameraTest::Inputs(GLFWwindow* window)
 		firstClick = true;
 	}
 
+	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+	{
+		double mouseX;
+		double mouseY;
+		// Fetches the coordinates of the cursor
+		glfwGetCursorPos(window, &mouseX, &mouseY);
+		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
+		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
+		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
+
+		printf("Raycast results: %d\n", raycasts.size());
+
+		for (rp3d::RaycastInfo* raycast : raycasts)
+		{
+			std::cout << raycast->worldPoint.to_string();
+		}
+	}
+
+	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 }

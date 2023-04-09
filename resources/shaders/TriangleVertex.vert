@@ -34,7 +34,7 @@ layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer{
 
 void main()
 {
-	mat4 model = objectBuffer.objects[gl_BaseInstance].model;
+	mat4 model = objectBuffer.objects[gl_InstanceIndex].model;
     mat4 transform = globalData.CameraViewProjection * model;
 	gl_Position = transform * vec4(Position, 1.0f);
 	float factor = dot(Normal, globalData.SunDirection);

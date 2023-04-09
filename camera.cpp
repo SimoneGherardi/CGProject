@@ -75,8 +75,8 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
 		// and then "transforms" them into degrees 
-		float rotX = sensitivityRotation * (float)(mouseY - (Height / 2)) / Height;
-		float rotY = sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
+		float rotX = - sensitivityRotation * (float)(mouseY - (Height / 2)) / Height;
+		float rotY = - sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
@@ -123,8 +123,8 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Fetches the coordinates of the cursor
 		glfwGetCursorPos(window, &mouseX, &mouseY);
  
-		float translationY = -(float)(mouseY - (Height / 2)) / Height;
-		float translationX = (float)(mouseX - (Width / 2)) / Width;
+		float translationY = (float)(mouseY - (Height / 2)) / Height;
+		float translationX = -(float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming change in the Position
 		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;

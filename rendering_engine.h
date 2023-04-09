@@ -53,6 +53,7 @@ private:
 	VulkanContext_T _Context;
 
 	VkRenderPass _RenderPass;
+	VkRenderPass _GUIRenderPass;
 
 	VkPipelineLayout _PipelineLayout;
 	VkPipeline _Pipeline;
@@ -62,9 +63,12 @@ private:
 	Semaphore* _RenderSemaphore;
 
 	VkCommandPool _CommandPool;
+	VkCommandPool _GUICommandPool;
 	CommandBuffer* _MainCommandBuffer;
+	CommandBuffer* _GUICommandBuffer;
 
 	std::vector<VkFramebuffer> _SwapChainFramebuffers;
+	std::vector<VkFramebuffer> _GUISwapChainFramebuffers;
 
 	std::array<FrameData, FRAME_OVERLAP> _FrameData = {};
 	uint8_t _CurrentFrameIndex = 0;
@@ -105,14 +109,18 @@ private:
 	void _InitializeLogicalDevice();
 	void _InitializeSwapchain(WindowSize windowSize);
 	void _InitializeRenderPass();
+	void _InitializeGUIRenderPass();
 	void _InitializeAllocators();
 	void _InitializeDescriptorSet();
 	void _InitializePipeline();
 	void _InitializeSyncStructures();
 	void _InitializeCommandPool();
+	void _InitializeGUICommandPool();
 	void _InitializeCommandBuffers();
+	void _InitializeGUICommandBuffers();
 	void _InitializeRenderTargets();
 	void _InitializeFrameBuffer();
+	void _InitializeGUIFrameBuffer();
 	void _InitializeModels();
 	void _InitializeGui();
 

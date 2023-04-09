@@ -106,6 +106,22 @@ void RenderingEngine::_InitializeRenderPass() {
 	TRACEEND;
 }
 
+void RenderingEngine::_InitializeGUIRenderPass() {
+	TRACESTART;
+	initializeRenderPass(
+		_Context.PhysicalDevice,
+		_Context.Device,
+		_Swapchain.GetFormat(),
+		VK_SAMPLE_COUNT_2_BIT,
+		&_GUIRenderPass
+	);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up render pass");
+		cleanupRenderPass(_Context.Device, _GUIRenderPass);
+		});
+	TRACEEND;
+}
+
 void RenderingEngine::_InitializeAllocators()
 {
 	TRACESTART;
@@ -291,6 +307,21 @@ void RenderingEngine::_InitializeCommandPool() {
 	TRACEEND;
 }
 
+void RenderingEngine::_InitializeGUICommandPool() {
+	TRACESTART;
+	auto queueFamilyIndices = findQueueFamilies(_Context.PhysicalDevice, _Context.Surface);
+	initializeCommandPool(
+		_Context.Device,
+		queueFamilyIndices,
+		&_GUICommandPool
+	);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up command pool");
+		cleanupCommandPool(_Context.Device, _GUICommandPool);
+		});
+	TRACEEND;
+}
+
 void RenderingEngine::_InitializeCommandBuffers()
 {
 	TRACESTART;
@@ -298,6 +329,17 @@ void RenderingEngine::_InitializeCommandBuffers()
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command buffers");
 		_MainCommandBuffer->Cleanup();
+		});
+	TRACEEND;
+}
+
+void RenderingEngine::_InitializeGUICommandBuffers()
+{
+	TRACESTART;
+	_GUICommandBuffer = new CommandBuffer(&_Context, _CommandPool);
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up command buffers");
+		_GUICommandBuffer->Cleanup();
 		});
 	TRACEEND;
 }
@@ -367,6 +409,36 @@ void RenderingEngine::_InitializeFrameBuffer() {
 	TRACEEND;
 }
 
+void RenderingEngine::_InitializeGUIFrameBuffer() {
+	TRACESTART;
+	_GUISwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
+	for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
+		std::array<VkImageView, 3> attachments = {
+			_ColorRenderTarget.GetImageView(),
+			_DepthRenderTarget.GetImageView(),
+			_Swapchain.GetImagesViews()[i]
+		};
+
+		initializeFrameBuffer(
+			_Context.Device,
+			static_cast<uint32_t>(attachments.size()),
+			attachments.data(),
+			_RenderPass,
+			_Swapchain.GetExtent(),
+			&_GUISwapChainFramebuffers[i]
+		);
+
+		_CleanupStack.push([=]() {
+			LOGDBG("cleaning up framebuffer");
+			cleanupFrameBuffer(
+				_Context.Device,
+				_GUISwapChainFramebuffers[i]
+			);
+			});
+	}
+	TRACEEND;
+}
+
 void RenderingEngine::_InitializeModels()
 {
 	TRACESTART;
@@ -379,6 +451,9 @@ void RenderingEngine::_InitializeModels()
 void RenderingEngine::_InitializeGui()
 {
 	TRACESTART;
+
+	
+
 	initializeDescriptorPool(
 		&_Context,
 		{
@@ -396,6 +471,26 @@ void RenderingEngine::_InitializeGui()
 		},
 		&_GuiDescriptorPool
 	);
+
+	/*
+	std::array<VkCommandBuffer, 3> submitCommandBuffers = {
+	environmentalcommandBuffers[imageIndex].handle,
+	commandBuffers[imageIndex].handle,
+	imGuiCommandBuffers[imageIndex].handle
+				};
+	VkSubmitInfo submitInfo{};
+	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+	submitInfo.waitSemaphoreCount = 1;
+	submitInfo.pWaitSemaphores = waitSemaphores;
+	submitInfo.pWaitDstStageMask = waitStages;
+	submitInfo.commandBufferCount = static_cast<uint32_t>(submitCommandBuffers.size());
+	submitInfo.pCommandBuffers = submitCommandBuffers.data();
+	submitInfo.signalSemaphoreCount = 1;
+	submitInfo.pSignalSemaphores = signalSemaphores;
+
+	if (vkQueueSubmit(graphicsQueue_, 1, &submitInfo, synchronization.inFlightFences[imageIndex].handle) != VK_SUCCESS)
+	throw std::runtime_error("failed to submit draw command buffer!");
+	*/
 
 	ImGui_ImplVulkan_InitInfo init_info = {};
 	init_info.Instance = _Context.Instance;
@@ -441,6 +536,7 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 
 	_InitializeSwapchain(windowSize);
 	_InitializeRenderPass();
+	_InitializeGUIRenderPass();
 
 	_InitializeSyncStructures();
 	_InitializeAllocators();
@@ -448,9 +544,12 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	_InitializeDescriptorSet();
 	_InitializePipeline();
 	_InitializeCommandPool();
+	_InitializeGUICommandPool();
 	_InitializeCommandBuffers();
+	_InitializeGUICommandBuffers();
 	_InitializeRenderTargets();
 	_InitializeFrameBuffer();
+	_InitializeGUIFrameBuffer();
 	_InitializeGui();
 	TRACEEND;
 }

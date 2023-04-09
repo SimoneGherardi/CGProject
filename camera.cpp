@@ -118,14 +118,14 @@ void CameraTest::Inputs(GLFWwindow* window)
 		// Fetches the coordinates of the cursor
 		glfwGetCursorPos(window, &mouseX, &mouseY);
  
-		float translationY = - sensitivityTranslation * (float)(mouseY - (height / 2)) / height;
-		float translationX = sensitivityTranslation * (float)(mouseX - (width / 2)) / width;
+		float translationY = -(float)(mouseY - (height / 2)) / height;
+		float translationX = (float)(mouseX - (width / 2)) / width;
 
 		// Calculates upcoming change in the Position
 		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;
 
 		// Update Position
-		Position += translation;
+		Position += sensitivityTranslation * translation;
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, (width / 2), (height / 2));

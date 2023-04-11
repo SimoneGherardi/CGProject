@@ -1,33 +1,36 @@
 #include "custom_GUI.h"
 
+void scaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos) {
+    double mouseX, mouseY;
+    glfwGetCursorPos(window, &mouseX, &mouseY);
 
+}
 
-void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), WindowHeight(windowSize.Height){
+    ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    ShowDemoWindow = false;
+    ShowAnotherWindow = true;
+
+    // Dimensions
+    ScaleRatio = 0.7f;
+    MenuBarHeight = ((float)windowSize.Height) * 0.04;
+    MenuBarDimensions = ImVec2(((float)windowSize.Width), MenuBarHeight);
+    SceneDimensions = ImVec2(((float)windowSize.Width) * ScaleRatio, ((float)windowSize.Height) * ScaleRatio + 0.5 * MenuBarHeight);
+    PrefabContainerDimensions = ImVec2(SceneDimensions[0], ((float)windowSize.Height) - SceneDimensions.y);
+    LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleRatio), ((float)windowSize.Height) - MenuBarHeight);
+
+    // Positions
+    MenuBarPosition = ImVec2(0, 0);
+    ScenePosition = ImVec2(0, MenuBarHeight);
+    PrefabContainerPosition = ImVec2(0, SceneDimensions[1]);
+    LogPosition = ImVec2(SceneDimensions[0], MenuBarHeight);
+}
+
+void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
     {
-        static float f = 0.0f;
-        static int counter = 0;
-        ImVec4 clearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-        bool showDemoWindow = false;
-        bool showAnotherWindow = true;
-
-        // Dimensions
-        float scaleRatio = 0.7f;
-        float menuBarHeight = ((float)windowSize.Height) * 0.04;
-        ImVec2 menuBarDimensions = ImVec2(((float)windowSize.Width), menuBarHeight);
-        ImVec2 sceneDimensions = ImVec2(((float)windowSize.Width) * scaleRatio , ((float)windowSize.Height) * scaleRatio + 1.7 * menuBarHeight);
-        ImVec2 prefabContainerDimensions = ImVec2(sceneDimensions[0], ((float)windowSize.Height) * (1.0f - scaleRatio) - 2 * menuBarHeight);
-        ImVec2 logDimensions = ImVec2(((float)windowSize.Width) * (1.0f - scaleRatio), ((float)windowSize.Height) - menuBarDimensions[1]);
-
-        // Positions
-        ImVec2 menuBarPosition = ImVec2(0, 0);
-        ImVec2 scenePosition = ImVec2(0, menuBarDimensions[1]);
-        ImVec2 prefabContainerPosition = ImVec2(0, menuBarHeight + sceneDimensions[1]);
-        ImVec2 logPosition = ImVec2(sceneDimensions[0], menuBarDimensions[1]);
-
-
         // Menu bar
-        ImGui::SetNextWindowSize(menuBarDimensions);
-        ImGui::SetNextWindowPos(menuBarPosition);
+        ImGui::SetNextWindowSize(MenuBarDimensions);
+        ImGui::SetNextWindowPos(MenuBarPosition);
         ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
         ImGui::Begin("Menu Bar", NULL, flags);
         if (ImGui::Button("Open")) {}
@@ -36,58 +39,52 @@ void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
         ImGui::End();
 
         // Scene 
-        ImGui::SetNextWindowSize(sceneDimensions);
-        ImGui::SetNextWindowPos(scenePosition);
+        ImGui::SetNextWindowSize(SceneDimensions);
+        ImGui::SetNextWindowPos(ScenePosition);
         //flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
-
         ImGui::Begin("Scene", NULL, flags);                          // Create a window called "Hello, world!" and append into it.
-        
-        ImGui::Image(renderTexture, ImVec2(1200, 675));
+        ImGui::Image(renderTexture, ImVec2(windowSize.Width * ScaleRatio, windowSize.Height * ScaleRatio));
         
         ImGui::End();
 
 
         //PrefabContainer
-        ImGui::SetNextWindowSize(prefabContainerDimensions);
-        ImGui::SetNextWindowPos(prefabContainerPosition);
+        ImGui::SetNextWindowSize(PrefabContainerDimensions);
+        ImGui::SetNextWindowPos(PrefabContainerPosition);
         flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
         ImGui::Begin("Prefab Container", NULL, flags);
 
         ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &showAnotherWindow);
+        ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
+        ImGui::Checkbox("Another Window", &ShowAnotherWindow);
 
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+        //ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
         ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
 
         ImGui::End();
 
         //Log
-        ImGui::SetNextWindowSize(logDimensions);
-        ImGui::SetNextWindowPos(logPosition);
+        ImGui::SetNextWindowSize(LogDimensions);
+        ImGui::SetNextWindowPos(LogPosition);
         flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
         ImGui::Begin("Log", NULL, flags);
 
         ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo Window", &showDemoWindow);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another Window", &showAnotherWindow);
+        ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
+        ImGui::Checkbox("Another Window", &ShowAnotherWindow);
 
 
-        ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-        ImGui::ColorEdit3("clear color", (float*)&clearColor); // Edit 3 floats representing a color
+        // ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+        ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
 
         if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-            counter++;
         ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
 
         ImGui::End();
         

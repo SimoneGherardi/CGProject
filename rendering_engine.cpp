@@ -650,7 +650,8 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		&uiRpInfo,
 		VK_SUBPASS_CONTENTS_INLINE
 	);
-	showCustomWindow(renderTextureId, _WindowSize);
+	EditorGUI editorGUI = EditorGUI(_WindowSize);
+	editorGUI.showCustomWindow(renderTextureId, _WindowSize);
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

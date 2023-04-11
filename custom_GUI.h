@@ -1,4 +1,8 @@
 #pragma once
-#include <imgui.h>
+#include "imgui.h"
 
-void showCustomWindow(ImTextureID renderTexture);
+struct WindowSize {
+	int Width, Height;
+};
+
+void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);

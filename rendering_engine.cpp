@@ -2,7 +2,7 @@
 #include "rendering_engine.h"
 #include "camera.h"
 #include "VulkanStructs.h"
-#include "custom_GUI.h"
+
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -650,7 +650,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		&uiRpInfo,
 		VK_SUBPASS_CONTENTS_INLINE
 	);
-	showCustomWindow(renderTextureId);
+	showCustomWindow(renderTextureId, _WindowSize);
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

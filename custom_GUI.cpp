@@ -12,15 +12,16 @@ void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
 
         // Dimensions
         float scaleRatio = 0.7f;
-        ImVec2 menuBarDimensions = ImVec2(((float)windowSize.Width), ((float)windowSize.Height) * 0.03);
-        ImVec2 sceneDimensions = ImVec2(((float)windowSize.Width) * scaleRatio , ((float)windowSize.Height) * scaleRatio + ((float)windowSize.Height) * 0.07);
-        ImVec2 prefabContainerDimensions = ImVec2(((float)windowSize.Width) * scaleRatio, ((float)windowSize.Height) * (1.0f - scaleRatio) - menuBarDimensions[1]);
+        float menuBarHeight = ((float)windowSize.Height) * 0.04;
+        ImVec2 menuBarDimensions = ImVec2(((float)windowSize.Width), menuBarHeight);
+        ImVec2 sceneDimensions = ImVec2(((float)windowSize.Width) * scaleRatio , ((float)windowSize.Height) * scaleRatio + 1.7 * menuBarHeight);
+        ImVec2 prefabContainerDimensions = ImVec2(sceneDimensions[0], ((float)windowSize.Height) * (1.0f - scaleRatio) - 2 * menuBarHeight);
         ImVec2 logDimensions = ImVec2(((float)windowSize.Width) * (1.0f - scaleRatio), ((float)windowSize.Height) - menuBarDimensions[1]);
 
         // Positions
         ImVec2 menuBarPosition = ImVec2(0, 0);
         ImVec2 scenePosition = ImVec2(0, menuBarDimensions[1]);
-        ImVec2 prefabContainerPosition = ImVec2(0, menuBarDimensions[1] + sceneDimensions[1]);
+        ImVec2 prefabContainerPosition = ImVec2(0, menuBarHeight + sceneDimensions[1]);
         ImVec2 logPosition = ImVec2(sceneDimensions[0], menuBarDimensions[1]);
 
 

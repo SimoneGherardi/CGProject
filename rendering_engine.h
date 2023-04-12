@@ -86,6 +86,7 @@ private:
 
 	//Imgui render descriptor set
 	VkDescriptorSet renderTextureId;
+	VkDescriptorSet renderBlock1Id;
 
 	VkDescriptorPool _GuiDescriptorPool;
 	ImmediateCommandBuffer* _GuiCommandBuffer;

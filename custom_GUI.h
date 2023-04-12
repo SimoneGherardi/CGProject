@@ -2,6 +2,7 @@
 #include "imgui.h"
 #include "imgui_internal.h"
 #include<GLFW/glfw3.h>
+#include "stb_image.h"
 
 struct WindowSize {
 	int Width, Height;
@@ -18,6 +19,11 @@ public:
     ImVec4 ClearColor;
     bool ShowDemoWindow;
     bool ShowAnotherWindow;
+    int Counter = 0;
+
+    int Block1width;
+    int Block1height;
+    ImTextureID Block1png;
 
     // Dimensions
     float ScaleFactor;
@@ -33,9 +39,9 @@ public:
     ImVec2 ScenePosition;
     ImVec2 PrefabContainerPosition;
     ImVec2 LogPosition;
-	// Camera constructor to set up initial values
+
+	
     EditorGUI(WindowSize windowSize);
     
     void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
-    float getHorizontalBorder();
 };

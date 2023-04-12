@@ -7,6 +7,18 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
 
+    int channels;
+    unsigned char* pixels = stbi_load("D:\\Documents_Data\\Visual_Studio_2022\\Projects\\CGProject\\CGProject\\resources\\textures\\Moon.jpg", &Block1width, &Block1height, &channels, 3);
+    int size = Block1width * Block1height * channels;
+    ImGuiIO& io = ImGui::GetIO();
+    Block1png = io.Fonts->TexID;
+    io.Fonts->TexID = (void*)Block1png;
+    io.Fonts->TexPixelsAlpha8 = NULL;
+    io.Fonts->TexPixelsRGBA32 = (unsigned int*)pixels;
+    io.Fonts->TexWidth = Block1width;
+    io.Fonts->TexHeight = Block1height;
+    
+
     // Dimensions
     ScaleFactor = 0.7f;
     MenuBarHeight = ((float)windowSize.Height) * 0.04;
@@ -25,12 +37,17 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
 
 
 void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+
+   
+
     // Menu bar
     ImGui::SetNextWindowSize(MenuBarDimensions);
     ImGui::SetNextWindowPos(MenuBarPosition);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("Menu Bar", NULL, flags);
-    if (ImGui::Button("Open")) {}
+    if (ImGui::Button("Open")) {
+        Counter++;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Save")) {}
     ImGui::End();
@@ -53,18 +70,33 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(PrefabContainerPosition);
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
+
     ImGui::Begin("Prefab Container", NULL, flags);
+    if (ImGui::Button("Square Block")) {
 
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("Another Window", &ShowAnotherWindow);
-
-
-    //ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
-
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+    }
     ImGui::SameLine();
+    if (ImGui::Button("T Block")) {
+
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("L Block")) {
+
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reverse L Block")) {
+
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Z Block")) {
+
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reverse Z Block")) {
+
+    }
+    ImGui::SameLine();
+
 
     ImGui::End();
 
@@ -73,18 +105,7 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(LogPosition);
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-    ImGui::Begin("Log", NULL, flags);
-
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("Another Window", &ShowAnotherWindow);
-
-
-    // ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
-
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-    ImGui::SameLine();
+    ImGui::Begin("Log", NULL, flags);    
 
     ImGui::End();
    

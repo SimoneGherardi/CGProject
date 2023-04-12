@@ -38,6 +38,11 @@ void main()
     mat4 transform = globalData.CameraViewProjection * model;
 	gl_Position = transform * vec4(Position, 1.0f);
 	float factor = dot(Normal, globalData.SunDirection);
-
-	outColor = vec4(factor * Color.x, factor * Color.y, factor * Color.z, 1.0f);
+	float fr = clamp(factor + globalData.AmbientLight.x, 0, 1);
+	float fg = clamp(factor + globalData.AmbientLight.y, 0, 1);
+	float fb = clamp(factor + globalData.AmbientLight.z, 0, 1);
+	float r = Color.x * fr;
+	float g = Color.y * fg;
+	float b = Color.z * fb;
+	outColor = vec4(r, g, b, 1.0f);
 }

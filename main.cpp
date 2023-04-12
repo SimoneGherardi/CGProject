@@ -67,7 +67,11 @@ int main(int argc, char** argv)
         using clock = std::chrono::system_clock;
         using millisec = std::chrono::duration<float>;
         GameEngine& engine = GameEngine::GetInstance();
+        RenderingEngine& rendEngine = RenderingEngine::GetInstance();
         CameraInfos& Camera = engine.Camera();
+        WindowSize windowSize;
+        glfwGetWindowSize(Window, &windowSize.Width, &windowSize.Height);
+        EditorGUI* editorGUI = rendEngine.EditGUI;
         
         while (!glfwWindowShouldClose(Window)) {
             const auto start = clock::now();
@@ -78,7 +82,7 @@ int main(int argc, char** argv)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             
-            Camera.Inputs(Window);
+            Camera.Inputs(Window, editorGUI->ScaleFactor, windowSize, editorGUI->HorizontalBorder, editorGUI->MenuBarHeight);
 
             RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;

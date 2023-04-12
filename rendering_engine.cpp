@@ -2,7 +2,7 @@
 #include "rendering_engine.h"
 #include "camera.h"
 #include "VulkanStructs.h"
-#include "custom_GUI.h"
+
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -541,6 +541,8 @@ void RenderingEngine::_InitializeGui()
 	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 	//Maso devo fare il cleanup? <3
 
+	EditGUI = new EditorGUI(_WindowSize);
+
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
 		_GuiCommandBuffer->Cleanup();
@@ -650,7 +652,8 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		&uiRpInfo,
 		VK_SUBPASS_CONTENTS_INLINE
 	);
-	showCustomWindow(renderTextureId);
+
+	EditGUI->showCustomWindow(renderTextureId, _WindowSize);
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

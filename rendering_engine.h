@@ -29,6 +29,7 @@
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
 #include "camera.h"
+#include "custom_GUI.h"
 
 #define FRAME_OVERLAP 3
 constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);
@@ -36,9 +37,7 @@ constexpr auto DEVICE_LOCAL_MEMORY_SIZE = (4 * 1024 * 1024);
 constexpr auto MAX_COMMANDS = 2048;
 constexpr auto MAX_INSTANCES = 4096;
 
-struct WindowSize {
-	int Width, Height;
-};
+
 
 class RenderingEngine
 {
@@ -96,6 +95,8 @@ private:
 
 	CleanupStack _CleanupStack;
 
+	
+
 	const std::vector<const char*> _DeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
@@ -137,7 +138,9 @@ private:
 
 	RenderingEngine() = default;
 public:
+	EditorGUI* EditGUI;
 	FrameData* GetCurrentFrameData();
+
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize);
 	void Render(float delta, CameraInfos* camera);
 	void Cleanup();

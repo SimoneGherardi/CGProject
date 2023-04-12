@@ -19,7 +19,7 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
     // Positions
     MenuBarPosition = ImVec2(0, 0);
     ScenePosition = ImVec2(0, MenuBarHeight);
-    PrefabContainerPosition = ImVec2(0, SceneDimensions[1]);
+    PrefabContainerPosition = ImVec2(0, SceneDimensions[1] + MenuBarHeight);
     LogPosition = ImVec2(SceneDimensions[0], MenuBarHeight);
 }
 

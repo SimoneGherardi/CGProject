@@ -57,6 +57,7 @@ void RenderContext::BuildAssets()
 {
 	for (auto m : Models::ModelsToLoad)
 	{
+		LOGDBG("Loading model " << m.Name);
 		loadDataFromGLTF((ASSET_PATH + m.Name + ".gltf").c_str());
 	}
 }

@@ -145,6 +145,10 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
         pos.x, pos.y, pos.z
     );
 
+    ECSWorld.entity()
+        .set<Transform>({ {pos.x, pos.y, pos.z} })
+        .set<Renderer>({ Models::BLOCK });
+
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();
     rp3d::Vector3 end = origin + direction * maxDistance;

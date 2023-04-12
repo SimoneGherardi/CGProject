@@ -10,6 +10,7 @@
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
+#include "custom_GUI.h"
 
 //#include"shaderClass.h"
 
@@ -43,9 +44,10 @@ public:
 	glm::mat4 ViewMatrix();
 	glm::mat4 Matrix();
 	// Handles camera inputs
-	void Inputs(GLFWwindow* window);
+	void Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
+	void ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
 private:
 	char _LastLeftEvent = GLFW_RELEASE;
 };

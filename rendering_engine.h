@@ -95,6 +95,8 @@ private:
 
 	CleanupStack _CleanupStack;
 
+	
+
 	const std::vector<const char*> _DeviceExtensions = {
 	VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 	VK_KHR_SHADER_DRAW_PARAMETERS_EXTENSION_NAME,
@@ -136,7 +138,9 @@ private:
 
 	RenderingEngine() = default;
 public:
+	EditorGUI* EditGUI;
 	FrameData* GetCurrentFrameData();
+
 	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize);
 	void Render(float delta, CameraInfos* camera);
 	void Cleanup();

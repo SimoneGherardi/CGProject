@@ -6,6 +6,7 @@
 CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg), Position(position)
 {}
 
+
 glm::mat4 CameraInfos::ProjectionMatrix()
 {
 	glm::mat4 projection = glm::mat4(1.0f);
@@ -51,10 +52,29 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 	Position += Horizontal * (float)offset * sensitivityScroll;
 }
 
-void CameraInfos::Inputs(GLFWwindow* window)
+
+
+void CameraInfos::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset) {
+    double mouseX, mouseY;
+    glfwGetCursorPos(window, &mouseX, &mouseY);
+	horizontalOffset = verticalOffset / 3.5;
+    if (mouseX > horizontalOffset && mouseX <= windowSize.Width*windowScaleFactor + horizontalOffset && mouseY > verticalOffset && mouseY < windowSize.Width * windowScaleFactor + 1.5 * verticalOffset) {
+		*xpos = (mouseX - horizontalOffset) / windowScaleFactor;
+		*ypos = (mouseY - 1.5 * verticalOffset) / windowScaleFactor;
+	}
+    else {
+		*xpos = mouseX;
+		*ypos = mouseY;
+	}
+}
+
+void CameraInfos::Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset)
 {
+
 	// Handles mouse inputs
 	// Camera rotation
+	float ScaledWidth = Width * windowScaleFactor + horizontalOffset;
+	float ScaledHeight = Height * windowScaleFactor + verticalOffset;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
 		// Hides mouse cursor
@@ -163,6 +183,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		global_xoffset = 0;
 	};
 
+	// Mouse left button
 	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
 	{
 
@@ -170,7 +191,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		double mouseX;
 		double mouseY;
 		// Fetches the coordinates of the cursor
-		glfwGetCursorPos(window, &mouseX, &mouseY);
+		ScaledGetCursorPos(window, &mouseX, &mouseY, windowScaleFactor, windowSize, horizontalOffset, verticalOffset);
 
 		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
 		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;

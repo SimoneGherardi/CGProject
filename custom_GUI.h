@@ -1,5 +1,6 @@
 #pragma once
 #include "imgui.h"
+#include "imgui_internal.h"
 #include<GLFW/glfw3.h>
 
 struct WindowSize {
@@ -19,8 +20,9 @@ public:
     bool ShowAnotherWindow;
 
     // Dimensions
-    float ScaleRatio;
+    float ScaleFactor;
     float MenuBarHeight;
+    float HorizontalBorder;
     ImVec2 MenuBarDimensions;
     ImVec2 SceneDimensions;
     ImVec2 PrefabContainerDimensions;
@@ -35,5 +37,5 @@ public:
     EditorGUI(WindowSize windowSize);
     
     void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
-
+    float getHorizontalBorder();
 };

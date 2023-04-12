@@ -8,6 +8,15 @@
 
 #define ASSET_PATH "resources/models/gltf/"
 
+std::set<std::string> _GetOrderedFilesFromDirectory(std::string directory)
+{
+	std::set<std::string> toret = {};
+	for (const auto& entry : std::filesystem::directory_iterator(directory)) {
+		toret.insert(entry.path().string());
+	}
+	return toret;
+}
+
 BakedModelInfo RenderContext::_BakeModel(const ModelId id, const std::vector<GLTFModel> models, const std::vector<GLTFPrimitive> primitives, const std::vector<GLTFMaterial> materials)
 {
 	BakedModelInfo modelInfo;
@@ -63,17 +72,21 @@ void RenderContext::Initialize(const VulkanContext context, const Buffer staging
 		std::vector<GLTFPrimitive> primitives = {};
 		std::vector<GLTFMaterial> materials = {};
 		std::vector<GLTFModel> models = {};
-		std::string materialsPath = ".\\resources\\models\\gltf\\" + m.Name + "\\GLTFMaterial";
-		std::string primitivesPath = ".\\resources\\models\\gltf\\" + m.Name + "\\GLTFPrimitive";
-		std::string modelsPath = ".\\resources\\models\\gltf\\" + m.Name + "\\GLTFModel";
-		for (const auto& entry : std::filesystem::directory_iterator(materialsPath)) {
-			materials.push_back(loadMaterialFromBin(entry.path().string()));
+		std::string materialsPath = "./resources/models/gltf/" + m.Name + "/GLTFMaterial";
+		std::string primitivesPath = "./resources/models/gltf/" + m.Name + "/GLTFPrimitive";
+		std::string modelsPath = "./resources/models/gltf/" + m.Name + "/GLTFModel";
+
+		auto materialFiles = _GetOrderedFilesFromDirectory(materialsPath);
+		auto primitiveFiles = _GetOrderedFilesFromDirectory(primitivesPath);
+		auto modelFiles = _GetOrderedFilesFromDirectory(modelsPath);
+		for (const auto& m : materialFiles) {
+			materials.push_back(loadMaterialFromBin(m));
 		}
-		for (const auto& entry : std::filesystem::directory_iterator(primitivesPath)) {
-			primitives.push_back(loadPrimitiveFromBin(entry.path().string()));
+		for (const auto& p : primitiveFiles) {
+			primitives.push_back(loadPrimitiveFromBin(p));
 		}
-		for (const auto& entry : std::filesystem::directory_iterator(modelsPath)) {
-			models.push_back(loadModelFromBin (entry.path().string()));
+		for (const auto& m : modelFiles) {
+			models.push_back(loadModelFromBin(m));
 		}
 
 		_BakeModel(m.Id, models, primitives, materials);

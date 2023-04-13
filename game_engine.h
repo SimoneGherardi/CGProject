@@ -4,9 +4,13 @@
 #include "ecs_modules.h"
 #include "camera.h"
 
+struct RaycastInfo : rp3d::RaycastInfo {
+	flecs::entity Entity;
+};
+
 class GatherAllRaycastCallback : public rp3d::RaycastCallback {
 public:
-	std::vector <rp3d::RaycastInfo*> Infos;
+	std::vector <RaycastInfo*> Infos;
 	virtual rp3d::decimal notifyRaycastHit(const rp3d::RaycastInfo& info);
 };
 
@@ -29,6 +33,7 @@ public:
 	std::chrono::duration<double> DeltaTime = std::chrono::duration<double>::zero();
 	std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
 	flecs::world ECSWorld;
+	flecs::filter<> RaycastTargets;
 	rp3d::PhysicsCommon PhysicsCommon;
 	rp3d::PhysicsWorld* PhysicsWorld;
 	std::chrono::system_clock::time_point GetCurrentFrameTime();
@@ -46,5 +51,5 @@ public:
 	glm::vec3 WorldToScreenSpace(rp3d::Vector3 position);
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec3 screenPoint);
 
-	std::vector<rp3d::RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
+	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 };

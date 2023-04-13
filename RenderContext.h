@@ -27,6 +27,8 @@ struct RenderContext
 	std::vector<Texture> Textures = {};
 	std::vector<VkDescriptorImageInfo> TexturesImageInfos = {};
 
+	VkSampler TextureSampler;
+
 	std::map<ModelId, BakedModelInfo> Models = {};
 
 	Buffer VertexBuffer = {};

@@ -23,5 +23,7 @@ extern void updateDescriptorSetImages(
 	const VulkanContext context,
 	const uint32_t dstBinding,
 	const VkDescriptorSet dstSet,
-	const std::vector<VkDescriptorImageInfo> descriptorImageInfos
+	const VkDescriptorType type,
+	const uint32_t descriptorCount,
+	VkDescriptorImageInfo* imageInfo
 );

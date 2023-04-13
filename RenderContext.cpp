@@ -5,6 +5,7 @@
 #include "image.h"
 #include "image_views.h"
 #include "ImmediateCommandBuffer.h"
+#include "VulkanStructs.h"
 
 #define PACK_VEC3(v) glm::vec3(v[0], v[1], v[2])
 #define PACK_VEC4(v) glm::vec4(v[0], v[1], v[2], v[3])
@@ -185,6 +186,10 @@ BakedModelInfo RenderContext::_BakeModel(
 				vertex.Position = PACK_VEC3(primitive.Positions[i]);
 				vertex.Normal = PACK_VEC3(primitive.Normals[i]);
 				vertex.Color = PACK_VEC4(material.BaseColorFactor);
+				vertex.UV = glm::vec2(
+					rand() % 2,
+					rand() % 2
+				);
 				Vertices.push_back(vertex);
 			}
 
@@ -266,6 +271,18 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 	m = MemoryTransferer(context, IndexBuffer, Indices.data(), isize);
 	m.TransferStaged(stagingBuffer, 0);
 	stagingMemory->FreeBuffer(stagingBuffer);
+
+	for (auto& t : Textures)
+	{
+		VkDescriptorImageInfo descriptorImageInfo = {};
+		descriptorImageInfo.sampler = nullptr;
+		descriptorImageInfo.imageView = t.View;
+		descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		TexturesImageInfos.push_back(descriptorImageInfo);
+	}
+
+	VkSamplerCreateInfo samplerCreateInfo = VulkanStructs::SamplerCreateInfo(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+	CheckVkResult(vkCreateSampler(context->Device, &samplerCreateInfo, nullptr, &TextureSampler));
 
 	Memory = memory;
 	IsInitialized = true;

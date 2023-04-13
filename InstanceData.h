@@ -7,7 +7,7 @@ struct GPUInstanceData
 {
 	glm::mat4 ModelMatrix;
 	uint32_t ModelId;
-	uint32_t _padding0;
+	uint32_t TextureIndex;
 	uint32_t _padding1;
 	uint32_t _padding2;
 };

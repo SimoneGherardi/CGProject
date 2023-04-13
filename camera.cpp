@@ -195,13 +195,14 @@ void CameraInfos::Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize
 
 		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
 		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
-		std::vector<rp3d::RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
+		std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
 
 		printf("Raycast results: %d\n", raycasts.size());
 
-		for (rp3d::RaycastInfo* raycast : raycasts)
+		for (RaycastInfo* raycast : raycasts)
 		{
 			std::cout << raycast->worldPoint.to_string();
+			std::cout << raycast->Entity.name() << std::endl;
 		}
 	}
 

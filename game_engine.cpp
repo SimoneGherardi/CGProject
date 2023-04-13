@@ -17,6 +17,12 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0.4f, 1.2
     ECSWorld.import<Physics>();
     ECSWorld.import<Rendering>();
 
+    RaycastTargets = ECSWorld.filter_builder()
+        .term<Collider>()
+        .term<RigidBody>().optional().oper(flecs::Or)
+        .term<CollisionBody>().optional()
+        .build();
+
     _TestEcs();
 }
 
@@ -122,7 +128,7 @@ rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
 
 rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
 {
-    rp3d::RaycastInfo* raycastInfo = new rp3d::RaycastInfo();
+    RaycastInfo* raycastInfo = new RaycastInfo();
     raycastInfo->body = info.body;
     raycastInfo->worldPoint = info.worldPoint;
     raycastInfo->worldNormal = info.worldNormal;
@@ -130,12 +136,30 @@ rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo
     raycastInfo->collider = info.collider;
     raycastInfo->meshSubpart = info.meshSubpart;
     raycastInfo->triangleIndex = info.triangleIndex;
+
+    GameEngine &engine = GameEngine::GetInstance();
+
+    engine.RaycastTargets.iter([&](flecs::iter& it) {
+        flecs::id vs_id = it.id(2);
+        if (vs_id == engine.ECSWorld.id<CollisionBody>()) {
+            auto cb = it.field<CollisionBody>(2);
+            for (auto i : it) {
+                if (cb->Body == info.body) raycastInfo->Entity = it.entity(i);
+			}
+        }
+        else if (vs_id == engine.ECSWorld.id<RigidBody>()) {
+            auto rb = it.field<RigidBody>(2);
+            for (auto i : it) {
+                if (rb->Body == info.body) raycastInfo->Entity = it.entity(i);
+            }
+        }
+    });
     
     Infos.push_back(raycastInfo);
     return rp3d::decimal(1.0);
 }
 
-std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
+std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
 {
     GameEngine &engine = GameEngine::GetInstance();
     CameraInfos camera = engine._Camera;

@@ -12,7 +12,6 @@
 #include<glm/gtx/vector_angle.hpp>
 #include "custom_GUI.h"
 
-//#include"shaderClass.h"
 
 class CameraInfos
 {
@@ -39,7 +38,6 @@ public:
 	// Camera constructor to set up initial values
 	CameraInfos(int width, int height, float FOVDeg, glm::vec3 position);
 
-	// Updates and exports the camera matrix to the Vertex Shader
 	glm::mat4 ProjectionMatrix();
 	glm::mat4 ViewMatrix();
 	glm::mat4 Matrix();

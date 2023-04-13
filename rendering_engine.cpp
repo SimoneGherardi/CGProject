@@ -262,7 +262,7 @@ void RenderingEngine::_InitializePipeline()
 	);
 	initializeStdPipeline(
 		_Context.Device,
-		"resources/shaders/TriangleVertex.vert.spv",
+		"resources/shaders/NewPBRVert.spv",
 		"resources/shaders/TriangleVertex.frag.spv",
 		_Swapchain.GetExtent(),
 		VK_SAMPLE_COUNT_2_BIT,

@@ -25,6 +25,10 @@ layout(set = 0, binding = 0) uniform GlobalData{
 
 struct ObjectData{
 	mat4 model;
+	int modelId;
+	int _padding0;
+	int _padding1;
+	int _padding2;
 };
 
 layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer{

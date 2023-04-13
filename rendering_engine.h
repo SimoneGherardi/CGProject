@@ -83,6 +83,8 @@ private:
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
+	VkDescriptorSetLayout _TexturesDescriptorSetLayout;
+	VkDescriptorSet _TexturesDescriptorSet;
 
 	//Imgui render descriptor set
 	VkDescriptorSet renderTextureId;

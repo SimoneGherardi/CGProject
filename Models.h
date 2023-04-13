@@ -16,12 +16,14 @@ namespace Models
 	{
 		SUZANNE,
 		DEBUG,
-		BLOCK
+		BLOCK,
+		TEST_TEXTURE
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
 		{SUZANNE, "untitled"},
 		{DEBUG, "debug"},
-		{BLOCK, "block"}
+		{BLOCK, "block"},
+		{TEST_TEXTURE, "test_texture"}
 	};
 }

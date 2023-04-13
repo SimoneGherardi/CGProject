@@ -147,7 +147,7 @@ std::vector<rp3d::RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPo
 
     ECSWorld.entity()
         .set<Transform>({ {pos.x, pos.y, pos.z} })
-        .set<Renderer>({ Models::BLOCK });
+        .set<Renderer>({ Models::TEST_TEXTURE });
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();

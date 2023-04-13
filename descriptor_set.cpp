@@ -45,3 +45,25 @@ void updateDescriptorSet(
 
 	vkUpdateDescriptorSets(context->Device, 1, &setWrite, 0, nullptr);
 }
+
+void updateDescriptorSetImages(
+	const VulkanContext context,
+	const uint32_t dstBinding,
+	const VkDescriptorSet dstSet,
+	const std::vector<VkDescriptorImageInfo> descriptorImageInfos
+)
+{	
+	VkWriteDescriptorSet swrite;
+
+	swrite = {};
+	swrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+	swrite.dstBinding = dstBinding;
+	swrite.dstArrayElement = 0;
+	swrite.descriptorType = VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
+	swrite.descriptorCount = descriptorImageInfos.size();
+	swrite.pBufferInfo = 0;
+	swrite.dstSet = dstSet;
+	swrite.pImageInfo = descriptorImageInfos.data();
+
+	vkUpdateDescriptorSets(context->Device, 1, &swrite, 0, nullptr);
+}

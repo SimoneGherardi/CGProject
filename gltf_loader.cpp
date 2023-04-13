@@ -607,8 +607,14 @@ void loadDataFromGLTF(const char* fileName){
             // TmpAccessor for UVCoords
             TmpAccessor = model.accessors[TmpPrimitive.attributes["TEXCOORD_0"]];
             // float VEC2
-            NewPrimitive.UVCoordinatesNum = TmpAccessor.count;
-            NewPrimitive.UVCoordinates = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum), NewPrimitive.UVCoordinatesNum, 2);
+            if (TmpAccessor.componentType == 5126 && TmpAccessor.type == 2) {
+                NewPrimitive.UVCoordinatesNum = TmpAccessor.count;
+                NewPrimitive.UVCoordinates = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum), NewPrimitive.UVCoordinatesNum, 2);
+            }
+            else {
+                NewPrimitive.UVCoordinatesNum = 0;
+            }
+            
             saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };
@@ -718,15 +724,23 @@ void loadDataFromGLTF(const char* fileName){
     };
 
     // test
-    //std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFModel";
-    //std::vector<GLTFModel> ReadModels;
-    //int i = 0;
-    //for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    //    std::cout << entry.path() << std::endl;
-    //    GLTFModel ReadModel = loadModelFromBin(entry.path().string());
-    //    i++;
-    //    ReadModels.push_back(ReadModel);
-    //};
+    std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
+    std::vector<GLTFPrimitive> ReadPrimitives;
+    int i = 0;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path() << std::endl;
+        GLTFPrimitive ReadPrimitive = loadPrimitiveFromBin(entry.path().string());
+        i++;
+        ReadPrimitives.push_back(ReadPrimitive);
+    };
+
+    path = ".\\resources\\models\\gltf\\untitled\\GLTFAnimationChannel";
+    std::vector<GLTFAnimationChannel> ReadAnimationChannels;
+    for (const auto& entry : std::filesystem::directory_iterator(path)) {
+        std::cout << entry.path() << std::endl;
+        GLTFAnimationChannel ReadAnimationChannel = loadAnimationChannelFromBin(entry.path().string());
+        ReadAnimationChannels.push_back(ReadAnimationChannel);
+    };
 
 
     return;

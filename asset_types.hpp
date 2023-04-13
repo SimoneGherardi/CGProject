@@ -44,10 +44,10 @@ struct GLTFPrimitive {
     int32_t IndicesNum;
     int32_t MaterialId;
     int32_t UVCoordinatesNum;
-    std::vector<std::vector<float>> Positions;  // PositionsNum * 3 floats
-    std::vector<std::vector<float>> Normals;    // PositionsNum * 3 floats
-    std::vector<unsigned short> Indices;        // IndicesNum
-    std::vector<std::vector<float>> UVCoordinates // UVCoordNum * 2 floats
+    std::vector<std::vector<float>> Positions;          // PositionsNum * 3 floats
+    std::vector<std::vector<float>> Normals;            // PositionsNum * 3 floats
+    std::vector<unsigned short> Indices;                // IndicesNum
+    std::vector<std::vector<float>> UVCoordinates;      // UVCoordNum * 2 floats
 };
 
 struct GLTFTexture {

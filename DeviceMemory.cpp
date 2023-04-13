@@ -3,6 +3,7 @@
 
 VkDeviceSize _getAlignedSize(VkDeviceSize size)
 {
+	if (size % ALIGNMENT == 0) return size;
 	return (size / ALIGNMENT + 1) * ALIGNMENT;
 }
 
@@ -64,9 +65,6 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	VkBuffer b;
 	auto offset = Blocks.FindAvailableOffset(alignedSize);
-	if (offset == -1) {
-		throw "Cannot allocate buffer";
-	}
 	CheckVkResult(vkCreateBuffer(
 		Context->Device,
 		&bufferCreateInfo,

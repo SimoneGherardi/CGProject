@@ -257,10 +257,10 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 
 	auto vsize = Vertices.size() * sizeof(VertexData);
 	auto isize = Indices.size() * sizeof(uint16_t);
-	VertexBuffer = memory->NewBuffer(vsize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-	IndexBuffer = memory->NewBuffer(isize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+	VertexBuffer = memory->NewBuffer(vsize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
+	IndexBuffer = memory->NewBuffer(isize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT);
 
-	auto stagingBuffer = stagingMemory->NewBuffer(8192, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+	auto stagingBuffer = stagingMemory->NewBuffer(1024 * 1024, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
 	MemoryTransferer m = MemoryTransferer(context, VertexBuffer, Vertices.data(), vsize);
 	m.TransferStaged(stagingBuffer, 0);
 	m = MemoryTransferer(context, IndexBuffer, Indices.data(), isize);

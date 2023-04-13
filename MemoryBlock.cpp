@@ -12,15 +12,12 @@ VkDeviceSize MemoryBlock::FindAvailableOffset(VkDeviceSize size)
 	if (Size - offset >= size) {
 		return offset;
 	}
-	return -1;
+	throw "NO MORE AVAILABLE BLOCKS";
 }
 
 VkDeviceSize MemoryBlock::Allocate(VkDeviceSize size)
 {
 	VkDeviceSize offset = FindAvailableOffset(size);
-	if (offset == -1) {
-		return -1;
-	}
 	Allocations[offset] = size;
 	return offset;
 }

@@ -360,6 +360,10 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
     memcpy(&ReadPrimitive.MaterialId, (char*)FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
 
+    // int32_t UVCoordinatesNum;
+    memcpy(&ReadPrimitive.UVCoordinatesNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
     // std::vector<std::vector<float>> Positions;
     for (int i = 0; i < ReadPrimitive.PositionsNum; i++) {
         std::vector<float> TmpVec;
@@ -392,7 +396,18 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
         ReadPrimitive.Indices.push_back(TmpElement);
     }
 
-    
+    // std::vector<std::vector<float>> UVCoordinates;
+    for (int i = 0; i < ReadPrimitive.UVCoordinatesNum; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 2; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadPrimitive.UVCoordinates.push_back(TmpVec);
+    }
+
     return ReadPrimitive;
 }
 
@@ -589,7 +604,11 @@ void loadDataFromGLTF(const char* fileName){
             // unsigned short SCALAR
             NewPrimitive.IndicesNum = TmpAccessor.count;
             NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
-        
+            // TmpAccessor for UVCoords
+            TmpAccessor = model.accessors[TmpPrimitive.attributes["TEXCOORD_0"]];
+            // float VEC2
+            NewPrimitive.UVCoordinatesNum = TmpAccessor.count;
+            NewPrimitive.UVCoordinates = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum), NewPrimitive.UVCoordinatesNum, 2);
             saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };

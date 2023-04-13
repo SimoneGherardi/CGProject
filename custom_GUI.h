@@ -3,13 +3,19 @@
 #include "imgui_internal.h"
 #include<GLFW/glfw3.h>
 #include "stb_image.h"
+#include <string>
+#include <vector>
 
 struct WindowSize {
 	int Width, Height;
 };
 
-void scaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
-void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
+struct LogEntry {
+    std::string Text;
+    bool IsSelected;
+
+    LogEntry(std::string text, bool isSelected);
+};
 
 class EditorGUI
 {
@@ -21,9 +27,7 @@ public:
     bool ShowAnotherWindow;
     int Counter = 0;
 
-    int Block1width;
-    int Block1height;
-    ImTextureID Block1png;
+    std::vector <LogEntry> Log;
 
     // Dimensions
     float ScaleFactor;
@@ -44,4 +48,6 @@ public:
     EditorGUI(WindowSize windowSize);
     
     void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
+    void addLogEntry(std::string entryText);
+
 };

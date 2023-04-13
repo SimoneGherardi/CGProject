@@ -1,22 +1,12 @@
 #include "custom_GUI.h"
 
-
+LogEntry::LogEntry(std::string text, bool isSelected): Text(text), IsSelected(isSelected) {
+}
 
 EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), WindowHeight(windowSize.Height){
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
-
-    int channels;
-    unsigned char* pixels = stbi_load("D:\\Documents_Data\\Visual_Studio_2022\\Projects\\CGProject\\CGProject\\resources\\textures\\Moon.jpg", &Block1width, &Block1height, &channels, 3);
-    int size = Block1width * Block1height * channels;
-    ImGuiIO& io = ImGui::GetIO();
-    Block1png = io.Fonts->TexID;
-    io.Fonts->TexID = (void*)Block1png;
-    io.Fonts->TexPixelsAlpha8 = NULL;
-    io.Fonts->TexPixelsRGBA32 = (unsigned int*)pixels;
-    io.Fonts->TexWidth = Block1width;
-    io.Fonts->TexHeight = Block1height;
     
 
     // Dimensions
@@ -36,9 +26,13 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
 }
 
 
-void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+void EditorGUI::addLogEntry(std::string entryText) {
+    Log.push_back(LogEntry(entryText, false));
+}
 
-   
+
+
+void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
 
     // Menu bar
     ImGui::SetNextWindowSize(MenuBarDimensions);
@@ -73,27 +67,27 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block")) {
-
+        addLogEntry("Square Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("T Block")) {
-
+        addLogEntry("T Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("L Block")) {
-
+        addLogEntry("L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse L Block")) {
-
+        addLogEntry("Reverse L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Z Block")) {
-
+        addLogEntry("Z Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse Z Block")) {
-
+        addLogEntry("Reverze Z Block");
     }
     ImGui::SameLine();
 
@@ -106,7 +100,28 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     ImGui::Begin("Log", NULL, flags);    
+    /*
+    ImGui::ListBoxHeader(...)
+        for (item : my_vector_containing_my_items)
+        {
+            std::string& item_name = item.Name;
+            if (ImGui::Selectable(s.c_str(), item.IsSelected))
+            {
+                // handle selection
+            }
+        }
+    ImGui::ListBoxFooter()
+        */
+    ImGui::ListBoxHeader("", Log.size());
+        for (auto&& item : Log)
+        {
 
+            if (ImGui::Selectable(item.Text.c_str(), item.IsSelected))
+            {
+                // handle selection
+            }
+        }
+    ImGui::ListBoxFooter();
     ImGui::End();
    
 }

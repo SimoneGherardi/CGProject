@@ -107,4 +107,3 @@ struct GLTFAnimation {
     int32_t ChannelsNum;
     //std::vector<int32_t> Channels;
 };
-

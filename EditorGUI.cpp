@@ -1,14 +1,29 @@
-#include "custom_GUI.h"
+#include "EditorGUI.h"
 
+EditorGUI* EditorGUI::_Instance = nullptr;
 
+EditorGUI::EditorGUI() {};
 
-EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), WindowHeight(windowSize.Height){
+LogEntry::LogEntry(std::string text, bool isSelected): Text(text), IsSelected(isSelected) {
+}
+
+EditorGUI* EditorGUI::GetInstance() {
+    if (_Instance == nullptr) {
+        _Instance = new EditorGUI();
+    }
+    return _Instance;
+}
+
+void EditorGUI::Initialize(WindowSize windowSize){
+    WindowHeight = windowSize.Height;
+    WindowWidth = windowSize.Width;
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
+    
 
     // Dimensions
-    ScaleFactor = 0.7f;
+    ScaleFactor = 0.8f;
     MenuBarHeight = ((float)windowSize.Height) * 0.04;
     HorizontalBorder = 0.0f;
     MenuBarDimensions = ImVec2(((float)windowSize.Width), MenuBarHeight);
@@ -19,18 +34,36 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
     // Positions
     MenuBarPosition = ImVec2(0, 0);
     ScenePosition = ImVec2(0, MenuBarHeight);
-    PrefabContainerPosition = ImVec2(0, SceneDimensions[1]);
+    PrefabContainerPosition = ImVec2(0, SceneDimensions[1] + MenuBarHeight);
     LogPosition = ImVec2(SceneDimensions[0], MenuBarHeight);
 }
 
+bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
+    if (mouseX > ScenePosition.x && mouseX <= LogPosition.x && mouseY > ScenePosition.y && mouseY < PrefabContainerPosition.y) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
-void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+
+void EditorGUI::AddLogEntry(std::string entryText) {
+    Log.push_back(LogEntry(entryText, false));
+}
+
+
+
+void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+
     // Menu bar
     ImGui::SetNextWindowSize(MenuBarDimensions);
     ImGui::SetNextWindowPos(MenuBarPosition);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("Menu Bar", NULL, flags);
-    if (ImGui::Button("Open")) {}
+    if (ImGui::Button("Open")) {
+        Counter++;
+    }
     ImGui::SameLine();
     if (ImGui::Button("Save")) {}
     ImGui::End();
@@ -53,17 +86,31 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(PrefabContainerPosition);
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
+
     ImGui::Begin("Prefab Container", NULL, flags);
-
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("Another Window", &ShowAnotherWindow);
-
-
-    //ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
-
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+    if (ImGui::Button("Square Block", ButtonDimensions)) {
+        AddLogEntry("Square Block");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("T Block", ButtonDimensions)) {
+        AddLogEntry("T Block");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("L Block", ButtonDimensions)) {
+        AddLogEntry("L Block");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reverse L Block", ButtonDimensions)) {
+        AddLogEntry("Reverse L Block");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Z Block", ButtonDimensions)) {
+        AddLogEntry("Z Block");
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Reverse Z Block", ButtonDimensions)) {
+        AddLogEntry("Reverze Z Block");
+    }
     ImGui::SameLine();
 
     ImGui::End();
@@ -73,19 +120,18 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(LogPosition);
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-    ImGui::Begin("Log", NULL, flags);
+    ImGui::Begin("Log", NULL, flags);    
+    ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
+    ImGui::ListBoxHeader(" ", Log.size(), Log.size());
+        for (auto&& item : Log)
+        {
 
-    ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-    ImGui::Checkbox("Demo Window", &ShowDemoWindow);      // Edit bools storing our window open/close state
-    ImGui::Checkbox("Another Window", &ShowAnotherWindow);
-
-
-    // ImGui::SliderFloat("float", &F, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-    ImGui::ColorEdit3("clear color", (float*)&ClearColor); // Edit 3 floats representing a color
-
-    if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-    ImGui::SameLine();
-
+            if (ImGui::Selectable(item.Text.c_str(), item.IsSelected))
+            {
+                // handle selection
+            }
+        }
+    ImGui::ListBoxFooter();
     ImGui::End();
    
 }

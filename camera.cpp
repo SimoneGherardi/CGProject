@@ -54,17 +54,20 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 
 
 
-void CameraInfos::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset) {
+bool CameraInfos::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset) {
     double mouseX, mouseY;
     glfwGetCursorPos(window, &mouseX, &mouseY);
+	EditorGUI* editorGUI = EditorGUI::GetInstance();
 	horizontalOffset = verticalOffset / 3.5;
-    if (mouseX > horizontalOffset && mouseX <= windowSize.Width*windowScaleFactor + horizontalOffset && mouseY > verticalOffset && mouseY < windowSize.Width * windowScaleFactor + 1.5 * verticalOffset) {
+    if (editorGUI->CheckMouseInsideScene(mouseX, mouseY)) {
 		*xpos = (mouseX - horizontalOffset) / windowScaleFactor;
 		*ypos = (mouseY - 1.5 * verticalOffset) / windowScaleFactor;
+		return true;
 	}
     else {
 		*xpos = mouseX;
 		*ypos = mouseY;
+		return false;
 	}
 }
 

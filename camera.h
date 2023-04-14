@@ -10,9 +10,8 @@
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
-#include "custom_GUI.h"
+#include "EditorGUI.h"
 
-//#include"shaderClass.h"
 
 class CameraInfos
 {
@@ -39,7 +38,6 @@ public:
 	// Camera constructor to set up initial values
 	CameraInfos(int width, int height, float FOVDeg, glm::vec3 position);
 
-	// Updates and exports the camera matrix to the Vertex Shader
 	glm::mat4 ProjectionMatrix();
 	glm::mat4 ViewMatrix();
 	glm::mat4 Matrix();
@@ -47,7 +45,7 @@ public:
 	void Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
-	void ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
+	bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
 private:
 	char _LastLeftEvent = GLFW_RELEASE;
 };

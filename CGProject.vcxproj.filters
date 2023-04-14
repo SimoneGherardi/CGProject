@@ -289,7 +289,22 @@
     <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="custom_GUI.cpp">
+    <ClCompile Include="EditorGUI.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
@@ -507,7 +522,7 @@
     <ClInclude Include="camera.h">
       <Filter>Header Files\scene_elements</Filter>
     </ClInclude>
-    <ClInclude Include="custom_GUI.h">
+    <ClInclude Include="EditorGUI.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="math.h">

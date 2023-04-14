@@ -1,5 +1,7 @@
 #include "EditorGUI.h"
 #include "game_engine.h"
+#include "reactphysics3d/reactphysics3d.h"
+#include "ecs_modules.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
@@ -33,6 +35,7 @@ void EditorGUI::Initialize(WindowSize windowSize){
     LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleFactor), ((float)windowSize.Height) - MenuBarHeight);
 
     // Positions
+    SceneCenterPosition = glm::vec2((((SceneDimensions[0] / 2) + HorizontalBorder) / WindowWidth * 2) - 1, (((SceneDimensions[1] / 2) + MenuBarHeight) / WindowHeight) * 2 - 1);
     MenuBarPosition = ImVec2(0, 0);
     ScenePosition = ImVec2(0, MenuBarHeight);
     PrefabContainerPosition = ImVec2(0, SceneDimensions[1] + MenuBarHeight);
@@ -47,7 +50,6 @@ bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
         return false;
     }
 }
-
 
 void EditorGUI::AddLogEntry(std::string entryText) {
     Log.push_back(LogEntry(entryText, false));
@@ -79,10 +81,12 @@ void EditorGUI::Inputs(GLFWwindow* window) {
         // Stores the coordinates of the cursor
         double mouseX;
         double mouseY;
-        // Fetches the coordinates of the cursor
+
         if (ScaledGetCursorPos(window, &mouseX, &mouseY)) {
+            // Only inside the scene window
             auto mousePosition = glm::vec2((mouseX / WindowWidth * 2) - 1, (mouseY / WindowHeight) * 2 - 1);
             std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
+            
             std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
 
             printf("Raycast results: %d\n", raycasts.size());
@@ -92,6 +96,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
                 std::cout << raycast->worldPoint.to_string();
                 std::cout << raycast->Entity.name() << std::endl;
             }
+            
         }
     }
 
@@ -134,6 +139,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
         AddLogEntry("Square Block");
+        std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(glm::vec2(0,0), 10);
     }
     ImGui::SameLine();
     if (ImGui::Button("T Block", ButtonDimensions)) {

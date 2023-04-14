@@ -7,6 +7,7 @@
 
 struct RaycastInfo : rp3d::RaycastInfo {
 	flecs::entity Entity;
+	bool IsSelected = false;
 };
 
 class GatherAllRaycastCallback : public rp3d::RaycastCallback {

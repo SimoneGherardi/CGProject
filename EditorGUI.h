@@ -52,6 +52,7 @@ public:
     ImVec2 LogEntryDimensions  = ImVec2(100, 50);
 
     // Positions
+    glm::vec2 SceneCenterPosition;
     ImVec2 MenuBarPosition;
     ImVec2 ScenePosition;
     ImVec2 PrefabContainerPosition;

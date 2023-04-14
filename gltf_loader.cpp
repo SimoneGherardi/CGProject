@@ -360,6 +360,10 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
     memcpy(&ReadPrimitive.MaterialId, (char*)FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
 
+    // int32_t UVCoordinatesNum;
+    memcpy(&ReadPrimitive.UVCoordinatesNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
     // std::vector<std::vector<float>> Positions;
     for (int i = 0; i < ReadPrimitive.PositionsNum; i++) {
         std::vector<float> TmpVec;
@@ -392,7 +396,18 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
         ReadPrimitive.Indices.push_back(TmpElement);
     }
 
-    
+    // std::vector<std::vector<float>> UVCoordinates;
+    for (int i = 0; i < ReadPrimitive.UVCoordinatesNum; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 2; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadPrimitive.UVCoordinates.push_back(TmpVec);
+    }
+
     return ReadPrimitive;
 }
 
@@ -578,18 +593,32 @@ void loadDataFromGLTF(const char* fileName){
             // float VEC3
             NewPrimitive.PositionsNum = TmpAccessor.count;
             NewPrimitive.MaterialId = TmpPrimitive.material;
-            NewPrimitive.Positions = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
+            auto ptr = readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum);
+            NewPrimitive.Positions = dataToFloatVectorVectors(ptr, NewPrimitive.PositionsNum, 3);
             // TmpAccessor for normals of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.attributes["NORMAL"]];
             // float VEC3
             // Numbers of normals is the same as positions
-            NewPrimitive.Normals = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
+            ptr = readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum);
+            NewPrimitive.Normals = dataToFloatVectorVectors(ptr, NewPrimitive.PositionsNum, 3);
             // TmpAccessor for indeces of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.indices];
             // unsigned short SCALAR
             NewPrimitive.IndicesNum = TmpAccessor.count;
-            NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
-        
+            ptr = readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum);
+            NewPrimitive.Indices = dataToUShortVector(ptr, NewPrimitive.IndicesNum);
+            // TmpAccessor for UVCoords
+            TmpAccessor = model.accessors[TmpPrimitive.attributes["TEXCOORD_0"]];
+            // float VEC2
+            if (TmpAccessor.componentType == 5126 && TmpAccessor.type == 2) {
+                NewPrimitive.UVCoordinatesNum = TmpAccessor.count;
+                ptr = readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum);
+                NewPrimitive.UVCoordinates = dataToFloatVectorVectors(ptr, NewPrimitive.UVCoordinatesNum, 2);
+            }
+            else {
+                NewPrimitive.UVCoordinatesNum = 0;
+            }
+            
             saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };
@@ -678,7 +707,8 @@ void loadDataFromGLTF(const char* fileName){
             }
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             // loading "input"
-            NewAnimationChannel.Input = dataToFloatVector(readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount);
+            auto ptr = readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount);
+            NewAnimationChannel.Input = dataToFloatVector(ptr, NewAnimationChannel.KeyFrameCount);
             // loading "interpolation"
             if (TmpAnimationSampler.interpolation == "STEP") {
                 NewAnimationChannel.Interpolation = INTERPOLATION_STEP;
@@ -690,7 +720,8 @@ void loadDataFromGLTF(const char* fileName){
                 NewAnimationChannel.Interpolation = INTERPOLATION_CUBICSPLINE;
             }
             // loading "output"
-            NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
+            ptr = readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount);
+            NewAnimationChannel.Output = dataToFloatVectorVectors(ptr, NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
             
             saveGLTFAnimationChannelToBinFile(Root, "AnimationChannel", NewAnimation.Id, NewAnimationChannel);
         }
@@ -699,15 +730,23 @@ void loadDataFromGLTF(const char* fileName){
     };
 
     // test
-    //std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFModel";
-    //std::vector<GLTFModel> ReadModels;
-    //int i = 0;
-    //for (const auto& entry : std::filesystem::directory_iterator(path)) {
-    //    std::cout << entry.path() << std::endl;
-    //    GLTFModel ReadModel = loadModelFromBin(entry.path().string());
-    //    i++;
-    //    ReadModels.push_back(ReadModel);
-    //};
+    // std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
+    // std::vector<GLTFPrimitive> ReadPrimitives;
+    // int i = 0;
+    // for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //     std::cout << entry.path() << std::endl;
+    //     GLTFPrimitive ReadPrimitive = loadPrimitiveFromBin(entry.path().string());
+    //     i++;
+    //     ReadPrimitives.push_back(ReadPrimitive);
+    // };
+
+    // path = ".\\resources\\models\\gltf\\untitled\\GLTFAnimationChannel";
+    // std::vector<GLTFAnimationChannel> ReadAnimationChannels;
+    // for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //     std::cout << entry.path() << std::endl;
+    //     GLTFAnimationChannel ReadAnimationChannel = loadAnimationChannelFromBin(entry.path().string());
+    //     ReadAnimationChannels.push_back(ReadAnimationChannel);
+    // };
 
 
     return;

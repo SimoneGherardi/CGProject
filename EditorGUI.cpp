@@ -1,4 +1,5 @@
 #include "EditorGUI.h"
+#include "game_engine.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
@@ -52,7 +53,50 @@ void EditorGUI::AddLogEntry(std::string entryText) {
     Log.push_back(LogEntry(entryText, false));
 }
 
+bool EditorGUI::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos) {
+    double mouseX, mouseY;
+    glfwGetCursorPos(window, &mouseX, &mouseY);
+    EditorGUI* editorGUI = EditorGUI::GetInstance();
+    HorizontalBorder = MenuBarHeight / 3.5;
+    if (editorGUI->CheckMouseInsideScene(mouseX, mouseY)) {
+        *xpos = (mouseX - HorizontalBorder) / ScaleFactor;
+        *ypos = (mouseY - 1.5 * MenuBarHeight) / ScaleFactor;
+        return true;
+    }
+    else {
+        *xpos = mouseX;
+        *ypos = mouseY;
+        return false;
+    }
+}
 
+void EditorGUI::Inputs(GLFWwindow* window) {
+    // Mouse left button
+
+    if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    {
+
+        // Stores the coordinates of the cursor
+        double mouseX;
+        double mouseY;
+        // Fetches the coordinates of the cursor
+        if (ScaledGetCursorPos(window, &mouseX, &mouseY)) {
+            auto mousePosition = glm::vec2((mouseX / WindowWidth * 2) - 1, (mouseY / WindowHeight) * 2 - 1);
+            std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
+            std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
+
+            printf("Raycast results: %d\n", raycasts.size());
+
+            for (RaycastInfo* raycast : raycasts)
+            {
+                std::cout << raycast->worldPoint.to_string();
+                std::cout << raycast->Entity.name() << std::endl;
+            }
+        }
+    }
+
+    _LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+}
 
 void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
 

@@ -27,6 +27,7 @@ public:
     bool ShowAnotherWindow;
     int Counter = 0;
 
+
     std::vector <LogEntry> Log;
 
     // Dimensions
@@ -37,6 +38,8 @@ public:
     ImVec2 SceneDimensions;
     ImVec2 PrefabContainerDimensions;
     ImVec2 LogDimensions;
+    ImVec2 ButtonDimensions = ImVec2(200, 50);
+    ImVec2 LogEntryDimensions  = ImVec2(100, 50);
 
     // Positions
     ImVec2 MenuBarPosition;

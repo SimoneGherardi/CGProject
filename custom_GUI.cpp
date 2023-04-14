@@ -66,31 +66,30 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
 
     ImGui::Begin("Prefab Container", NULL, flags);
-    if (ImGui::Button("Square Block")) {
+    if (ImGui::Button("Square Block", ButtonDimensions)) {
         addLogEntry("Square Block");
     }
     ImGui::SameLine();
-    if (ImGui::Button("T Block")) {
+    if (ImGui::Button("T Block", ButtonDimensions)) {
         addLogEntry("T Block");
     }
     ImGui::SameLine();
-    if (ImGui::Button("L Block")) {
+    if (ImGui::Button("L Block", ButtonDimensions)) {
         addLogEntry("L Block");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Reverse L Block")) {
+    if (ImGui::Button("Reverse L Block", ButtonDimensions)) {
         addLogEntry("Reverse L Block");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Z Block")) {
+    if (ImGui::Button("Z Block", ButtonDimensions)) {
         addLogEntry("Z Block");
     }
     ImGui::SameLine();
-    if (ImGui::Button("Reverse Z Block")) {
+    if (ImGui::Button("Reverse Z Block", ButtonDimensions)) {
         addLogEntry("Reverze Z Block");
     }
     ImGui::SameLine();
-
 
     ImGui::End();
 
@@ -100,19 +99,8 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     ImGui::Begin("Log", NULL, flags);    
-    /*
-    ImGui::ListBoxHeader(...)
-        for (item : my_vector_containing_my_items)
-        {
-            std::string& item_name = item.Name;
-            if (ImGui::Selectable(s.c_str(), item.IsSelected))
-            {
-                // handle selection
-            }
-        }
-    ImGui::ListBoxFooter()
-        */
-    ImGui::ListBoxHeader("", Log.size());
+    ImGui::PushItemWidth(500);
+    ImGui::ListBoxHeader(" ", Log.size(), Log.size());
         for (auto&& item : Log)
         {
 

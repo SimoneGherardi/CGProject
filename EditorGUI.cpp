@@ -1,16 +1,29 @@
-#include "custom_GUI.h"
+#include "EditorGUI.h"
+
+EditorGUI* EditorGUI::_Instance = nullptr;
+
+EditorGUI::EditorGUI() {};
 
 LogEntry::LogEntry(std::string text, bool isSelected): Text(text), IsSelected(isSelected) {
 }
 
-EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), WindowHeight(windowSize.Height){
+EditorGUI* EditorGUI::GetInstance() {
+    if (_Instance == nullptr) {
+        _Instance = new EditorGUI();
+    }
+    return _Instance;
+}
+
+void EditorGUI::Initialize(WindowSize windowSize){
+    WindowHeight = windowSize.Height;
+    WindowWidth = windowSize.Width;
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
     
 
     // Dimensions
-    ScaleFactor = 0.7f;
+    ScaleFactor = 0.8f;
     MenuBarHeight = ((float)windowSize.Height) * 0.04;
     HorizontalBorder = 0.0f;
     MenuBarDimensions = ImVec2(((float)windowSize.Width), MenuBarHeight);
@@ -25,14 +38,23 @@ EditorGUI::EditorGUI(WindowSize windowSize) : WindowWidth(windowSize.Width), Win
     LogPosition = ImVec2(SceneDimensions[0], MenuBarHeight);
 }
 
+bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
+    if (mouseX > ScenePosition.x && mouseX <= LogPosition.x && mouseY > ScenePosition.y && mouseY < PrefabContainerPosition.y) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
 
-void EditorGUI::addLogEntry(std::string entryText) {
+
+void EditorGUI::AddLogEntry(std::string entryText) {
     Log.push_back(LogEntry(entryText, false));
 }
 
 
 
-void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
 
     // Menu bar
     ImGui::SetNextWindowSize(MenuBarDimensions);
@@ -67,27 +89,27 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
-        addLogEntry("Square Block");
+        AddLogEntry("Square Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("T Block", ButtonDimensions)) {
-        addLogEntry("T Block");
+        AddLogEntry("T Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("L Block", ButtonDimensions)) {
-        addLogEntry("L Block");
+        AddLogEntry("L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse L Block", ButtonDimensions)) {
-        addLogEntry("Reverse L Block");
+        AddLogEntry("Reverse L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Z Block", ButtonDimensions)) {
-        addLogEntry("Z Block");
+        AddLogEntry("Z Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse Z Block", ButtonDimensions)) {
-        addLogEntry("Reverze Z Block");
+        AddLogEntry("Reverze Z Block");
     }
     ImGui::SameLine();
 
@@ -99,7 +121,7 @@ void EditorGUI::showCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
     ImGui::Begin("Log", NULL, flags);    
-    ImGui::PushItemWidth(500);
+    ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
     ImGui::ListBoxHeader(" ", Log.size(), Log.size());
         for (auto&& item : Log)
         {

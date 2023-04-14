@@ -29,7 +29,7 @@
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
 #include "camera.h"
-#include "custom_GUI.h"
+#include "EditorGUI.h"
 
 #define FRAME_OVERLAP 3
 constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);

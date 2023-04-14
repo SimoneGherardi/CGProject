@@ -1,7 +1,7 @@
 #pragma once
 #include "imgui.h"
 #include "imgui_internal.h"
-#include<GLFW/glfw3.h>
+#include <GLFW/glfw3.h>
 #include "stb_image.h"
 #include <string>
 #include <vector>
@@ -48,9 +48,16 @@ public:
     ImVec2 LogPosition;
 
 	
-    EditorGUI(WindowSize windowSize);
+    static EditorGUI* GetInstance();
+    void Initialize(WindowSize windowSize);
+    void ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
+    void AddLogEntry(std::string entryText);
+    bool CheckMouseInsideScene(float mouseX, float mouseY);
     
-    void showCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
-    void addLogEntry(std::string entryText);
+    
+protected:
+    EditorGUI();
+    static EditorGUI* _Instance;
+
 
 };

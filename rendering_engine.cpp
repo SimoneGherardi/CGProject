@@ -262,7 +262,7 @@ void RenderingEngine::_InitializePipeline()
 	);
 	initializeStdPipeline(
 		_Context.Device,
-		"resources/shaders/NewPBRVert.spv",
+		"resources/shaders/TriangleVertex.vert.spv",
 		"resources/shaders/TriangleVertex.frag.spv",
 		_Swapchain.GetExtent(),
 		VK_SAMPLE_COUNT_2_BIT,
@@ -544,7 +544,8 @@ void RenderingEngine::_InitializeGui()
 	//renderBlock1Id = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI,)
 	//Maso devo fare il cleanup? <3
 
-	EditGUI = new EditorGUI(_WindowSize);
+	EditGUI = EditorGUI::GetInstance();
+	EditGUI->Initialize(_WindowSize);
 
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
@@ -656,7 +657,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		VK_SUBPASS_CONTENTS_INLINE
 	);
 
-	EditGUI->showCustomWindow(renderTextureId, _WindowSize);
+	EditGUI->ShowCustomWindow(renderTextureId, _WindowSize);
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

@@ -7,6 +7,7 @@
 #include "ImmediateCommandBuffer.h"
 #include "VulkanStructs.h"
 
+#define PACK_VEC2(v) glm::vec2(v[0], v[1])
 #define PACK_VEC3(v) glm::vec3(v[0], v[1], v[2])
 #define PACK_VEC4(v) glm::vec4(v[0], v[1], v[2], v[3])
 
@@ -186,10 +187,7 @@ BakedModelInfo RenderContext::_BakeModel(
 				vertex.Position = PACK_VEC3(primitive.Positions[i]);
 				vertex.Normal = PACK_VEC3(primitive.Normals[i]);
 				vertex.Color = PACK_VEC4(material.BaseColorFactor);
-				vertex.UV = glm::vec2(
-					rand() % 2,
-					rand() % 2
-				);
+				vertex.UV = PACK_VEC2(primitive.UVCoordinates[i]);
 				Vertices.push_back(vertex);
 			}
 

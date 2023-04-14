@@ -32,8 +32,8 @@
 #include "custom_GUI.h"
 
 #define FRAME_OVERLAP 3
-constexpr auto HOST_VISIBLE_MEMORY_SIZE = (4 * 1024 * 1024);
-constexpr auto DEVICE_LOCAL_MEMORY_SIZE = (4 * 1024 * 1024);
+constexpr auto HOST_VISIBLE_MEMORY_SIZE = (128 * 1024 * 1024);
+constexpr auto DEVICE_LOCAL_MEMORY_SIZE = (128 * 1024 * 1024);
 constexpr auto MAX_COMMANDS = 2048;
 constexpr auto MAX_INSTANCES = 4096;
 
@@ -83,6 +83,8 @@ private:
 	VkDescriptorPool _FrameDataDescriptorPool;
 	VkDescriptorSetLayout _FrameDataDescriptorSetLayout;
 	VkDescriptorSetLayout _ObjectDescriptorSetLayout;
+	VkDescriptorSetLayout _TexturesDescriptorSetLayout;
+	VkDescriptorSet _TexturesDescriptorSet;
 
 	//Imgui render descriptor set
 	VkDescriptorSet renderTextureId;

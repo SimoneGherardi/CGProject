@@ -3,6 +3,7 @@
 
 VkDeviceSize _getAlignedSize(VkDeviceSize size)
 {
+	if (size % ALIGNMENT == 0) return size;
 	return (size / ALIGNMENT + 1) * ALIGNMENT;
 }
 
@@ -64,9 +65,6 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 	bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 	VkBuffer b;
 	auto offset = Blocks.FindAvailableOffset(alignedSize);
-	if (offset == -1) {
-		throw "Cannot allocate buffer";
-	}
 	CheckVkResult(vkCreateBuffer(
 		Context->Device,
 		&bufferCreateInfo,
@@ -83,10 +81,58 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 	return Buffer{ b, size, alignedSize, offset, Memory };
 }
 
+Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage)
+{
+	VkImage image;
+	VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
+	VkExtent3D extent = {};
+	extent.width = width;
+	extent.height = height;
+	extent.depth = 1;
+	VkImageCreateInfo imageInfo = VulkanStructs::ImageCreateInfo(
+		format,
+		usage,
+		extent
+	);
+
+	CheckVkResult(vkCreateImage(
+		Context->Device,
+		&imageInfo,
+		nullptr,
+		&image
+	));
+
+	VkMemoryRequirements memReqs;
+	vkGetImageMemoryRequirements(Context->Device, image, &memReqs);
+	VkDeviceSize size = memReqs.size;
+	auto alignedSize = _getAlignedSize(size);
+
+	auto offset = Blocks.FindAvailableOffset(alignedSize);
+	if (offset == -1) {
+		throw "Cannot allocate image";
+	}
+
+	CheckVkResult(vkBindImageMemory(
+		Context->Device,
+		image,
+		Memory,
+		offset
+	));
+
+	Blocks.Allocate(alignedSize);
+	return Image{ image, size, alignedSize, offset, Memory, format, extent };
+}
+
 void DeviceMemory::FreeBuffer(const Buffer buffer)
 {
 	vkDestroyBuffer(Context->Device, buffer.Buffer, nullptr);
 	Blocks.Free(buffer.Offset);
+}
+
+void DeviceMemory::FreeImage(const Image image)
+{
+	vkDestroyImage(Context->Device, image.Image, nullptr);
+	Blocks.Free(image.Offset);
 }
 
 void DeviceMemory::Cleanup()

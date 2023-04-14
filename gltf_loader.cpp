@@ -65,7 +65,7 @@ unsigned int getAccessorComponentsDimension(int componentType) {
     }
 }
 
-char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count) {
+char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t& count) {
     // returns char* of the data defined by the the accessor of index accessorIndex. count is filled with the number of elements of TmpAccessor.type type contained in the accessor
     tinygltf::Accessor TmpAccessor = model.accessors[accessorIndex];
     const unsigned int ComponentsNumber = getAccessorComponentsNumber(TmpAccessor.type);                   // number of components of a single data to be copied (scalar->1, vec2->2, mat4->16 ecc)
@@ -82,7 +82,7 @@ char* readAccessor(tinygltf::Model model, int32_t accessorIndex, int32_t &count)
     const unsigned int Offset = TmpBufferView.byteOffset + TmpAccessor.byteOffset;
     for (int i = 0; i < count; i++) {
         const unsigned int BufferIndex = Offset + TmpBufferView.byteStride * i;
-        memcpy(RetPointer+(i*OneElementSize), TmpBuffer.data.data() + BufferIndex, OneElementSize);
+        memcpy(RetPointer + (i * OneElementSize), TmpBuffer.data.data() + BufferIndex, OneElementSize);
     }
     return RetPointer;
 }
@@ -92,7 +92,7 @@ std::vector<float> dataToFloatVector(char* data, int dim) {
     std::vector<float> vec;
     for (int i = 0; i < dim; i++) {
         float Tmp;
-        memcpy(&Tmp, data + i*sizeof(float), (sizeof(float)));
+        memcpy(&Tmp, data + i * sizeof(float), (sizeof(float)));
         vec.push_back(Tmp);
     }
     return vec;
@@ -146,7 +146,7 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
     memcpy(&ReadArmature.JointsCount, FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
     // std::vector<std::vector<float>> InvBindMatrices;
-    
+
     for (int i = 0; i < ReadArmature.BoneCount; i++) {
         std::vector<float> TmpVec;
         for (int j = 0; j < 16; j++) {
@@ -157,7 +157,7 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
         }
         ReadArmature.InvBindMatrices.push_back(TmpVec);
     }
-    
+
     // std::vector<int> Joints;
     for (int i = 0; i < ReadArmature.JointsCount; i++) {
         int TmpElement;
@@ -165,7 +165,7 @@ GLTFArmature loadArmatureFromBin(std::string fileName) {
         Offset += sizeof(int);
         ReadArmature.Joints.push_back(TmpElement);
     }
-    
+
     return ReadArmature;
 }
 
@@ -221,7 +221,7 @@ GLTFMaterial loadMaterialFromBin(std::string fileName) {
     Offset += sizeof(int32_t);
 
     GLTFMaterial ReadMaterial(TmpId);
-    
+
     // double Roughness;
     memcpy(&ReadMaterial.Roughness, (char*)FileStream + Offset, sizeof(double));
     Offset += sizeof(double);
@@ -529,7 +529,7 @@ std::string extractFileName(const char* completePath) {
     return BaseFilename;
 }
 
-void loadDataFromGLTF(const char* fileName){
+void loadDataFromGLTF(const char* fileName) {
     tinygltf::Model model;
     tinygltf::TinyGLTF loader;
     std::string warn, err;
@@ -548,13 +548,13 @@ void loadDataFromGLTF(const char* fileName){
         tinygltf::Skin TmpSkin;
         GLTFModel NewModel(i);
         NewModel.Id = i;
-        
+
         NewModel.ChildrenNum = TmpNode.children.size();
         NewModel.ArmatureInd = TmpNode.skin;
         NewModel.Children = (std::vector<int32_t>)TmpNode.children;
         NewModel.Rotation = TmpNode.rotation;
         NewModel.Rotation.size() != 0 ? NewModel.Rot = true : NewModel.Rot = false;
-        
+
         NewModel.Scale = TmpNode.scale;
         NewModel.Scale.size() != 0 ? NewModel.Sca = true : NewModel.Sca = false;
 
@@ -573,10 +573,11 @@ void loadDataFromGLTF(const char* fileName){
             for (int j = 0; j < TmpMesh.primitives.size(); j++) {
                 NewModel.Primitives.push_back(j);
             }
-        } else {
+        }
+        else {
             NewModel.PrimitivesNum = 0;
         }
-        
+
         saveGLTFModelToBinFile(Root, TmpNode.name, NewModel);
         Models.push_back(NewModel);
     };
@@ -593,28 +594,32 @@ void loadDataFromGLTF(const char* fileName){
             // float VEC3
             NewPrimitive.PositionsNum = TmpAccessor.count;
             NewPrimitive.MaterialId = TmpPrimitive.material;
-            NewPrimitive.Positions = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
+            auto ptr = readAccessor(model, TmpPrimitive.attributes["POSITION"], NewPrimitive.PositionsNum);
+            NewPrimitive.Positions = dataToFloatVectorVectors(ptr, NewPrimitive.PositionsNum, 3);
             // TmpAccessor for normals of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.attributes["NORMAL"]];
             // float VEC3
             // Numbers of normals is the same as positions
-            NewPrimitive.Normals = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum), NewPrimitive.PositionsNum, 3);
+            ptr = readAccessor(model, TmpPrimitive.attributes["NORMAL"], NewPrimitive.PositionsNum);
+            NewPrimitive.Normals = dataToFloatVectorVectors(ptr, NewPrimitive.PositionsNum, 3);
             // TmpAccessor for indeces of the vertex
             TmpAccessor = model.accessors[TmpPrimitive.indices];
             // unsigned short SCALAR
             NewPrimitive.IndicesNum = TmpAccessor.count;
-            NewPrimitive.Indices = dataToUShortVector(readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum), NewPrimitive.IndicesNum);
+            ptr = readAccessor(model, TmpPrimitive.indices, NewPrimitive.IndicesNum);
+            NewPrimitive.Indices = dataToUShortVector(ptr, NewPrimitive.IndicesNum);
             // TmpAccessor for UVCoords
             TmpAccessor = model.accessors[TmpPrimitive.attributes["TEXCOORD_0"]];
             // float VEC2
             if (TmpAccessor.componentType == 5126 && TmpAccessor.type == 2) {
                 NewPrimitive.UVCoordinatesNum = TmpAccessor.count;
-                NewPrimitive.UVCoordinates = dataToFloatVectorVectors(readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum), NewPrimitive.UVCoordinatesNum, 2);
+                ptr = readAccessor(model, TmpPrimitive.attributes["TEXCOORD_0"], NewPrimitive.UVCoordinatesNum);
+                NewPrimitive.UVCoordinates = dataToFloatVectorVectors(ptr, NewPrimitive.UVCoordinatesNum, 2);
             }
             else {
                 NewPrimitive.UVCoordinatesNum = 0;
             }
-            
+
             saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);
         };
     };
@@ -636,10 +641,10 @@ void loadDataFromGLTF(const char* fileName){
         NewTexture.Samplers[3] = (int32_t)TmpSampler.wrapT;
 
         saveGLTFTextureToBinFile(Root, model.textures[i].name, NewTexture);
-        
+
     };
 
-    
+
 
     // loading materials
     for (int i = 0; i < model.materials.size(); i++) {
@@ -653,29 +658,29 @@ void loadDataFromGLTF(const char* fileName){
         NewMaterial.Roughness = TmpMaterial.pbrMetallicRoughness.roughnessFactor;
         NewMaterial.Specular = TmpMaterial.pbrMetallicRoughness.metallicFactor;
         NewMaterial.BaseColorFactor = TmpMaterial.pbrMetallicRoughness.baseColorFactor;
-        
+
         NewMaterial.NormalScale = TmpMaterial.normalTexture.scale;
-        
+
 
         NewMaterial.OcclusionStrength = TmpMaterial.occlusionTexture.strength;
-        
+
         saveGLTFMaterialToBinFile(Root, TmpMaterial.name, NewMaterial);
     };
 
-    
+
 
     // loading armatures
     for (int i = 0; i < model.skins.size(); i++) {
         tinygltf::Skin TmpSkin = model.skins[i];
         GLTFArmature NewArmature(i, TmpSkin.joints.size());
         char* AccessorData = readAccessor(model, TmpSkin.inverseBindMatrices, NewArmature.BoneCount);
-        NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float)*4);
+        NewArmature.InvBindMatrices = dataToFloatVectorVectors(AccessorData, NewArmature.BoneCount, sizeof(float) * 4);
         NewArmature.JointsCount = TmpSkin.joints.size();
         NewArmature.Joints = TmpSkin.joints;
         saveGLTFArmatureToBinFile(Root, TmpSkin.name, NewArmature);
     };
 
-    
+
     // loading animation
     for (int i = 0; i < model.animations.size(); i++) {
         tinygltf::Animation TmpAnimation = model.animations[i];
@@ -703,7 +708,8 @@ void loadDataFromGLTF(const char* fileName){
             }
             // TmpAccessor needed to evaluate the number of elements in "input" and "output"
             // loading "input"
-            NewAnimationChannel.Input = dataToFloatVector(readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount);
+            auto ptr = readAccessor(model, TmpAnimationSampler.input, NewAnimationChannel.KeyFrameCount);
+            NewAnimationChannel.Input = dataToFloatVector(ptr, NewAnimationChannel.KeyFrameCount);
             // loading "interpolation"
             if (TmpAnimationSampler.interpolation == "STEP") {
                 NewAnimationChannel.Interpolation = INTERPOLATION_STEP;
@@ -715,8 +721,9 @@ void loadDataFromGLTF(const char* fileName){
                 NewAnimationChannel.Interpolation = INTERPOLATION_CUBICSPLINE;
             }
             // loading "output"
-            NewAnimationChannel.Output = dataToFloatVectorVectors(readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount), NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
-            
+            ptr = readAccessor(model, TmpAnimationSampler.output, NewAnimationChannel.KeyFrameCount);
+            NewAnimationChannel.Output = dataToFloatVectorVectors(ptr, NewAnimationChannel.KeyFrameCount, NewAnimationChannel.OutputDim);
+
             saveGLTFAnimationChannelToBinFile(Root, "AnimationChannel", NewAnimation.Id, NewAnimationChannel);
         }
         NewAnimation.ChannelsNum = TmpAnimation.channels.size();
@@ -724,23 +731,23 @@ void loadDataFromGLTF(const char* fileName){
     };
 
     // test
-    std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
-    std::vector<GLTFPrimitive> ReadPrimitives;
-    int i = 0;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path() << std::endl;
-        GLTFPrimitive ReadPrimitive = loadPrimitiveFromBin(entry.path().string());
-        i++;
-        ReadPrimitives.push_back(ReadPrimitive);
-    };
+    // std::string path = ".\\resources\\models\\gltf\\untitled\\GLTFPrimitive";
+    // std::vector<GLTFPrimitive> ReadPrimitives;
+    // int i = 0;
+    // for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //     std::cout << entry.path() << std::endl;
+    //     GLTFPrimitive ReadPrimitive = loadPrimitiveFromBin(entry.path().string());
+    //     i++;
+    //     ReadPrimitives.push_back(ReadPrimitive);
+    // };
 
-    path = ".\\resources\\models\\gltf\\untitled\\GLTFAnimationChannel";
-    std::vector<GLTFAnimationChannel> ReadAnimationChannels;
-    for (const auto& entry : std::filesystem::directory_iterator(path)) {
-        std::cout << entry.path() << std::endl;
-        GLTFAnimationChannel ReadAnimationChannel = loadAnimationChannelFromBin(entry.path().string());
-        ReadAnimationChannels.push_back(ReadAnimationChannel);
-    };
+    // path = ".\\resources\\models\\gltf\\untitled\\GLTFAnimationChannel";
+    // std::vector<GLTFAnimationChannel> ReadAnimationChannels;
+    // for (const auto& entry : std::filesystem::directory_iterator(path)) {
+    //     std::cout << entry.path() << std::endl;
+    //     GLTFAnimationChannel ReadAnimationChannel = loadAnimationChannelFromBin(entry.path().string());
+    //     ReadAnimationChannels.push_back(ReadAnimationChannel);
+    // };
 
 
     return;
@@ -852,4 +859,3 @@ void GLTFLoader::LoadMesh(const char* FName, ModelInfo& MD, VertexDescriptor& VD
         << ", I: " << MD.indices.size() << "\n";
     //		throw std::runtime_error("Now We Stop Here!");
 }
-

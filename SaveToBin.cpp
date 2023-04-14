@@ -268,6 +268,7 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
 
     // std::vector<unsigned short> Indices;
     memcpy(ToFile + Offset, (reinterpret_cast<unsigned short*> (&primitive.Indices[0])), primitive.IndicesNum * sizeof(unsigned short));
+    Offset += primitive.IndicesNum * sizeof(unsigned short);
 
     // std::vector<std::vector<float>> UVCoordinates;
     for (int i = 0; i < primitive.UVCoordinatesNum; i++) {

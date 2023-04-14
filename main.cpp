@@ -82,7 +82,9 @@ int main(int argc, char** argv)
             ImGui_ImplGlfw_NewFrame();
             ImGui::NewFrame();
             
-            Camera.Inputs(Window, editorGUI->ScaleFactor, windowSize, editorGUI->HorizontalBorder, editorGUI->MenuBarHeight);
+            // Read Inputs
+            Camera.Inputs(Window);
+            editorGUI->Inputs(Window);
 
             RenderingEngine::GetInstance().Render(delta, &Camera);
             const millisec duration = clock::now() - start;

@@ -1,8 +1,17 @@
+#ifndef EDITOR_CLASS_H
+#define EDITOR_CLASS_H
+
 #pragma once
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <GLFW/glfw3.h>
 #include "stb_image.h"
+#include "glm/ext.hpp"
+#include <iostream>
+
+
+
+#include "glm/gtx/string_cast.hpp"
 #include <string>
 #include <vector>
 
@@ -26,6 +35,7 @@ public:
     bool ShowDemoWindow;
     bool ShowAnotherWindow;
     int Counter = 0;
+    char _LastLeftEvent = GLFW_RELEASE;
 
 
     std::vector <LogEntry> Log;
@@ -53,6 +63,8 @@ public:
     void ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize);
     void AddLogEntry(std::string entryText);
     bool CheckMouseInsideScene(float mouseX, float mouseY);
+    bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
+    void Inputs(GLFWwindow* window);
     
     
 protected:
@@ -61,3 +73,4 @@ protected:
 
 
 };
+#endif

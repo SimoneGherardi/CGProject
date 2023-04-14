@@ -1,11 +1,15 @@
 #include "tests.h"
 #include "descriptor_set.h"
+#include <glm/glm.hpp>
 
 float timer = 0;
 
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(1,-2,-1));
+glm::vec3 AMBIENT_LIGHT = glm::normalize(glm::vec3(0.3f,0.3f,0.3f));
+
 void TEST_CAMERA(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {
-	timer += delta;
+	//timer += delta;
 
 	float xl = glm::sin(timer); // change 0 for spinning
 	float zl = glm::cos(timer); // change 0 for spinning
@@ -23,7 +27,8 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 	//data->CameraView = view;
 	//data->CameraViewProjection = projection * view;
 
-	data->SunDirection = { xl, 0.0f, zl };
+	data->SunDirection = SUN_DIRECTION;
+	data->AmbientLight = AMBIENT_LIGHT;
 	frameData->Global.Update(context);
 
 	vkCmdBindDescriptorSets(

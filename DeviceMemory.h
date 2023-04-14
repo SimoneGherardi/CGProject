@@ -13,6 +13,17 @@ struct Buffer
 	VkDeviceMemory Memory;
 };
 
+struct Image
+{
+	VkImage Image;
+	VkDeviceSize Size;
+	VkDeviceSize AlignedSize;
+	VkDeviceSize Offset;
+	VkDeviceMemory Memory;
+	VkFormat Format;
+	VkExtent3D Extent;
+};
+
 struct DeviceMemory
 {
 	VulkanContext Context;
@@ -28,6 +39,8 @@ struct DeviceMemory
 	);
 
 	Buffer NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage);
+	Image NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage);
 	void FreeBuffer(const Buffer buffer);
+	void FreeImage(const Image image);
 	void Cleanup();
 };

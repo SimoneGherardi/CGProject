@@ -23,6 +23,8 @@ void PrintInfos(flecs::entity e, Renderer renderer)
     float matrix[16];
     renderer.GlobalTransform.getOpenGLMatrix(matrix);
     GPUInstanceData d = {};
+    d.ModelId = renderer.Mesh;
+    d.TextureIndex = RenderContext::GetInstance().Models[renderer.Mesh].TextureId;
     d.ModelMatrix = glm::mat4(
         matrix[0], matrix[1], matrix[2], matrix[3],
         matrix[4], matrix[5], matrix[6], matrix[7],

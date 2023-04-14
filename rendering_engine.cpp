@@ -148,8 +148,14 @@ void RenderingEngine::_InitializeDescriptorSet()
 	initializeDescriptorPool(
 		&_Context,
 		{
-			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 10 },
-			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 10 }
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER, 2000 },
+			{ VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_IMAGE, 1000 },
+			{ VK_DESCRIPTOR_TYPE_UNIFORM_TEXEL_BUFFER, 1000 },
+			{ VK_DESCRIPTOR_TYPE_STORAGE_TEXEL_BUFFER, 1000 },
 		},
 		&_FrameDataDescriptorPool
 	);
@@ -167,6 +173,22 @@ void RenderingEngine::_InitializeDescriptorSet()
 		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
 		1,
 		VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT,
+		nullptr
+	);
+
+	VkDescriptorSetLayoutBinding textureBindings[2];
+	textureBindings[0] = getDescriptorSetLayoutBinding(
+		0,
+		VK_DESCRIPTOR_TYPE_SAMPLER,
+		1,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		nullptr
+	);
+	textureBindings[1] = getDescriptorSetLayoutBinding(
+		1,
+		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		RenderContext::GetInstance().TexturesImageInfos.size(),
+		VK_SHADER_STAGE_FRAGMENT_BIT,
 		nullptr
 	);
 
@@ -189,11 +211,46 @@ void RenderingEngine::_InitializeDescriptorSet()
 		&_ObjectDescriptorSetLayout
 	);
 
+	initializeDescriptorSetLayout(
+		_Context.Device,
+		2,
+		textureBindings,
+		&_TexturesDescriptorSetLayout
+	);
+
+	initializeDescriptorSet(
+		&_Context,
+		_FrameDataDescriptorPool,
+		1,
+		&_TexturesDescriptorSetLayout,
+		&_TexturesDescriptorSet
+	);
+
+	VkDescriptorImageInfo samplerInfo = {};
+	samplerInfo.sampler = RenderContext::GetInstance().TextureSampler;
+	updateDescriptorSetImages(
+		&_Context,
+		0,
+		_TexturesDescriptorSet,
+		VK_DESCRIPTOR_TYPE_SAMPLER,
+		1,
+		&samplerInfo
+	);
+	updateDescriptorSetImages(
+		&_Context,
+		1,
+		_TexturesDescriptorSet,
+		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
+		RenderContext::GetInstance().TexturesImageInfos.size(),
+		RenderContext::GetInstance().TexturesImageInfos.data()
+	);
+
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up descriptor set layouts");
 		cleanupDescriptorSetLayout(_Context.Device, _FrameDataDescriptorSetLayout);
 		cleanupDescriptorSetLayout(_Context.Device, _ObjectDescriptorSetLayout);
-		});
+		cleanupDescriptorSetLayout(_Context.Device, _TexturesDescriptorSetLayout);
+	});
 
 	for (size_t i = 0; i < FRAME_OVERLAP; i++)
 	{
@@ -250,7 +307,7 @@ void RenderingEngine::_InitializePipeline()
 {
 	TRACESTART;
 	std::vector<VkDescriptorSetLayout> layouts = {
-		_FrameDataDescriptorSetLayout, _ObjectDescriptorSetLayout
+		_FrameDataDescriptorSetLayout, _ObjectDescriptorSetLayout, _TexturesDescriptorSetLayout
 	};
 	initializeGraphicsPipelineLayout(
 		_Context.Device,
@@ -486,9 +543,9 @@ void RenderingEngine::_InitializeGUIFrameBuffer() {
 void RenderingEngine::_InitializeModels()
 {
 	TRACESTART;
-	Buffer stagingBuffer = _HostVisibleMemory->NewBuffer(1024 * 1024, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-	RenderContext::GetInstance().Initialize(&_Context, stagingBuffer, _DeviceLocalMemory);
-	_HostVisibleMemory->FreeBuffer(stagingBuffer);
+	// Buffer stagingBuffer = _HostVisibleMemory->NewBuffer(1024 * 1024, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+	RenderContext::GetInstance().Initialize(&_Context, _HostVisibleMemory, _DeviceLocalMemory);
+	// _HostVisibleMemory->FreeBuffer(stagingBuffer);
 	TRACEEND;
 }
 
@@ -635,6 +692,16 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 
 	VkDeviceSize offset = 0;
+	vkCmdBindDescriptorSets(
+		cmd,
+		VK_PIPELINE_BIND_POINT_GRAPHICS,
+		_PipelineLayout,
+		2,
+		1,
+		&_TexturesDescriptorSet,
+		0,
+		nullptr
+	);
 	vkCmdBindVertexBuffers(cmd, 0, 1, &(RenderContext::GetInstance().VertexBuffer.Buffer), &offset);
 	vkCmdBindIndexBuffer(cmd, RenderContext::GetInstance().IndexBuffer.Buffer, 0, VK_INDEX_TYPE_UINT16);
 	vkCmdDrawIndexedIndirect(cmd, f->Objects.CommandsBuffer.Buffer, 0, f->Objects.Commands.size(), sizeof(VkDrawIndexedIndirectCommand));

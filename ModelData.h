@@ -17,4 +17,5 @@ struct BakedModelInfo
 {
 	ModelId Id;
 	std::vector<BakedMeshInfo> Meshes;
+	uint32_t TextureId;
 };

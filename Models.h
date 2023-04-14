@@ -15,11 +15,15 @@ namespace Models
 	enum Ids : ModelId
 	{
 		SUZANNE,
-		DEBUG
+		DEBUG,
+		BLOCK,
+		TEST_TEXTURE
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
 		{SUZANNE, "untitled"},
-		{DEBUG, "debug"}
+		{DEBUG, "debug"},
+		{BLOCK, "block"},
+		{TEST_TEXTURE, "test_texture"}
 	};
 }

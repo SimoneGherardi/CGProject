@@ -4,6 +4,24 @@
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
 #include "camera.h"
+#include <map>
+#include <optional>
+
+enum PREFABS {
+	MONKEY,
+	BUSH,
+	COIN,
+	GRASSBLOCK,
+	ROCK1,
+	ROCK2,
+	SIGN,
+	TREE1,
+	TREE2,
+	WOODBRIDGE,
+	WOODPLATFORM,
+	WOODSHELF,
+	CUBE
+};
 
 struct RaycastInfo : rp3d::RaycastInfo {
 	flecs::entity Entity;
@@ -26,6 +44,8 @@ private:
 
 	CameraInfos _Camera;
 
+	std::map<PREFABS, std::function<flecs::entity(const char*)>> _Prefabs;
+	void _InitPrefabs();
 	void _TestEcs();
 	void _SetupPhysicsLogger();
 
@@ -45,6 +65,8 @@ public:
 
 	GameEngine(GameEngine const&) = delete;
 	void operator=(GameEngine const&) = delete;
+
+	flecs::entity InstantiateEntity(PREFABS prefab, const char* name = nullptr);
 
 	rp3d::Vector3 WorldToCameraSpace(rp3d::Vector3 position);
 	rp3d::Vector3 CameraToWorldSpace(rp3d::Vector3 position);

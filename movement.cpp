@@ -21,7 +21,8 @@ void Rotate(flecs::iter it, Transform* transform, AngularVelocity* speed)
     auto delta = GameEngine::GetInstance().DeltaTime;
     for (int i : it)
     {
-        transform[i].Rotation = transform[i].Rotation + (speed[i].Direction * speed[i].Magnitude) * delta.count();
+        transform[i].Rotation = transform[i].Rotation * speed[i].Direction * speed[i].Magnitude * delta.count();
+        transform[i].Rotation.normalize();
     }
 }
 

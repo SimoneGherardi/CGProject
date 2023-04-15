@@ -4,8 +4,10 @@
 
 float timer = 0;
 
-glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(1,-2,-1));
-glm::vec3 AMBIENT_LIGHT = glm::normalize(glm::vec3(0.3f,0.3f,0.3f));
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f));
+glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f);
+// glm::vec3 AMBIENT_LIGHT = glm::normalize(glm::vec3(0.3f,0.3f,0.3f));
+glm::vec3 AMBIENT_LIGHT = glm::vec3(0.016f,0.016f,0.016f);
 
 void TEST_CAMERA(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {
@@ -28,8 +30,19 @@ void TEST_CAMERA(const VulkanContext context, const float width, const float hei
 	//data->CameraViewProjection = projection * view;
 
 	data->SunDirection = SUN_DIRECTION;
+	data->SunColor = SUN_COLOR;
 	data->AmbientLight = AMBIENT_LIGHT;
 	frameData->Global.Update(context);
+
+	updateDescriptorSet(
+		context,
+		frameData->Global.Buffer.Buffer,
+		frameData->Global.Buffer.Size,
+		0,
+		frameData->Global.DescriptorSet,
+		1,
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+	);
 
 	vkCmdBindDescriptorSets(
 		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr

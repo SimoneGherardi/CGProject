@@ -388,5 +388,19 @@ const std::vector<VkVertexInputAttributeDescription> VulkanStructs::VertexInputA
     tmp.offset = offsetof(VertexData, BonesCount);
     result.push_back(tmp);
 
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 9;
+    tmp.format = VK_FORMAT_R32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Metallic);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 10;
+    tmp.format = VK_FORMAT_R32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Roughness);
+    result.push_back(tmp);
+
     return result;
 }

@@ -44,6 +44,7 @@ void GameEngine::_TestEcs()
         .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
         .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
         .set<Velocity>({ {0, 0, 0}, 1 })
+        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(0, 0.01f, 0), 1.f})
         .set<Renderer>({ Models::SUZANNE });
     ECSWorld.entity("Left")
         .set<Transform>({ {-8, 4, 0} })
@@ -171,7 +172,7 @@ std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, r
 
     ECSWorld.entity()
         .set<Transform>({ {pos.x, pos.y, pos.z} })
-        .set<Renderer>({ Models::TEST_TEXTURE });
+        .set<Renderer>({ Models::SPHERE });
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();

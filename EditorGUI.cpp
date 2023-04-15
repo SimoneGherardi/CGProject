@@ -164,10 +164,11 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
-        
         Entities.push_back(GameEngine::GetInstance().ECSWorld.entity()
             .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) })
-            .set<Renderer>({ Models::TEST_TEXTURE }));
+            .set<Renderer>({ Models::SUZANNE })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL }));
         AddLogEntry(&Entities.back());
     }
     ImGui::SameLine();

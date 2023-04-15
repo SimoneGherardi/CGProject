@@ -2,12 +2,14 @@
 #include "game_engine.h"
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
+#include "Models.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
 EditorGUI::EditorGUI() {};
 
-LogEntry::LogEntry(std::string text, bool isSelected): Text(text), IsSelected(isSelected) {
+LogEntry::LogEntry(flecs::entity* entity, bool isSelected): Entity(entity), IsSelected(isSelected) {
+    std::cout << "LogEntry created" << std::endl;
 }
 
 EditorGUI* EditorGUI::GetInstance() {
@@ -17,7 +19,8 @@ EditorGUI* EditorGUI::GetInstance() {
     return _Instance;
 }
 
-void EditorGUI::Initialize(WindowSize windowSize){
+void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
+    _Window = window;
     WindowHeight = windowSize.Height;
     WindowWidth = windowSize.Width;
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -33,13 +36,15 @@ void EditorGUI::Initialize(WindowSize windowSize){
     SceneDimensions = ImVec2(((float)windowSize.Width) * ScaleFactor, ((float)windowSize.Height) * ScaleFactor + 0.5 * MenuBarHeight);
     PrefabContainerDimensions = ImVec2(SceneDimensions[0], ((float)windowSize.Height) - SceneDimensions.y);
     LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleFactor), ((float)windowSize.Height) - MenuBarHeight);
+    LogEditPromptDimensions = ImVec2(LogDimensions.x, LogDimensions.y * 0.5);
 
     // Positions
     SceneCenterPosition = glm::vec2((((SceneDimensions[0] / 2) + HorizontalBorder) / WindowWidth * 2) - 1, (((SceneDimensions[1] / 2) + MenuBarHeight) / WindowHeight) * 2 - 1);
     MenuBarPosition = ImVec2(0, 0);
     ScenePosition = ImVec2(0, MenuBarHeight);
-    PrefabContainerPosition = ImVec2(0, SceneDimensions[1] + MenuBarHeight);
-    LogPosition = ImVec2(SceneDimensions[0], MenuBarHeight);
+    PrefabContainerPosition = ImVec2(0, SceneDimensions.y + MenuBarHeight);
+    LogPosition = ImVec2(SceneDimensions.x, MenuBarHeight);
+    LogEditPromptPositions = ImVec2(LogPosition.x, WindowHeight * 2/3);
 }
 
 bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
@@ -51,8 +56,8 @@ bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
     }
 }
 
-void EditorGUI::AddLogEntry(std::string entryText) {
-    Log.push_back(LogEntry(entryText, false));
+void EditorGUI::AddLogEntry(flecs::entity* entity) {
+    Log.push_back(LogEntry(entity, false));
 }
 
 bool EditorGUI::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos) {
@@ -103,7 +108,28 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     _LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 }
 
-void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize) {
+void EditorGUI::CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions) {
+    // check if there is space for the prompt, otherwise adjusts the spwn coordinates
+    if (*spawnX + dimensions.x > WindowWidth) {
+		*spawnX -= dimensions.x;
+	}
+    if (*spawnY + dimensions.y > WindowHeight) {
+		*spawnY -= dimensions.y;
+	}
+
+}
+
+void EditorGUI::PrintPrompt(LogEntry entry) {
+    ImGui::Begin("Test");
+    ImGui::Text("Hello");
+    ImGui::InputFloat4("input test", vec4f);
+    if (ImGui::Button("Done")) {
+        entry.IsSelected = false;
+    }
+    ImGui::End();
+}
+
+void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window) {
 
     // Menu bar
     ImGui::SetNextWindowSize(MenuBarDimensions);
@@ -138,28 +164,26 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
-        AddLogEntry("Square Block");
-        std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(glm::vec2(0,0), 10);
+        
+        Entities.push_back(GameEngine::GetInstance().ECSWorld.entity()
+            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) })
+            .set<Renderer>({ Models::TEST_TEXTURE }));
+        AddLogEntry(&Entities.back());
     }
     ImGui::SameLine();
     if (ImGui::Button("T Block", ButtonDimensions)) {
-        AddLogEntry("T Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("L Block", ButtonDimensions)) {
-        AddLogEntry("L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse L Block", ButtonDimensions)) {
-        AddLogEntry("Reverse L Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Z Block", ButtonDimensions)) {
-        AddLogEntry("Z Block");
     }
     ImGui::SameLine();
     if (ImGui::Button("Reverse Z Block", ButtonDimensions)) {
-        AddLogEntry("Reverze Z Block");
     }
     ImGui::SameLine();
 
@@ -173,13 +197,25 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Log", NULL, flags);    
     ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
     ImGui::ListBoxHeader(" ", Log.size(), Log.size());
-        for (auto&& item : Log)
+        for (auto&& entry : Log)
         {
 
-            if (ImGui::Selectable(item.Text.c_str(), item.IsSelected))
+            if (ImGui::Selectable("XXX", entry.IsSelected))
             {
-                // handle selection
+                entry.IsSelected = !entry.IsSelected;
+                if (entry.IsSelected)
+                {
+					double mouseX, mouseY;
+					glfwGetCursorPos(window, &mouseX, &mouseY);
+                    ImGui::SetNextWindowSize(LogEditPromptDimensions);
+                    //CheckSpaceForPrompt(&mouseX, &mouseY, LogEditPromptDimensions);
+					ImGui::SetNextWindowPos(LogEditPromptPositions);
+                }
             }
+            if (entry.IsSelected)
+            {
+                PrintPrompt(entry);
+			}
         }
     ImGui::ListBoxFooter();
     ImGui::End();

@@ -35,6 +35,7 @@ public:
 	std::chrono::duration<double> DeltaTime = std::chrono::duration<double>::zero();
 	std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
 	flecs::world ECSWorld;
+	std::vector<flecs::entity> Entities;
 	flecs::filter<> RaycastTargets;
 	rp3d::PhysicsCommon PhysicsCommon;
 	rp3d::PhysicsWorld* PhysicsWorld;
@@ -54,4 +55,5 @@ public:
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec3 screenPoint);
 
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
+	//flecs::entity* SpawnEntity(Models::Ids model, glm::vec3 position);
 };

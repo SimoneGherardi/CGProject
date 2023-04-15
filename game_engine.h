@@ -61,6 +61,11 @@ public:
 	rp3d::PhysicsWorld* PhysicsWorld;
 	std::chrono::system_clock::time_point GetCurrentFrameTime();
 
+	bool IsEditor = true;
+	bool IsPhysicsActive;
+	bool IsKinematicActive;
+	bool ShowBoundingBoxes;
+
 	CameraInfos& Camera();
 
 	void Loop(float delta);
@@ -77,5 +82,6 @@ public:
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec3 screenPoint);
 
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
-	//flecs::entity* SpawnEntity(Models::Ids model, glm::vec3 position);
+
+	void SetIsEditor(bool isEditor);
 };

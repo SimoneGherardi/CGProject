@@ -9,7 +9,9 @@ const rp3d::Transform Transform::LocalTransform() const
 
 void Move(flecs::iter it, Transform* transform, Velocity* velocity)
 {
-    auto delta = GameEngine::GetInstance().DeltaTime;
+    GameEngine& engine = GameEngine::GetInstance();
+    if (!engine.IsKinematicActive) return;
+    auto delta = engine.DeltaTime;
     for (int i : it)
     {
         transform[i].Position = transform[i].Position + (velocity[i].Direction * velocity[i].Magnitude) * delta.count();
@@ -18,10 +20,13 @@ void Move(flecs::iter it, Transform* transform, Velocity* velocity)
 
 void Rotate(flecs::iter it, Transform* transform, AngularVelocity* speed)
 {
-    auto delta = GameEngine::GetInstance().DeltaTime;
+    GameEngine& engine = GameEngine::GetInstance();
+    if (!engine.IsKinematicActive) return;
+    auto delta = engine.DeltaTime;
     for (int i : it)
     {
-        transform[i].Rotation = transform[i].Rotation + (speed[i].Direction * speed[i].Magnitude) * delta.count();
+        transform[i].Rotation = transform[i].Rotation * speed[i].Direction * speed[i].Magnitude * delta.count();
+        transform[i].Rotation.normalize();
     }
 }
 

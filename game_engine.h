@@ -4,6 +4,24 @@
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
 #include "camera.h"
+#include <map>
+#include <optional>
+
+enum PREFABS {
+	MONKEY,
+	BUSH,
+	COIN,
+	GRASSBLOCK,
+	ROCK1,
+	ROCK2,
+	SIGN,
+	TREE1,
+	TREE2,
+	WOODBRIDGE,
+	WOODPLATFORM,
+	WOODSHELF,
+	CUBE
+};
 
 struct RaycastInfo : rp3d::RaycastInfo {
 	flecs::entity Entity;
@@ -27,6 +45,8 @@ private:
 
 	CameraInfos _Camera;
 
+	std::map<PREFABS, std::function<flecs::entity(const char*)>> _Prefabs;
+	void _InitPrefabs();
 	void _TestEcs();
 	void _SetupPhysicsLogger();
 
@@ -41,12 +61,19 @@ public:
 	rp3d::PhysicsWorld* PhysicsWorld;
 	std::chrono::system_clock::time_point GetCurrentFrameTime();
 
+	bool IsEditor = true;
+	bool IsPhysicsActive;
+	bool IsKinematicActive;
+	bool ShowBoundingBoxes;
+
 	CameraInfos& Camera();
 
 	void Loop(float delta);
 
 	GameEngine(GameEngine const&) = delete;
 	void operator=(GameEngine const&) = delete;
+
+	flecs::entity InstantiateEntity(PREFABS prefab, const char* name = nullptr);
 
 	rp3d::Vector3 WorldToCameraSpace(rp3d::Vector3 position);
 	rp3d::Vector3 CameraToWorldSpace(rp3d::Vector3 position);
@@ -55,5 +82,6 @@ public:
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec3 screenPoint);
 
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
-	//flecs::entity* SpawnEntity(Models::Ids model, glm::vec3 position);
+
+	void SetIsEditor(bool isEditor);
 };

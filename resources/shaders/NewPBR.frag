@@ -20,26 +20,22 @@ struct AnalyticalLight {
 	vec3 radiance;
 };
 
-layout(location=0) in Vertex
-{
-	vec3 position;
-	vec2 texcoord;
-	mat3 tangentBasis;
-} vin;
+layout (location = 0) in vec4 inColor;
+layout (location = 1) in vec2 UV;
+layout (location = 2) in flat int instanceIndex;
+layout (location = 3) in vec4 inPosition;
+layout (location = 4) in vec3 inNormal;
+layout (location = 5) in float inMetallic;
+layout (location = 6) in float inRoughness;
+layout (location = 7) in mat3 inTangentBasis;
 
-layout(location=0) out vec4 color;
-
-/*
-layout(set=0, binding=1) uniform ShadingUniforms {
-	AnalyticalLight lights[NumLights];
-	vec3 eyePosition;
-};
-*/
+layout (location = 0) out vec4 outFragColor;
 
 layout(set = 0, binding = 0) uniform GlobalData{
     mat4 CameraView;
     mat4 CameraProjection;
     mat4 CameraViewProjection;
+	vec3 CameraPosition;
 
 	vec3 SunDirection;
 	vec3 SunColor;
@@ -47,13 +43,21 @@ layout(set = 0, binding = 0) uniform GlobalData{
 	vec3 AmbientLight;
 } globalData;
 
-layout(set=1, binding=0) uniform sampler2D albedoTexture;
-layout(set=1, binding=1) uniform sampler2D normalTexture;
-layout(set=1, binding=2) uniform sampler2D metalnessTexture;
-layout(set=1, binding=3) uniform sampler2D roughnessTexture;
-layout(set=1, binding=4) uniform samplerCube specularTexture;
-layout(set=1, binding=5) uniform samplerCube irradianceTexture;
-layout(set=1, binding=6) uniform sampler2D specularBRDF_LUT;
+struct ObjectData{
+	mat4 model;
+	int modelId;
+	int texIndex;
+	int _padding0;
+	int _padding1;
+};
+
+layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer{
+
+	ObjectData objects[];
+} objectBuffer;
+
+layout(set = 2, binding = 0) uniform sampler samp;
+layout(set = 2, binding = 1) uniform texture2D Textures[8192];
 
 // GGX/Towbridge-Reitz normal distribution function.
 // Uses Disney's reparametrization of alpha = roughness^2.
@@ -89,16 +93,24 @@ vec3 fresnelSchlick(vec3 F0, float cosTheta)
 void main()
 {
 	// Sample input textures to get shading model params.
-	vec3 albedo = texture(albedoTexture, vin.texcoord).rgb;
-	float metalness = texture(metalnessTexture, vin.texcoord).r;
-	float roughness = texture(roughnessTexture, vin.texcoord).r;
+	ObjectData data = objectBuffer.objects[instanceIndex];
+	vec3 albedo = inColor.xyz;
+	if (data.texIndex != 0xFFFFFFFF)
+	{
+		vec4 tex = texture(sampler2D(Textures[data.texIndex], samp), UV);
+		albedo *= tex.rgb;
+	}
+	float metalness = inMetallic;
+	float roughness = inRoughness;
 
 	// Outgoing light direction (vector from world-space fragment position to the "eye").
-	vec3 Lo = normalize(eyePosition - vin.position);
+	vec3 eyePosition = globalData.CameraPosition.xyz;
+	vec3 vertPosition = inPosition.xyz / inPosition.w;
+	vec3 Lo = normalize(eyePosition - vertPosition);
 
 	// Get current fragment's normal and transform to world space.
-	vec3 N = normalize(2.0 * texture(normalTexture, vin.texcoord).rgb - 1.0);
-	N = normalize(vin.tangentBasis * N);
+	// vec3 N = normalize(inTangentBasis * inNormal);
+	vec3 N = inNormal;
 	
 	// Angle between surface normal and outgoing light direction.
 	float cosLo = max(0.0, dot(N, Lo));
@@ -112,7 +124,7 @@ void main()
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
 	
-	vec3 Li = globalData.SunDirection;
+	vec3 Li = -globalData.SunDirection;
 	vec3 Lradiance = globalData.SunColor;
 
 	// Half-vector between Li and Lo.
@@ -144,40 +156,11 @@ void main()
 
 	// Total contribution for this light.
 	directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
-	
 
 	// Ambient lighting (IBL).
-	vec3 ambientLighting;
-	{
-		// Sample diffuse irradiance at normal direction.
-		vec3 irradiance = texture(irradianceTexture, N).rgb;
-
-		// Calculate Fresnel term for ambient lighting.
-		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
-		// use cosLo instead of angle with light's half-vector (cosLh above).
-		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
-		vec3 F = fresnelSchlick(F0, cosLo);
-
-		// Get diffuse contribution factor (as with direct lighting).
-		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
-
-		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
-		vec3 diffuseIBL = kd * albedo * irradiance;
-
-		// Sample pre-filtered specular reflection environment at correct mipmap level.
-		int specularTextureLevels = textureQueryLevels(specularTexture);
-		vec3 specularIrradiance = textureLod(specularTexture, Lr, roughness * specularTextureLevels).rgb;
-
-		// Split-sum approximation factors for Cook-Torrance specular BRDF.
-		vec2 specularBRDF = texture(specularBRDF_LUT, vec2(cosLo, roughness)).rg;
-
-		// Total specular IBL contribution.
-		vec3 specularIBL = (F0 * specularBRDF.x + specularBRDF.y) * specularIrradiance;
-
-		// Total ambient lighting contribution.
-		ambientLighting = diffuseIBL + specularIBL;
-	}
+	vec3 ambientLighting = globalData.AmbientLight;
 
 	// Final fragment color.
-	color = vec4(directLighting + ambientLighting, 1.0);
+	outFragColor = vec4(directLighting + ambientLighting, 1.0f);
+	// outFragColor = vec4(allLight, 1.0);
 }

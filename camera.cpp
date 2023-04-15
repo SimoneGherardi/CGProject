@@ -146,6 +146,16 @@ void CameraInfos::Inputs(GLFWwindow* window)
 			firstClick = true;
 		}
 	}
+
+	GameEngine& gameEngine = GameEngine::GetInstance();
+	auto spaceState = glfwGetKey(window, GLFW_KEY_SPACE);
+	if (spaceState == GLFW_RELEASE && _LastSpaceEvent == GLFW_PRESS)
+	{
+		gameEngine.SetIsEditor(!gameEngine.IsEditor);
+		std::cout << spaceState << " " << gameEngine.IsEditor << std::endl;
+	}
+	_LastSpaceEvent = spaceState;
+
 	// Handles scroll and swipe inputs
 	double yoffset = 0;
 	double xoffset = 0;

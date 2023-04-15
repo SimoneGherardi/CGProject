@@ -17,12 +17,10 @@ namespace Models
 		SUZANNE,
 		BUSH,
 		COIN,
-		CUBICBB,
 		GRASSBLOCK,
 		ROCK1,
 		ROCK2,
 		SIGN,
-		SPHEREBB,
 		TREE1,
 		TREE2,
 		WOODBRIDGE,
@@ -30,19 +28,20 @@ namespace Models
 		WOODSHELF,
 		DEBUG,
 		BLOCK,
-		TEST_TEXTURE
+		TEST_TEXTURE,
+		CUBICBB,
+		SPHEREBB,
+		CAPSULEBB
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
 		{SUZANNE, "untitled"},
 		{BUSH, "bush"},
 		{COIN, "coin"},
-		{CUBICBB, "cubic-bb"},
 		{GRASSBLOCK, "grass-block"},
 		{ROCK1, "rock1"},
 		{ROCK2, "rock2"},
 		{SIGN, "sign"},
-		{SPHEREBB, "sphere-bb"},
 		{TREE1, "tree1"},
 		{TREE2, "tree2"},
 		{WOODBRIDGE, "wood-bridge"},
@@ -50,6 +49,9 @@ namespace Models
 		{WOODSHELF, "wood-shelf"},
 		{DEBUG, "debug"},
 		{BLOCK, "block"},
-		{TEST_TEXTURE, "test_texture"}
+		{TEST_TEXTURE, "test_texture"},
+		{CUBICBB, "cubic-bb"},
+		{SPHEREBB, "sphere-bb"},
+		{CAPSULEBB, "capsule-bb"}
 	};
 }

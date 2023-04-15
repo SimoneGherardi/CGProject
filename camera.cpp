@@ -52,32 +52,11 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 	Position += Horizontal * (float)offset * sensitivityScroll;
 }
 
-
-
-bool CameraInfos::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset) {
-    double mouseX, mouseY;
-    glfwGetCursorPos(window, &mouseX, &mouseY);
-	EditorGUI* editorGUI = EditorGUI::GetInstance();
-	horizontalOffset = verticalOffset / 3.5;
-    if (editorGUI->CheckMouseInsideScene(mouseX, mouseY)) {
-		*xpos = (mouseX - horizontalOffset) / windowScaleFactor;
-		*ypos = (mouseY - 1.5 * verticalOffset) / windowScaleFactor;
-		return true;
-	}
-    else {
-		*xpos = mouseX;
-		*ypos = mouseY;
-		return false;
-	}
-}
-
-void CameraInfos::Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset)
+void CameraInfos::Inputs(GLFWwindow* window)
 {
 
 	// Handles mouse inputs
 	// Camera rotation
-	float ScaledWidth = Width * windowScaleFactor + horizontalOffset;
-	float ScaledHeight = Height * windowScaleFactor + verticalOffset;
 	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
 	{
 		// Hides mouse cursor
@@ -167,8 +146,6 @@ void CameraInfos::Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize
 			firstClick = true;
 		}
 	}
-	
-
 	// Handles scroll and swipe inputs
 	double yoffset = 0;
 	double xoffset = 0;
@@ -185,29 +162,5 @@ void CameraInfos::Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize
 		CameraHorizontalSlide(xoffset);
 		global_xoffset = 0;
 	};
-
-	// Mouse left button
-	if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
-	{
-
-		// Stores the coordinates of the cursor
-		double mouseX;
-		double mouseY;
-		// Fetches the coordinates of the cursor
-		ScaledGetCursorPos(window, &mouseX, &mouseY, windowScaleFactor, windowSize, horizontalOffset, verticalOffset);
-
-		auto mousePosition = glm::vec2((mouseX / Width * 2) - 1, (mouseY / Height) * 2 - 1);
-		std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
-		std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
-
-		printf("Raycast results: %d\n", raycasts.size());
-
-		for (RaycastInfo* raycast : raycasts)
-		{
-			std::cout << raycast->worldPoint.to_string();
-			std::cout << raycast->Entity.name() << std::endl;
-		}
-	}
-
-	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	
 }

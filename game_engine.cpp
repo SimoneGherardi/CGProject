@@ -5,9 +5,7 @@
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-flecs::entity DEBUGGO;
-
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0.4f, 1.2f, -10.0f)))
+GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)))
 {
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
@@ -23,6 +21,7 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0.4f, 1.2
         .term<CollisionBody>().optional()
         .build();
 
+    _InitPrefabs();
     _TestEcs();
 }
 
@@ -37,27 +36,130 @@ CameraInfos& GameEngine::Camera()
 	return _Camera;
 }
 
+void GameEngine::_InitPrefabs()
+{
+    _Prefabs[PREFABS::MONKEY] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .add<Velocity>()
+            .set<Renderer>({ Models::SUZANNE });
+    };
+    _Prefabs[PREFABS::BUSH] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<Renderer>({ Models::BUSH });
+    };
+    _Prefabs[PREFABS::COIN] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<CollisionBody>({ NULL })
+            .set<Collider>({ {1, 1, 0.2}, rp3d::CollisionShapeName::BOX, true, NULL })
+            .set<Renderer>({ Models::COIN });
+    };
+    _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1.5, 1.5, 1.5}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::GRASSBLOCK });
+    };
+    _Prefabs[PREFABS::ROCK1] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<Renderer>({ Models::ROCK1 });
+    };
+    _Prefabs[PREFABS::ROCK2] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<Renderer>({ Models::ROCK2 });
+    };
+    _Prefabs[PREFABS::SIGN] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {0.1, 4, 0.1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::SIGN });
+    };
+    _Prefabs[PREFABS::TREE1] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::TREE1 });
+    };
+    _Prefabs[PREFABS::TREE2] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::TREE2 });
+    };
+    _Prefabs[PREFABS::WOODBRIDGE] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::WOODBRIDGE });
+    };
+    _Prefabs[PREFABS::WOODPLATFORM] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::WOODPLATFORM });
+    };
+    _Prefabs[PREFABS::WOODSHELF] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {1, 0.2, 0.5}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Renderer>({ Models::WOODSHELF });
+    };
+    _Prefabs[PREFABS::CUBE] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .add<Transform>()
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .add<Velocity>()
+            .set<Renderer>({ Models::SUZANNE });
+    };
+}
+
 void GameEngine::_TestEcs()
 {
-    ECSWorld.entity("Right")
-        .set<Transform>({ {8, 4, 0} })
-        .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-        .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
-        .set<Velocity>({ {0, 0, 0}, 1 })
-        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(0, 0.01f, 0), 1.f})
-        .set<Renderer>({ Models::SUZANNE });
-    ECSWorld.entity("Left")
-        .set<Transform>({ {-8, 4, 0} })
-        .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-        .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL })
+
+    InstantiateEntity(PREFABS::MONKEY)
+        .set<Transform>({ {8, 8, 0} })
+        .set<Velocity>({ {-1, 0, 0}, 1 });
+    InstantiateEntity(PREFABS::MONKEY)
+        .set<Transform>({ {-8, 8, 0} })
         .set<Velocity>({ {1, 0, 0}, 1 });
-    ECSWorld.entity("Plane")
-        .set<Transform>({ {0, 0, 0} })
-        .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-        .set<Collider>({ {100, 1, 100}, rp3d::CollisionShapeName::BOX, NULL });
-    DEBUGGO = ECSWorld.entity("Debuggo")
-        .set<Transform>({ {10, 10, 1} })
-        .set<Renderer>({ Models::DEBUG });
+    InstantiateEntity(PREFABS::WOODPLATFORM)
+        .set<Transform>({ { 4, 4, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { -8, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { -6, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { -4, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { -2, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { 0, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { 2, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { 4, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { 6, 0, 0 } });
+    InstantiateEntity(PREFABS::GRASSBLOCK)
+        .set<Transform>({ { 8, 0, 0 } });
 }
 
 void GameEngine::_SetupPhysicsLogger()
@@ -91,6 +193,11 @@ void GameEngine::Loop(float delta)
     Accumulator += DeltaTime;
 
     ECSWorld.progress();
+}
+
+flecs::entity GameEngine::InstantiateEntity(PREFABS prefab, const char* name)
+{
+    return _Prefabs[prefab](name);
 }
 
 rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)

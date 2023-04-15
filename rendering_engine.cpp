@@ -587,12 +587,10 @@ void RenderingEngine::_InitializeGui()
 
 	//ImGui Render texture
 	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-	//Block1 render texture
-	//renderBlock1Id = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI,)
 	//Maso devo fare il cleanup? <3
 
 	EditGUI = EditorGUI::GetInstance();
-	EditGUI->Initialize(_WindowSize);
+	EditGUI->Initialize(_WindowSize, _Window);
 
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
@@ -603,10 +601,11 @@ void RenderingEngine::_InitializeGui()
 	TRACEEND;
 }
 
-void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize)
+void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window)
 {
 	TRACESTART;
 	_WindowSize = windowSize;
+	_Window = window;
 	_InitializeInstance(title);
 #ifdef ENABLE_VALIDATION_LAYERS
 	_InitializeDebugMessenger();
@@ -718,7 +717,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		VK_SUBPASS_CONTENTS_INLINE
 	);
 
-	EditGUI->ShowCustomWindow(renderTextureId, _WindowSize);
+	EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
 
 	ImGui::Render();
 	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);

@@ -17,7 +17,7 @@ void GetTransform(flecs::entity e, Transform& transform, Renderer& renderer)
     renderer.GlobalTransform = t;
 }
 
-void PrintInfos(flecs::entity e, Renderer renderer)
+void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
 {
     // std::cout << renderer.GlobalTransform.to_string() << std::endl;
     float matrix[16];
@@ -45,5 +45,5 @@ Rendering::Rendering(flecs::world& world)
         .each(GetTransform);
     _CopyInfos = world.system<Renderer>()
         .kind(flecs::OnStore)
-        .each(PrintInfos);
+        .each(CopyToRenderingEngine);
 }

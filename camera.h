@@ -12,13 +12,12 @@
 #include<glm/gtx/vector_angle.hpp>
 #include "EditorGUI.h"
 
-
 class CameraInfos
 {
 public:
 	// Stores the main vectors of the camera
 	glm::vec3 Position;
-	glm::vec3 Orientation = glm::normalize(glm::vec3(0.5f, 0.0f, 1.0f));
+	glm::vec3 Orientation = glm::normalize(glm::vec3(0, -0.4, -1));
 	glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);
 
 	// Prevents the camera from jumping around when first clicking left click
@@ -42,10 +41,9 @@ public:
 	glm::mat4 ViewMatrix();
 	glm::mat4 Matrix();
 	// Handles camera inputs
-	void Inputs(GLFWwindow* window, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
+	void Inputs(GLFWwindow* window);
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
-	bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos, float windowScaleFactor, WindowSize windowSize, float horizontalOffset, float verticalOffset);
 private:
 	char _LastLeftEvent = GLFW_RELEASE;
 };

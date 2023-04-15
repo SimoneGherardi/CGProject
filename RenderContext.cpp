@@ -187,7 +187,7 @@ BakedModelInfo RenderContext::_BakeModel(
 				vertex.Position = PACK_VEC3(primitive.Positions[i]);
 				vertex.Normal = PACK_VEC3(primitive.Normals[i]);
 				vertex.Color = PACK_VEC4(material.BaseColorFactor);
-				vertex.UV = PACK_VEC2(primitive.UVCoordinates[i]);
+				if(primitive.UVCoordinatesNum > 0) vertex.UV = PACK_VEC2(primitive.UVCoordinates[i]);
 				Vertices.push_back(vertex);
 			}
 

@@ -119,12 +119,12 @@ void EditorGUI::CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimen
 
 }
 
-void EditorGUI::PrintPrompt(LogEntry entry) {
+void EditorGUI::PrintPrompt(LogEntry* entry) {
     ImGui::Begin("Test");
     ImGui::Text("Hello");
     ImGui::InputFloat4("input test", vec4f);
     if (ImGui::Button("Done")) {
-        entry.IsSelected = false;
+        entry->IsSelected = false;
     }
     ImGui::End();
 }
@@ -217,7 +217,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
             }
             if (entry.IsSelected)
             {
-                PrintPrompt(entry);
+                PrintPrompt(&entry);
 			}
         }
     ImGui::ListBoxFooter();

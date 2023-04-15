@@ -71,7 +71,7 @@ public:
     bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
     void Inputs(GLFWwindow* window);
     void CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions);
-    void PrintPrompt(LogEntry entry);
+    void PrintPrompt(LogEntry* entry);
     
     
 protected:

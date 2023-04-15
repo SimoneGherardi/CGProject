@@ -4,10 +4,10 @@
 
 float timer = 0;
 
-glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(1.0f, -1.0f, 1.0f));
-glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f);
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(-1.0f, -1.0f, -1.0f));
+glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f) * 3.f;
 // glm::vec3 AMBIENT_LIGHT = glm::normalize(glm::vec3(0.3f,0.3f,0.3f));
-glm::vec3 AMBIENT_LIGHT = glm::vec3(0.016f,0.016f,0.016f);
+glm::vec3 AMBIENT_LIGHT = glm::vec3(1.f,1.f,1.f) * 0.01f;
 
 void TEST_CAMERA(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {

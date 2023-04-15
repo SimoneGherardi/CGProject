@@ -46,5 +46,6 @@ public:
 	void CameraHorizontalSlide(double offset);
 private:
 	char _LastLeftEvent = GLFW_RELEASE;
+	char _LastSpaceEvent = GLFW_RELEASE;
 };
 #endif

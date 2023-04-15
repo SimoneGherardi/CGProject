@@ -63,6 +63,8 @@ void CreateColliderRigidBody(flecs::entity e, RigidBody& body, Collider& collide
 
 void TransformPositionToPhysicsPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
 {
+    GameEngine& engine = GameEngine::GetInstance();
+    if (!engine.IsPhysicsActive) return;
     if (rigidbody.Body == NULL) return;
     rigidbody.Body->setTransform(transform.LocalTransform());
 }
@@ -70,6 +72,7 @@ void TransformPositionToPhysicsPosition(flecs::entity e, Transform& transform, R
 void UpdatePhysicalWorld(flecs::iter it)
 {
     GameEngine& engine = GameEngine::GetInstance();
+    if (!engine.IsPhysicsActive) return;
     while (engine.Accumulator >= PHYSICS_TIMESTEP)
     {
         engine.PhysicsWorld->update(PHYSICS_TIMESTEP.count());
@@ -79,12 +82,10 @@ void UpdatePhysicalWorld(flecs::iter it)
 
 void PhysicsPositionToTransformPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
 {
-    if (rigidbody.Body == NULL) return;
     GameEngine& engine = GameEngine::GetInstance();
+    if (!engine.IsPhysicsActive) return;
+    if (rigidbody.Body == NULL) return;
     rp3d::Transform physicsTransform = rigidbody.Body->getTransform();
-    /*float factor = engine.Accumulator / PHYSIC_TIMESTEP;
-    rp3d::Transform currentTransform = rp3d::Transform(transform.Position, transform.Rotation);
-    rp3d::Transform interpolatedTransform = rp3d::Transform::interpolateTransforms(currentTransform, physicsTransform, factor);*/
     transform.Position = physicsTransform.getPosition();
     transform.Rotation = physicsTransform.getOrientation();
 }

@@ -9,6 +9,8 @@ flecs::entity DEBUGGO;
 
 GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)))
 {
+    SetIsEditor(IsEditor);
+
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
     _PreviousFrameTime = std::chrono::system_clock::now();
@@ -195,7 +197,7 @@ void GameEngine::Loop(float delta)
     _CurrentFrameTime = std::chrono::system_clock::now();
     DeltaTime = _CurrentFrameTime - _PreviousFrameTime;
     _PreviousFrameTime = _CurrentFrameTime;
-    Accumulator += DeltaTime;
+    if(IsPhysicsActive) Accumulator += DeltaTime;
 
     ECSWorld.progress();
 }
@@ -295,4 +297,12 @@ std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, r
     PhysicsWorld->raycast(ray, &callback);
 
 	return callback.Infos;
+}
+
+void GameEngine::SetIsEditor(bool isEditor)
+{
+    IsPhysicsActive = !isEditor;
+    IsKinematicActive = !isEditor;
+    ShowBoundingBoxes = isEditor;
+    IsEditor = isEditor;
 }

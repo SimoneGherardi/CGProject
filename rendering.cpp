@@ -2,6 +2,9 @@
 #include "reactphysics3d/reactphysics3d.h"
 #include "rendering_engine.h"
 #include "InstanceData.h"
+#include "physics.h"
+#include "game_engine.h"
+#include <glm/ext/matrix_transform.hpp>
 
 void GetTransform(flecs::entity e, Transform& transform, Renderer& renderer)
 {
@@ -32,6 +35,40 @@ void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
         matrix[12], matrix[13], matrix[14], matrix[15]
     );
     RenderingEngine::GetInstance().GetCurrentFrameData()->Objects.InstanceDataStore.Add(renderer.Mesh, d);
+
+    if (GameEngine::GetInstance().ShowBoundingBoxes && e.has<Collider>())
+    {
+        auto collider = e.get<Collider>();
+        GPUInstanceData colliderInstance = {};
+        glm::vec3 size;
+        switch (collider->Type)
+        {
+            case rp3d::CollisionShapeName::SPHERE:
+            {
+                colliderInstance.ModelId = Models::SPHEREBB;
+                size = glm::vec3(collider->Size.x);
+                break;
+            }
+            case rp3d::CollisionShapeName::CAPSULE:
+            {
+                colliderInstance.ModelId = Models::CAPSULEBB;
+                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.x);
+                break;
+            }
+            case rp3d::CollisionShapeName::BOX:
+            {
+                colliderInstance.ModelId = Models::CUBICBB;
+                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.x);
+				break;
+			}
+            default:
+                break;
+        }
+        colliderInstance.TextureIndex = 0xFFFFFFFF;
+        colliderInstance.ModelMatrix =  glm::scale(d.ModelMatrix, size);
+
+        RenderingEngine::GetInstance().GetCurrentFrameData()->Objects.InstanceDataStore.Add(colliderInstance.ModelId, colliderInstance);
+    }
 }
 
 Rendering::Rendering(flecs::world& world)

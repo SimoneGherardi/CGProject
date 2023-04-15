@@ -5,8 +5,6 @@
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
 
-flecs::entity DEBUGGO;
-
 GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)))
 {
     //SetupPhysicsLogger();
@@ -135,6 +133,7 @@ void GameEngine::_InitPrefabs()
 
 void GameEngine::_TestEcs()
 {
+
     InstantiateEntity(PREFABS::MONKEY)
         .set<Transform>({ {8, 8, 0} })
         .set<Velocity>({ {-1, 0, 0}, 1 });
@@ -161,10 +160,6 @@ void GameEngine::_TestEcs()
         .set<Transform>({ { 6, 0, 0 } });
     InstantiateEntity(PREFABS::GRASSBLOCK)
         .set<Transform>({ { 8, 0, 0 } });
-
-    DEBUGGO = ECSWorld.entity("Debuggo")
-        .set<Transform>({ {10, 10, 1} })
-        .set<Renderer>({ Models::DEBUG });
 }
 
 void GameEngine::_SetupPhysicsLogger()
@@ -284,7 +279,7 @@ std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, r
 
     ECSWorld.entity()
         .set<Transform>({ {pos.x, pos.y, pos.z} })
-        .set<Renderer>({ Models::TEST_TEXTURE });
+        .set<Renderer>({ Models::SPHERE });
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();

@@ -364,6 +364,10 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
     memcpy(&ReadPrimitive.UVCoordinatesNum, (char*)FileStream + Offset, sizeof(int32_t));
     Offset += sizeof(int32_t);
 
+    // int32_t UVCoordinatesNum;
+    memcpy(&ReadPrimitive.TangentsNum, (char*)FileStream + Offset, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+
     // std::vector<std::vector<float>> Positions;
     for (int i = 0; i < ReadPrimitive.PositionsNum; i++) {
         std::vector<float> TmpVec;
@@ -406,6 +410,18 @@ GLTFPrimitive loadPrimitiveFromBin(std::string fileName) {
             TmpVec.push_back(TmpFloat);
         }
         ReadPrimitive.UVCoordinates.push_back(TmpVec);
+    }
+
+    // std::vector<std::vector<float>> UVCoordinates;
+    for (int i = 0; i < ReadPrimitive.TangentsNum; i++) {
+        std::vector<float> TmpVec;
+        for (int j = 0; j < 4; j++) {
+            float TmpFloat;
+            memcpy(&TmpFloat, FileStream + Offset, sizeof(float));
+            Offset += sizeof(float);
+            TmpVec.push_back(TmpFloat);
+        }
+        ReadPrimitive.Tangents.push_back(TmpVec);
     }
 
     return ReadPrimitive;
@@ -618,6 +634,17 @@ void loadDataFromGLTF(const char* fileName) {
             }
             else {
                 NewPrimitive.UVCoordinatesNum = 0;
+            }
+            // TmpAccessor for Tangents
+            TmpAccessor = model.accessors[TmpPrimitive.attributes["TANGENT"]];
+            // float VEC4
+            if (TmpAccessor.componentType == 5126 && TmpAccessor.type == 4) {
+                NewPrimitive.TangentsNum = TmpAccessor.count;
+                ptr = readAccessor(model, TmpPrimitive.attributes["TANGENT"], NewPrimitive.TangentsNum);
+                NewPrimitive.Tangents = dataToFloatVectorVectors(ptr, NewPrimitive.TangentsNum, 4);
+            }
+            else {
+                NewPrimitive.TangentsNum = 0;
             }
 
             saveGLTFPrimitiveToBinFile(Root, TmpMesh.name + "_primitive_", NewPrimitive);

@@ -288,16 +288,6 @@ void RenderingEngine::_InitializeDescriptorSet()
 			&_ObjectDescriptorSetLayout,
 			&(f->Objects.DescriptorSet)
 		);
-
-		updateDescriptorSet(
-			&_Context,
-			f->Global.Buffer.Buffer,
-			sizeof(GlobalData),
-			0,
-			f->Global.DescriptorSet,
-			1,
-			VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
-		);
 	}
 
 	TRACEEND;
@@ -319,8 +309,8 @@ void RenderingEngine::_InitializePipeline()
 	);
 	initializeStdPipeline(
 		_Context.Device,
-		"resources/shaders/TriangleVertex.vert.spv",
-		"resources/shaders/TriangleVertex.frag.spv",
+		"resources/shaders/NewPBR.vert.spv",
+		"resources/shaders/NewPBR.frag.spv",
 		_Swapchain.GetExtent(),
 		VK_SAMPLE_COUNT_2_BIT,
 		VK_COMPARE_OP_LESS,
@@ -686,7 +676,11 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 
 	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
+	f->Global.Data.CameraView = camera->ViewMatrix();
+	f->Global.Data.CameraProjection = camera->ProjectionMatrix();
 	f->Global.Data.CameraViewProjection = camera->Matrix();
+	f->Global.Data.CameraPosition = camera->Position;
+	// f->Global.Data.CameraPosition = glm::vec4(camera->Position, 1.0f);
 
 	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 

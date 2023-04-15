@@ -30,7 +30,8 @@ namespace Models
 		WOODSHELF,
 		DEBUG,
 		BLOCK,
-		TEST_TEXTURE
+		TEST_TEXTURE,
+		SPHERE
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
@@ -50,6 +51,7 @@ namespace Models
 		{WOODSHELF, "wood-shelf"},
 		{DEBUG, "debug"},
 		{BLOCK, "block"},
-		{TEST_TEXTURE, "test_texture"}
+		{TEST_TEXTURE, "test_texture"},
+		{SPHERE, "test_sphere"}
 	};
 }

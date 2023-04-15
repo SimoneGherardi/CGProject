@@ -9,10 +9,6 @@ EditorGUI* EditorGUI::_Instance = nullptr;
 
 EditorGUI::EditorGUI() {};
 
-LogEntry::LogEntry(flecs::entity* entity, bool isSelected, uint32_t index): Entity(entity), IsSelected(isSelected) {
-    Name = std::to_string(index) + entity->name().c_str();
-}
-
 EditorGUI* EditorGUI::GetInstance() {
     if (_Instance == nullptr) {
         _Instance = new EditorGUI();
@@ -27,7 +23,6 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
-    GenEntities = 0;
 
     // Dimensions
     ScaleFactor = 0.8f;
@@ -45,7 +40,7 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ScenePosition = ImVec2(0, MenuBarHeight);
     PrefabContainerPosition = ImVec2(0, SceneDimensions.y + MenuBarHeight);
     LogPosition = ImVec2(SceneDimensions.x, MenuBarHeight);
-    LogEditPromptPositions = ImVec2(LogPosition.x, WindowHeight * 2/3);
+    LogEditPromptPositions = ImVec2(LogPosition.x, LogDimensions.y * 2/3);
 }
 
 bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
@@ -64,10 +59,6 @@ bool EditorGUI::CheckMouseInsidePrompt(float mouseX, float mouseY) {
     else {
         return false;
     }
-}
-
-void EditorGUI::AddLogEntry(flecs::entity* entity) {
-    Log.push_back(LogEntry(entity, false, GenEntities));
 }
 
 bool EditorGUI::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos) {
@@ -92,15 +83,6 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     double mouseX;
     double mouseY;
 
-    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
-        // Close prompt here
-        glfwGetCursorPos(window, &mouseX, &mouseY);
-        if (!CheckMouseInsidePrompt(mouseX, mouseY)) {}
-        for (LogEntry& entry : Log) {
-			entry.IsSelected = false;
-		}
-    }
-
     if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
     {
         // Stores the coordinates of the cursor
@@ -112,14 +94,12 @@ void EditorGUI::Inputs(GLFWwindow* window) {
             
             std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
 
-            printf("Raycast results: %d\n", raycasts.size());
-
-            for (RaycastInfo* raycast : raycasts)
-            {
-                std::cout << raycast->worldPoint.to_string();
-                std::cout << raycast->Entity.name() << std::endl;
-            }
-            
+            if (raycasts.size() > 0) {
+				GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
+			}
+            else {
+				GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
+			}
         }
     }
 
@@ -137,48 +117,40 @@ void EditorGUI::CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimen
 
 }
 
-void EditorGUI::PrintPrompt(LogEntry* entry) {
+void EditorGUI::PrintPrompt() {
+    GameEngine& gameEngine = GameEngine::GetInstance();
+    if (gameEngine.SelectedEntityId == 0) {
+		return;
+	}
     ImGui::SetNextWindowSize(LogEditPromptDimensions);
     ImGui::SetNextWindowPos(LogEditPromptPositions);
 
     rp3d::Vector3 tmpPosition;
-    
-    ImGui::Begin("Test");
-    ImGui::Text("Hello");
+    ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+    ImGui::Begin("Prompt", NULL, flags);
+    std::string PromptText = gameEngine.SelectedEntity().name().c_str() + std::string(" info");
+    ImGui::Text(PromptText.c_str());
     
     ImGui::NewLine();
     // Managing rotation
     
     std::string ButtonName = "Position";
-    ButtonName = entry->Name + ButtonName;
-
-    try
-    {
-        // Managing position
-        tmpPosition = entry->Entity->get<Transform>()->Position;
-        float tmpPositionVec[3] = { tmpPosition.x, tmpPosition.y, tmpPosition.z };
-        ImGui::InputFloat3(ButtonName.c_str(), tmpPositionVec);
-        tmpPosition = rp3d::Vector3(tmpPositionVec[0], tmpPositionVec[1], tmpPositionVec[2]);
-    }
-    catch (...)
-    {
-        std::cout << "No transform component" << std::endl;
-    }
+    
+    // Managing position
+    tmpPosition = gameEngine.SelectedEntity().get<Transform>()->Position;
+    float tmpPositionVec[3] = { tmpPosition.x, tmpPosition.y, tmpPosition.z };
+    ImGui::InputFloat3(ButtonName.c_str(), tmpPositionVec);
+    tmpPosition = rp3d::Vector3(tmpPositionVec[0], tmpPositionVec[1], tmpPositionVec[2]);
 
     ButtonName = "Rotation";
-    ButtonName = entry->Name + ButtonName;
-    AnglesQuaternion tmpQuat = AnglesQuaternion(entry->Entity->get<Transform>()->Rotation);
+    AnglesQuaternion tmpQuat = AnglesQuaternion(gameEngine.SelectedEntity().get<Transform>()->Rotation);
     AnglesEulerAngles tmpRotation = ToAnglesEulerAngles(tmpQuat);
     tmpRotation.toDegrees();
     ImGui::InputFloat3(ButtonName.c_str(), tmpRotation.XYZ);
     tmpRotation.toRadians();
     rp3d::Quaternion newRotation = rp3d::Quaternion::fromEulerAngles(tmpRotation.XYZ[0], tmpRotation.XYZ[1], tmpRotation.XYZ[2]);
     
-    entry->Entity->set<Transform>({ tmpPosition, newRotation });
-    
-    if (ImGui::Button("Done")) {
-        entry->IsSelected = false;
-    }
+    gameEngine.SelectedEntity().set<Transform>({ tmpPosition, newRotation });
     ImGui::End();
 }
 
@@ -199,7 +171,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     // Scene 
     ImGui::SetNextWindowSize(SceneDimensions);
     ImGui::SetNextWindowPos(ScenePosition);
-    //flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
+    flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
     ImGui::Begin("Scene", NULL, flags);                          // Create a window called "Hello, world!" and append into it.
     ImGui::Image(renderTexture, ImVec2(windowSize.Width * ScaleFactor, windowSize.Height * ScaleFactor));
@@ -217,13 +189,10 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
-        Entities.push_back(GameEngine::GetInstance().ECSWorld.entity("SUZA")
-            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) })
-            .set<Renderer>({ Models::SUZANNE })
-            .set<CollisionBody>({NULL})
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL }));
-        GenEntities++;
-        AddLogEntry(&Entities.back());
+        std::string name = "SUZA";
+        name += std::to_string(GameEngine::GetInstance().Entities.size());
+        GameEngine::GetInstance().InstantiateEntity(PREFABS::MONKEY, name.c_str())
+            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) });
     }
     ImGui::SameLine();
     if (ImGui::Button("T Block", ButtonDimensions)) {
@@ -247,39 +216,27 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     //Log
     ImGui::SetNextWindowSize(LogDimensions);
     ImGui::SetNextWindowPos(LogPosition);
-    flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
+    flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus;
 
     ImGui::Begin("Log", NULL, flags);    
     ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
     uint32_t index = 0;
-    for (auto&& entry : Log)
-    {
-        if (ImGui::Button(entry.Name.c_str()))
+    GameEngine& gameEngine = GameEngine::GetInstance();
+    ImGui::ListBoxHeader(" ", gameEngine.Entities.size(), gameEngine.Entities.size());
+        for (auto& entity : gameEngine.Entities)
         {
-            entry.IsSelected = !entry.IsSelected;
-        }
-        if (entry.IsSelected)
-        {
-            PrintPrompt(&entry);
-        }
-    }
-    /*
-    ImGui::ListBoxHeader(" ", Log.size(), Log.size());
-        for (auto&& entry : Log)
-        {
-            std::string tmp = "##" + std::to_string(entry.Entity->id());
-            if (ImGui::Selectable(tmp.c_str(), entry.IsSelected))
+            std::string tmp = "##" + std::to_string(entity.id());
+            //ImGui::SameLine();
+            if (ImGui::Selectable(tmp.c_str(), gameEngine.SelectedEntityId==entity))
             {
-                entry.IsSelected = !entry.IsSelected;
+                gameEngine.SelectedEntityId = entity;
             }
-            if (entry.IsSelected)
-            {
-                PrintPrompt(&entry);
-            }
+            ImGui::SameLine();
+            ImGui::Text(entity.name());
         }
     ImGui::ListBoxFooter();
-    */
     ImGui::End();
-   
+
+    PrintPrompt();
 }
 

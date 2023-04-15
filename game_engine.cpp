@@ -26,7 +26,7 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
         .build();
 
     _InitPrefabs();
-    _TestEcs();
+    //_TestEcs();
 }
 
 GameEngine& GameEngine::GetInstance()
@@ -204,7 +204,19 @@ void GameEngine::Loop(float delta)
 
 flecs::entity GameEngine::InstantiateEntity(PREFABS prefab, const char* name)
 {
-    return _Prefabs[prefab](name);
+    flecs::entity entity = _Prefabs[prefab](name);
+    Entities.push_back(entity);
+    return entity;
+}
+
+flecs::entity GameEngine::EntityFromId(flecs::entity_t id)
+{
+    return ECSWorld.entity(id);
+}
+
+flecs::entity GameEngine::SelectedEntity()
+{
+    return EntityFromId(SelectedEntityId);
 }
 
 rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
@@ -259,13 +271,13 @@ rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo
         if (vs_id == engine.ECSWorld.id<CollisionBody>()) {
             auto cb = it.field<CollisionBody>(2);
             for (auto i : it) {
-                if (cb->Body == info.body) raycastInfo->Entity = it.entity(i);
+                if (cb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
 			}
         }
         else if (vs_id == engine.ECSWorld.id<RigidBody>()) {
             auto rb = it.field<RigidBody>(2);
             for (auto i : it) {
-                if (rb->Body == info.body) raycastInfo->Entity = it.entity(i);
+                if (rb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
             }
         }
     });
@@ -280,13 +292,6 @@ std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, r
     CameraInfos camera = engine._Camera;
     rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
     auto pos = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
-    DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(
-        pos.x, pos.y, pos.z
-    );
-
-    ECSWorld.entity()
-        .set<Transform>({ {pos.x, pos.y, pos.z} })
-        .set<Renderer>({ Models::TEST_TEXTURE });
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();

@@ -18,14 +18,6 @@ struct WindowSize {
 	int Width, Height;
 };
 
-struct LogEntry {
-    std::string Name;
-    flecs::entity* Entity;
-    bool IsSelected;
-
-    LogEntry(flecs::entity* entity, bool isSelected, uint32_t index);
-};
-
 class EditorGUI
 {
 public:
@@ -36,13 +28,6 @@ public:
     bool ShowAnotherWindow;
     int Counter = 0;
     char _LastLeftEvent = GLFW_RELEASE;
-    uint32_t GenEntities;
-
-    // Debug
-    float vec4f[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
-
-    std::vector <flecs::entity> Entities;
-    std::vector <LogEntry> Log;
 
     // Dimensions
     float ScaleFactor;
@@ -73,7 +58,7 @@ public:
     bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
     void Inputs(GLFWwindow* window);
     void CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions);
-    void PrintPrompt(LogEntry* entry);
+    void PrintPrompt();
     bool CheckMouseInsidePrompt(float mouseX, float mouseY);
     
     

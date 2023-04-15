@@ -212,6 +212,9 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 					ImGui::SetNextWindowPos(LogEditPromptPositions);
                 }
             }
+            else {
+                entry.IsSelected == false;
+            }
             if (entry.IsSelected)
             {
                 PrintPrompt(entry);

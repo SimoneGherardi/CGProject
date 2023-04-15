@@ -266,6 +266,7 @@
     <ClCompile Include="window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Angles.h" />
     <ClInclude Include="assets.h" />
     <ClInclude Include="asset_types.hpp" />
     <ClInclude Include="cleanup_stack.h" />

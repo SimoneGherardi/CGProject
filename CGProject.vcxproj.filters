@@ -322,6 +322,21 @@
     <ClCompile Include="libraries\imgui\backends\*.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -533,6 +548,9 @@
     </ClInclude>
     <ClInclude Include="libraries\imgui\imgui_internal.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Angles.h">
+      <Filter>Header Files\utilities</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

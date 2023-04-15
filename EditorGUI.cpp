@@ -3,13 +3,14 @@
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
 #include "Models.h"
+#include "Angles.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
 EditorGUI::EditorGUI() {};
 
-LogEntry::LogEntry(flecs::entity* entity, bool isSelected): Entity(entity), IsSelected(isSelected) {
-    std::cout << "LogEntry created" << std::endl;
+LogEntry::LogEntry(flecs::entity* entity, bool isSelected, uint32_t index): Entity(entity), IsSelected(isSelected) {
+    Name = std::to_string(index) + entity->name().c_str();
 }
 
 EditorGUI* EditorGUI::GetInstance() {
@@ -26,7 +27,7 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
-    
+    GenEntities = 0;
 
     // Dimensions
     ScaleFactor = 0.8f;
@@ -56,8 +57,17 @@ bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
     }
 }
 
+bool EditorGUI::CheckMouseInsidePrompt(float mouseX, float mouseY) {
+    if (mouseX > LogEditPromptPositions.x && mouseX <= LogEditPromptPositions.x + LogEditPromptDimensions.x && mouseY > LogEditPromptPositions.y && mouseY < LogEditPromptPositions.y + LogEntryDimensions.y) {
+        return true;
+    }
+    else {
+        return false;
+    }
+}
+
 void EditorGUI::AddLogEntry(flecs::entity* entity) {
-    Log.push_back(LogEntry(entity, false));
+    Log.push_back(LogEntry(entity, false, GenEntities));
 }
 
 bool EditorGUI::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos) {
@@ -79,13 +89,21 @@ bool EditorGUI::ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypo
 
 void EditorGUI::Inputs(GLFWwindow* window) {
     // Mouse left button
+    double mouseX;
+    double mouseY;
+
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS) {
+        // Close prompt here
+        glfwGetCursorPos(window, &mouseX, &mouseY);
+        if (!CheckMouseInsidePrompt(mouseX, mouseY)) {}
+        for (LogEntry& entry : Log) {
+			entry.IsSelected = false;
+		}
+    }
 
     if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
     {
-
         // Stores the coordinates of the cursor
-        double mouseX;
-        double mouseY;
 
         if (ScaledGetCursorPos(window, &mouseX, &mouseY)) {
             // Only inside the scene window
@@ -120,9 +138,44 @@ void EditorGUI::CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimen
 }
 
 void EditorGUI::PrintPrompt(LogEntry* entry) {
+    ImGui::SetNextWindowSize(LogEditPromptDimensions);
+    ImGui::SetNextWindowPos(LogEditPromptPositions);
+
+    rp3d::Vector3 tmpPosition;
+    
     ImGui::Begin("Test");
     ImGui::Text("Hello");
-    ImGui::InputFloat4("input test", vec4f);
+    
+    ImGui::NewLine();
+    // Managing rotation
+    
+    std::string ButtonName = "Position";
+    ButtonName = entry->Name + ButtonName;
+
+    try
+    {
+        // Managing position
+        tmpPosition = entry->Entity->get<Transform>()->Position;
+        float tmpPositionVec[3] = { tmpPosition.x, tmpPosition.y, tmpPosition.z };
+        ImGui::InputFloat3(ButtonName.c_str(), tmpPositionVec);
+        tmpPosition = rp3d::Vector3(tmpPositionVec[0], tmpPositionVec[1], tmpPositionVec[2]);
+    }
+    catch (...)
+    {
+        std::cout << "No transform component" << std::endl;
+    }
+
+    ButtonName = "Rotation";
+    ButtonName = entry->Name + ButtonName;
+    AnglesQuaternion tmpQuat = AnglesQuaternion(entry->Entity->get<Transform>()->Rotation);
+    AnglesEulerAngles tmpRotation = ToAnglesEulerAngles(tmpQuat);
+    tmpRotation.toDegrees();
+    ImGui::InputFloat3(ButtonName.c_str(), tmpRotation.XYZ);
+    tmpRotation.toRadians();
+    rp3d::Quaternion newRotation = rp3d::Quaternion::fromEulerAngles(tmpRotation.XYZ[0], tmpRotation.XYZ[1], tmpRotation.XYZ[2]);
+    
+    entry->Entity->set<Transform>({ tmpPosition, newRotation });
+    
     if (ImGui::Button("Done")) {
         entry->IsSelected = false;
     }
@@ -164,11 +217,12 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Prefab Container", NULL, flags);
     if (ImGui::Button("Square Block", ButtonDimensions)) {
-        Entities.push_back(GameEngine::GetInstance().ECSWorld.entity()
+        Entities.push_back(GameEngine::GetInstance().ECSWorld.entity("SUZA")
             .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) })
             .set<Renderer>({ Models::SUZANNE })
-            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<CollisionBody>({NULL})
             .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, NULL }));
+        GenEntities++;
         AddLogEntry(&Entities.back());
     }
     ImGui::SameLine();
@@ -197,31 +251,34 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 
     ImGui::Begin("Log", NULL, flags);    
     ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
+    uint32_t index = 0;
+    for (auto&& entry : Log)
+    {
+        if (ImGui::Button(entry.Name.c_str()))
+        {
+            entry.IsSelected = !entry.IsSelected;
+        }
+        if (entry.IsSelected)
+        {
+            PrintPrompt(&entry);
+        }
+    }
+    /*
     ImGui::ListBoxHeader(" ", Log.size(), Log.size());
         for (auto&& entry : Log)
         {
-
-            if (ImGui::Selectable("XXX", entry.IsSelected))
+            std::string tmp = "##" + std::to_string(entry.Entity->id());
+            if (ImGui::Selectable(tmp.c_str(), entry.IsSelected))
             {
                 entry.IsSelected = !entry.IsSelected;
-                if (entry.IsSelected)
-                {
-					double mouseX, mouseY;
-					glfwGetCursorPos(window, &mouseX, &mouseY);
-                    ImGui::SetNextWindowSize(LogEditPromptDimensions);
-                    //CheckSpaceForPrompt(&mouseX, &mouseY, LogEditPromptDimensions);
-					ImGui::SetNextWindowPos(LogEditPromptPositions);
-                }
-            }
-            else {
-                entry.IsSelected == false;
             }
             if (entry.IsSelected)
             {
                 PrintPrompt(&entry);
-			}
+            }
         }
     ImGui::ListBoxFooter();
+    */
     ImGui::End();
    
 }

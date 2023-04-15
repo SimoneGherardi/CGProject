@@ -13,4 +13,6 @@ struct VertexData {
 	uint32_t WeightsCount;
 	uint32_t BonesOffset;
 	uint32_t BonesCount;
+	float Metallic;
+	float Roughness;
 };

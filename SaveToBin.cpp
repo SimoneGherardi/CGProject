@@ -221,7 +221,12 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
     // Create directory
     std::string DirName = createGLTFDirectories(root, "GLTFPrimitive");
     // Evaluate dimension of object
-    int32_t GLTFPrimitiveSize = (sizeof(int32_t) * 6) + (sizeof(float) * 3 * (primitive.PositionsNum * 2)) + (sizeof(unsigned short) * primitive.IndicesNum) + (sizeof(float) * 2 * (primitive.UVCoordinatesNum));
+    int32_t GLTFPrimitiveSize = 
+        (sizeof(int32_t) * 7) +
+        (sizeof(float) * 3 * (primitive.PositionsNum * 2)) +
+        (sizeof(unsigned short) * primitive.IndicesNum) +
+        (sizeof(float) * 2 * (primitive.UVCoordinatesNum)) +
+        (sizeof(float) * 4 * (primitive.TangentsNum));
     // Save to file
     // #PrimitiveId_MeshName_"primitive".primitive
     std::string BinaryFileName = DirName + "/" + "0000" + std::to_string(primitive.Id) + "_" + filename + ".primitive";
@@ -244,6 +249,9 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
     Offset += sizeof(int32_t);
     // int32_t UVCoordinatesNum;
     memcpy(ToFile + Offset, &primitive.UVCoordinatesNum, sizeof(int32_t));
+    Offset += sizeof(int32_t);
+    // int32_t TangentsNum;
+    memcpy(ToFile + Offset, &primitive.TangentsNum, sizeof(int32_t));
     Offset += sizeof(int32_t);
 
     // std::vector<std::vector<float>> Positions;
@@ -274,6 +282,15 @@ void saveGLTFPrimitiveToBinFile(std::string root, std::string filename, GLTFPrim
     for (int i = 0; i < primitive.UVCoordinatesNum; i++) {
         std::vector TmpVector = primitive.UVCoordinates[i];
         for (int j = 0; j < 2; j++) {
+            float TmpFloat = TmpVector[j];
+            memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
+            Offset += sizeof(float);
+        }
+    }
+    // std::vector<std::vector<float>> Tangents;
+    for (int i = 0; i < primitive.TangentsNum; i++) {
+        std::vector TmpVector = primitive.Tangents[i];
+        for (int j = 0; j < 4; j++) {
             float TmpFloat = TmpVector[j];
             memcpy(ToFile + Offset, (char*)&TmpFloat, sizeof(float));
             Offset += sizeof(float);

@@ -31,7 +31,8 @@ namespace Models
 		TEST_TEXTURE,
 		CUBICBB,
 		SPHEREBB,
-		CAPSULEBB
+		CAPSULEBB,
+		SPHERE
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
@@ -52,6 +53,7 @@ namespace Models
 		{TEST_TEXTURE, "test_texture"},
 		{CUBICBB, "cubic-bb"},
 		{SPHEREBB, "sphere-bb"},
-		{CAPSULEBB, "capsule-bb"}
+		{CAPSULEBB, "capsule-bb"},
+		{SPHERE, "test_sphere"}
 	};
 }

@@ -46,7 +46,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .add<Transform>()
             .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
     };
@@ -66,7 +66,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1.5, 1.5, 1.5}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Collider>({ {2.2, 2.2, 2.2}, rp3d::CollisionShapeName::BOX, false, NULL })
             .set<Renderer>({ Models::GRASSBLOCK });
     };
     _Prefabs[PREFABS::ROCK1] = [this](const char* name) {

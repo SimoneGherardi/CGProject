@@ -37,14 +37,14 @@ void CreateCollider(rp3d::CollisionBody* body, Collider& collider)
     switch (collider.Type)
     {
     case rp3d::CollisionShapeName::CAPSULE:
-        shape = engine.PhysicsCommon.createCapsuleShape(collider.Size.x, collider.Size.y);
+        shape = engine.PhysicsCommon.createCapsuleShape(collider.Size.x / 2, collider.Size.y);
         break;
     case rp3d::CollisionShapeName::BOX:
-        shape = engine.PhysicsCommon.createBoxShape(collider.Size);
+        shape = engine.PhysicsCommon.createBoxShape(collider.Size / 2);
         break;
     case rp3d::CollisionShapeName::SPHERE:
     default:
-        shape = engine.PhysicsCommon.createSphereShape(collider.Size.x);
+        shape = engine.PhysicsCommon.createSphereShape(collider.Size.x / 2);
         break;
     }
     collider.RP3DCollider = body->addCollider(shape, rp3d::Transform::identity());

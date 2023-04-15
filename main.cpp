@@ -39,7 +39,7 @@ void initialize()
     Window = initializeWindow(TITLE, WIDTH, HEIGHT, &(RenderingEngine::GetInstance()), onResize);
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(Window, true);
-    RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT});
+    RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT}, Window);
     
     TRACEEND;
 }

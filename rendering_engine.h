@@ -42,6 +42,7 @@ constexpr auto MAX_INSTANCES = 4096;
 class RenderingEngine
 {
 private:
+	GLFWwindow* _Window;
 	WindowSize _WindowSize;
 	VkDebugUtilsMessengerEXT _DebugMessenger;
 
@@ -144,7 +145,7 @@ public:
 	EditorGUI* EditGUI;
 	FrameData* GetCurrentFrameData();
 
-	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize);
+	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window);
 	void Render(float delta, CameraInfos* camera);
 	void Cleanup();
 

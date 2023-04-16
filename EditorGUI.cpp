@@ -113,15 +113,11 @@ void EditorGUI::Inputs(GLFWwindow* window) {
 
     if (ScaledGetCursorPos(window, &mouseX, &mouseY))
     {
-        mouseXSpawn = mouseX;
-        mouseYSpawn = mouseY;
         // Only inside Scene
         // Left mouse button pressed
         if (leftEvent == GLFW_PRESS)
         {
-            // Hides mouse cursor
-            //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-
+            
             // Prevents camera from jumping on the first click
             if (_FirstClick)
             {
@@ -142,7 +138,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
             if (GameEngine::GetInstance().SelectedEntityId != FLECS_INVALID_ENTITY) {
 
                 // Fetches the coordinates of the cursor
-                glfwGetCursorPos(window, &mouseX, &mouseY);
+                ScaledGetCursorPos(window, &mouseX, &mouseY);
                 glm::vec2 mousePositionNorm = glm::vec2(MouseToNorm(mouseX, WindowWidth), MouseToNorm(mouseY, WindowHeight));
                 glm::vec2 lastmousePositionNorm = glm::vec2(MouseToNorm(_LastMouseX, WindowWidth), MouseToNorm(_LastMouseY, WindowHeight));
 

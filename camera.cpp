@@ -54,19 +54,24 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 
 void CameraInfos::Inputs(GLFWwindow* window)
 {
+	char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	char middleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+	char lSfhitEvent = glfwGetMouseButton(window, GLFW_KEY_LEFT_SHIFT);
+	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
+	GameEngine& gameEngine = GameEngine::GetInstance();
 
 	// Handles mouse inputs
 	// Camera rotation
-	if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+	if (middleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS)
 	{
 		// Hides mouse cursor
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		
 		// Prevents camera from jumping on the first click
-		if (firstClick)
+		if (_FirstClick)
 		{
 			glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
-			firstClick = false;
+			_FirstClick = false;
 		}
 
 		// Stores the coordinates of the cursor
@@ -95,28 +100,28 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 	}
-	else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE && glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) != GLFW_PRESS)
+	else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS )
 	{
 		// Unhides cursor since camera is not looking around anymore
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		
 		// Makes sure the next time the camera looks around it doesn't jump
-		firstClick = true;
+		_FirstClick = true;
 	}
 
 	// Camera translation
-	if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+	if (lSfhitEvent == GLFW_PRESS)
 	{
-		if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_PRESS)
+		if (middleEvent == GLFW_PRESS)
 		{
 		// Hides mouse cursor
 		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		
 		// Prevents camera from jumping on the first click
-		if (firstClick)
+		if (_FirstClick)
 		{
 			glfwSetCursorPos(window, (Width / 2), (Height / 2));
-			firstClick = false;
+			_FirstClick = false;
 		}
 
 		// Stores the coordinates of the cursor
@@ -137,24 +142,22 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, (Width / 2), (Height / 2));
 		}
-		else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE) == GLFW_RELEASE)
+		else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS)
 		{
 			// Unhides cursor since camera is not looking around anymore
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 			
 			// Makes sure the next time the camera looks around it doesn't jump
-			firstClick = true;
+			_FirstClick = true;
 		}
 	}
 
-	GameEngine& gameEngine = GameEngine::GetInstance();
-	auto spaceState = glfwGetKey(window, GLFW_KEY_SPACE);
-	if (spaceState == GLFW_RELEASE && _LastSpaceEvent == GLFW_PRESS)
+	
+	if (spaceEvent == GLFW_RELEASE && _LastSpaceEvent == GLFW_PRESS)
 	{
 		gameEngine.SetIsEditor(!gameEngine.IsEditor);
-		std::cout << spaceState << " " << gameEngine.IsEditor << std::endl;
+		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
 	}
-	_LastSpaceEvent = spaceState;
 
 	// Handles scroll and swipe inputs
 	double yoffset = 0;
@@ -172,5 +175,9 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		CameraHorizontalSlide(xoffset);
 		global_xoffset = 0;
 	};
-	
+
+	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	_LastMiddleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
+	_LastLSfhitEvent = glfwGetMouseButton(window, GLFW_KEY_LEFT_SHIFT);
+	_LastSpaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 }

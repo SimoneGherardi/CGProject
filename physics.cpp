@@ -63,8 +63,6 @@ void CreateColliderRigidBody(flecs::entity e, RigidBody& body, Collider& collide
 
 void TransformPositionToPhysicsPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
 {
-    GameEngine& engine = GameEngine::GetInstance();
-    if (!engine.IsPhysicsActive) return;
     if (rigidbody.Body == NULL) return;
     rigidbody.Body->setTransform(transform.LocalTransform());
 }

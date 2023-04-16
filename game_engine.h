@@ -1,5 +1,5 @@
 #pragma once
-
+#define FLECS_INVALID_ENTITY 0
 
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
@@ -20,12 +20,11 @@ enum PREFABS {
 	WOODBRIDGE,
 	WOODPLATFORM,
 	WOODSHELF,
-	CUBE
+	CUBE,
 };
 
 struct RaycastInfo : rp3d::RaycastInfo {
 	flecs::entity Entity;
-	bool IsSelected = false;
 };
 
 class GatherAllRaycastCallback : public rp3d::RaycastCallback {
@@ -56,6 +55,7 @@ public:
 	std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
 	flecs::world ECSWorld;
 	std::vector<flecs::entity> Entities;
+	flecs::entity_t SelectedEntityId = FLECS_INVALID_ENTITY;
 	flecs::filter<> RaycastTargets;
 	rp3d::PhysicsCommon PhysicsCommon;
 	rp3d::PhysicsWorld* PhysicsWorld;
@@ -74,6 +74,8 @@ public:
 	void operator=(GameEngine const&) = delete;
 
 	flecs::entity InstantiateEntity(PREFABS prefab, const char* name = nullptr);
+	flecs::entity EntityFromId(flecs::entity_t id);
+	flecs::entity SelectedEntity();
 
 	rp3d::Vector3 WorldToCameraSpace(rp3d::Vector3 position);
 	rp3d::Vector3 CameraToWorldSpace(rp3d::Vector3 position);

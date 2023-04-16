@@ -9,20 +9,15 @@
 #include "glm/ext.hpp"
 #include <iostream>
 #include "flecs.h"
-
 #include "glm/gtx/string_cast.hpp"
 #include <string>
 #include <vector>
+#include <map>
+#include "game_engine.h"
+
 
 struct WindowSize {
 	int Width, Height;
-};
-
-struct LogEntry {
-    flecs::entity* Entity;
-    bool IsSelected;
-
-    LogEntry(flecs::entity* entity, bool isSelected);
 };
 
 class EditorGUI
@@ -34,13 +29,6 @@ public:
     bool ShowDemoWindow;
     bool ShowAnotherWindow;
     int Counter = 0;
-    char _LastLeftEvent = GLFW_RELEASE;
-
-    // Debug
-    float vec4f[4] = { 0.10f, 0.20f, 0.30f, 0.44f };
-
-    std::vector <flecs::entity> Entities;
-    std::vector <LogEntry> Log;
 
     // Dimensions
     float ScaleFactor;
@@ -50,9 +38,9 @@ public:
     ImVec2 SceneDimensions;
     ImVec2 PrefabContainerDimensions;
     ImVec2 LogDimensions;
-    ImVec2 ButtonDimensions = ImVec2(200, 50);
-    ImVec2 LogEntryDimensions  = ImVec2(100, 50);
-    ImVec2 LogEditPromptDimensions = ImVec2(200, 100);
+    ImVec2 ButtonDimensions;
+    ImVec2 LogEntryDimensions;
+    ImVec2 LogEditPromptDimensions;
 
     // Positions
     glm::vec2 SceneCenterPosition;
@@ -62,7 +50,8 @@ public:
     ImVec2 LogPosition;
     ImVec2 LogEditPromptPositions;
 
-	
+    std::map<PREFABS, std::string> Prefabs;
+
     static EditorGUI* GetInstance();
     void Initialize(WindowSize windowSize, GLFWwindow* window);
     void ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window);
@@ -71,14 +60,28 @@ public:
     bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
     void Inputs(GLFWwindow* window);
     void CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions);
-    void PrintPrompt(LogEntry* entry);
-    
+    void PrintPrompt();
+    bool CheckMouseInsidePrompt(float mouseX, float mouseY);
+    double MouseToNorm(double mouse, double dimension);
+    double NormToMouse(double norm, double dimension);
+    double ScaleMouseX(double mouseX);
+    double ScaleMouseY(double mouseY);  
+    void PrefabAddButton(const char* label, PREFABS prefab);
+    void SetPrefabsMap();
     
 protected:
     EditorGUI();
     GLFWwindow* _Window;
     static EditorGUI* _Instance;
 
+    double _LastMouseX;
+    double _LastMouseY;
+    char _LastLeftEvent = GLFW_RELEASE;
+    char _LastMiddleEvent = GLFW_RELEASE;
+    char _LastLSfhitEvent = GLFW_RELEASE;
+    char _LastSpaceEvent = GLFW_RELEASE;
+    bool _FirstClick = true;
+    double _FirstZValueObject = 0;
 
 };
 #endif

@@ -5,6 +5,12 @@
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include <filesystem>
+#include <sys/stat.h>
+
+#if _WINDLL
+#else
+#define sscanf_s(buf, fmt, ...) sscanf((buf), (fmt), __VA_ARGS__)
+#endif
 
 flecs::entity DEBUGGO;
 
@@ -28,6 +34,10 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
         .build();
 
     _InitPrefabs();
+    
+    ECSWorld.entity("skybox")
+        .set<Transform>({ {0, 0, 0} })
+        .set<Renderer>({Models::SKYBOX_MODEL_ID});
     //_TestEcs();
 }
 
@@ -58,7 +68,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
-            .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, true, NULL })
             .set<Renderer>({ Models::BUSH });
     };
     _Prefabs[PREFABS::COIN] = [this](const char* name) {
@@ -184,10 +194,6 @@ void GameEngine::_TestEcs()
     DEBUGGO = ECSWorld.entity("Debuggo")
         .set<Transform>({ {10, 10, 1} })
         .set<Renderer>({ Models::DEBUG });
-    
-    ECSWorld.entity("skybox")
-        .set<Transform>({ {10, 10, 2} })
-        .set<Renderer>({Models::SKYBOX_MODEL_ID});
     
     ECSWorld.entity("coin")
         .set<Transform>({ {4, 2, 0} })
@@ -375,37 +381,8 @@ void GameEngine::SerializeEntities() {
 
 PREFABS GetPrefabFromInt(int X)
 {
-    switch (X)
-    {
-    case 0:
-        return PREFABS::MONKEY;
-    case 1:
-        return PREFABS::BUSH;
-    case 2:
-        return PREFABS::COIN;
-    case 3:
-        return PREFABS::GRASSBLOCK;
-    case 4:
-        return PREFABS::ROCK1;
-    case 5:
-        return PREFABS::ROCK2;
-    case 6:
-        return PREFABS::SIGN;
-    case 7:
-        return PREFABS::TREE1;
-    case 8:
-        return PREFABS::TREE2;
-    case 9:
-        return PREFABS::WOODBRIDGE;
-    case 10:
-        return PREFABS::WOODPLATFORM;
-    case 11:
-        return PREFABS::WOODSHELF;
-    case 12:
-        return PREFABS::CUBE;
-    default:
-        return PREFABS::MONKEY;
-    }
+    PREFABS p = (PREFABS) X;
+    return p;
 }
 
 void  GameEngine::DeserializeEntities(std::string filename)

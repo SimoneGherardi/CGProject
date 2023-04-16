@@ -168,7 +168,7 @@ void main()
 	{
 		// Sample diffuse irradiance at normal direction.
 		// vec3 irradiance = texture(cubeSampler, N).rgb;
-		// vec3 irradiance = vec3(0.5f, 0.5f, 0.5f);
+		// vec3 irradiance = vec3(1, 1, 1);
 		vec3 irradiance = globalData.AmbientLight;
 
 		// Calculate Fresnel term for ambient lighting.
@@ -184,8 +184,10 @@ void main()
 		vec3 diffuseIBL = kd * albedo * irradiance;
 
 		// Sample pre-filtered specular reflection environment at correct mipmap level.
-		int specularTextureLevels = textureQueryLevels(cubeSampler);
-		vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb;
+		// int specularTextureLevels = textureQueryLevels(cubeSampler);
+		// vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb;
+		// vec3 specularIrradiance = mix(texture(cubeSampler, Lr).rgb, globalData.AmbientLight, roughness);
+		vec3 specularIrradiance = texture(cubeSampler, Lr).rgb * (1-roughness);
 
 		// Total specular IBL contribution.
 		vec3 specularIBL = (F0) * specularIrradiance;

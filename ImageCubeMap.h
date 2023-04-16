@@ -51,6 +51,7 @@ struct SkyboxImageBuilder
     uint32_t Width;
     uint32_t Height;
     uint32_t Channels;
+    uint32_t MipLevels;
 
     VulkanContext Context;
     DeviceMemory* StagingMemory;
@@ -60,6 +61,7 @@ struct SkyboxImageBuilder
 
     SkyboxImageBuilder Prepare(
         const VulkanContext context,
+        const uint32_t mipLevels,
         DeviceMemory* stagingMemory,
         DeviceMemory* destinationMemory
     );

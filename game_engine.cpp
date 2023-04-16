@@ -172,9 +172,16 @@ void GameEngine::_TestEcs()
         .set<Transform>({ {10, 10, 2} })
         .set<Renderer>({Models::SKYBOX_MODEL_ID});
     
+    ECSWorld.entity("coin")
+        .set<Transform>({ {4, 2, 0} })
+        .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+        .set<Collider>({ {0.4, 1, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(0, 0.005f, 0), 1.0f})
+        .set<Renderer>({Models::COIN});
+    
     ECSWorld.entity("testball")
         .set<Transform>({ {0, 4, 6} })
-        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(0, 0.002f, 0), 1.0f})
+        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(-0.005f, 0, 0), 1.0f})
         .set<Renderer>({Models::SPHERE});
 }
 

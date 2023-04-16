@@ -81,7 +81,7 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 	return Buffer{ b, size, alignedSize, offset, Memory };
 }
 
-Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage, const uint32_t arrayLayers, const VkImageCreateFlags createFlags)
+Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage, const uint32_t arrayLayers, const VkImageCreateFlags createFlags, const uint32_t mipLevels)
 {
 	VkImage image;
 	VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
@@ -94,7 +94,8 @@ Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height
 		usage,
 		extent,
 		arrayLayers,
-		createFlags
+		createFlags,
+		mipLevels
 	);
 
 	CheckVkResult(vkCreateImage(

@@ -155,12 +155,14 @@ void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat form
 
 SkyboxImageBuilder SkyboxImageBuilder::Prepare(
     const VulkanContext context,
+	const uint32_t mipLevels,
     DeviceMemory* stagingMemory,
     DeviceMemory* destinationMemory
 )
 {
     assert(State == START);
     Context = context;
+	MipLevels = mipLevels;
     StagingMemory = stagingMemory;
     DestinationMemory = destinationMemory;
     State = PREPARED;

@@ -19,7 +19,7 @@ namespace VulkanStructs {
 	const VkPipelineMultisampleStateCreateInfo MultisamplingStateCreateInfo();
 	const VkPipelineColorBlendAttachmentState ColorBlendAttachmentState();
 	const VkPipelineLayoutCreateInfo PipelineLayoutCreateInfo();
-	const VkImageCreateInfo ImageCreateInfo(const VkFormat format, const VkImageUsageFlags usageFlags, const VkExtent3D extent, const uint32_t arrayLayers = 1, const VkImageCreateFlags createFlags = 0);
+	const VkImageCreateInfo ImageCreateInfo(const VkFormat format, const VkImageUsageFlags usageFlags, const VkExtent3D extent, const uint32_t arrayLayers = 1, const VkImageCreateFlags createFlags = 0, const uint32_t mipLevels = 1);
 	const VkImageViewCreateInfo ImageviewCreateInfo(const VkFormat format, const VkImage image, const VkImageAspectFlags aspectFlags);
 	const VkPipelineDepthStencilStateCreateInfo DepthStencilCreateInfo(const bool bDepthTest, const bool bDepthWrite, const VkCompareOp compareOp);
 	const VkDescriptorSetLayoutBinding DescriptorsetLayoutBinding(const VkDescriptorType type, const VkShaderStageFlags stageFlags, const uint32_t binding);

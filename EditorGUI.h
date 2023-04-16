@@ -27,8 +27,6 @@ public:
     bool ShowDemoWindow;
     bool ShowAnotherWindow;
     int Counter = 0;
-    char _LastLeftEvent = GLFW_RELEASE;
-    bool firstClick = true;
 
     // Dimensions
     float ScaleFactor;
@@ -61,6 +59,10 @@ public:
     void CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions);
     void PrintPrompt();
     bool CheckMouseInsidePrompt(float mouseX, float mouseY);
+    double MouseToNorm(double mouse, double dimension);
+    double NormToMouse(double norm, double dimension);
+    double ScaleMouseX(double mouseX);
+    double ScaleMouseY(double mouseY);
     
     
 protected:
@@ -68,6 +70,13 @@ protected:
     GLFWwindow* _Window;
     static EditorGUI* _Instance;
 
+    double _LastMouseX;
+    double _LastMouseY;
+    char _LastLeftEvent = GLFW_RELEASE;
+    char _LastMiddleEvent = GLFW_RELEASE;
+    char _LastLSfhitEvent = GLFW_RELEASE;
+    char _LastSpaceEvent = GLFW_RELEASE;
+    bool _FirstClick = true;
 
 };
 #endif

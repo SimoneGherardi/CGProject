@@ -61,10 +61,20 @@ void CreateColliderRigidBody(flecs::entity e, RigidBody& body, Collider& collide
     CreateCollider(body.Body, collider);
 }
 
-void TransformPositionToPhysicsPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
+void TransformPositionToPhysicsPosition(flecs::entity e, Transform& transform, rp3d::CollisionBody* body)
 {
-    if (rigidbody.Body == NULL) return;
-    rigidbody.Body->setTransform(transform.LocalTransform());
+    if (body == nullptr) return;
+    body->setTransform(transform.LocalTransform());
+}
+
+void TransformPositionToPhysicsPositionRigidBody(flecs::entity e, Transform& transform, RigidBody& rigidbody)
+{
+    TransformPositionToPhysicsPosition(e, transform, rigidbody.Body);
+}
+
+void TransformPositionToPhysicsPositionCollisionBody(flecs::entity e, Transform& transform, CollisionBody& collisionbody)
+{
+    TransformPositionToPhysicsPosition(e, transform, collisionbody.Body);
 }
 
 void UpdatePhysicalWorld(flecs::iter it)
@@ -78,14 +88,24 @@ void UpdatePhysicalWorld(flecs::iter it)
     }
 }
 
-void PhysicsPositionToTransformPosition(flecs::entity e, Transform& transform, RigidBody& rigidbody)
+void PhysicsPositionToTransformPosition(flecs::entity e, Transform& transform, rp3d::CollisionBody* body)
 {
     GameEngine& engine = GameEngine::GetInstance();
     if (!engine.IsPhysicsActive) return;
-    if (rigidbody.Body == NULL) return;
-    rp3d::Transform physicsTransform = rigidbody.Body->getTransform();
+    if (body == NULL) return;
+    rp3d::Transform physicsTransform = body->getTransform();
     transform.Position = physicsTransform.getPosition();
     transform.Rotation = physicsTransform.getOrientation();
+}
+
+void PhysicsPositionToTransformPositionRigidbody(flecs::entity e, Transform& transform, RigidBody& rigidbody)
+{
+    PhysicsPositionToTransformPosition(e, transform, rigidbody.Body);
+}
+
+void PhysicsPositionToTransformPositionCollisionbody(flecs::entity e, Transform& transform, CollisionBody& collisionbody)
+{
+    PhysicsPositionToTransformPosition(e, transform, collisionbody.Body);
 }
 
 Physics::Physics(flecs::world& world)
@@ -96,7 +116,7 @@ Physics::Physics(flecs::world& world)
     _RigidBody = world.component<RigidBody>();
     _Collider = world.component<Collider>();
 
-    _CollisionBody = world.system<Transform, CollisionBody>()
+    _CreateCollisionBody = world.system<Transform, CollisionBody>()
         .each(CreateCollisionBody);
     _CreateRigidBody = world.system<Transform, RigidBody>()
         .each(CreateRigidBody);
@@ -104,13 +124,19 @@ Physics::Physics(flecs::world& world)
         .each(CreateColliderCollisioniBody);
     _CreateColliderForRigidBody = world.system<RigidBody, Collider>()
         .each(CreateColliderRigidBody);
-    _TransformPositionToPhysicsPosition = world.system<Transform, RigidBody>()
+    _TransformPositionToPhysicsPositionRigidbody = world.system<Transform, RigidBody>()
         .kind(flecs::PostUpdate)
-        .each(TransformPositionToPhysicsPosition);
+        .each(TransformPositionToPhysicsPositionRigidBody);
+    _TransformPositionToPhysicsPositionCollisionbody = world.system<Transform, CollisionBody>()
+        .kind(flecs::PostUpdate)
+        .each(TransformPositionToPhysicsPositionCollisionBody);
     _UpdateWorld = world.system<RigidBody>()
         .kind(flecs::PostUpdate)
         .iter(UpdatePhysicalWorld);
-    _PhysicsPositionToTransformPosition = world.system<Transform, RigidBody>()
+    _PhysicsPositionToTransformPositionRigidbody = world.system<Transform, RigidBody>()
         .kind(flecs::PostUpdate)
-        .each(PhysicsPositionToTransformPosition);
+        .each(PhysicsPositionToTransformPositionRigidbody);
+    _PhysicsPositionToTransformPositionCollisionbody = world.system<Transform, CollisionBody>()
+        .kind(flecs::PostUpdate)
+        .each(PhysicsPositionToTransformPositionCollisionbody);
 }

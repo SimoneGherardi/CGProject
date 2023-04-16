@@ -30,11 +30,14 @@ private:
     flecs::entity _Collider;
     flecs::entity _CreateColliderForCollisionBody;
     flecs::entity _CreateColliderForRigidBody;
+    flecs::entity _CreateCollisionBody;
     flecs::entity _CreateRigidBody;
     flecs::entity _CreateCollider;
-    flecs::entity _TransformPositionToPhysicsPosition;
+    flecs::entity _TransformPositionToPhysicsPositionRigidbody;
+    flecs::entity _PhysicsPositionToTransformPositionRigidbody;
+    flecs::entity _TransformPositionToPhysicsPositionCollisionbody;
+    flecs::entity _PhysicsPositionToTransformPositionCollisionbody;
     flecs::entity _UpdateWorld;
-    flecs::entity _PhysicsPositionToTransformPosition;
 public:
     Physics(flecs::world& world);
 };

@@ -58,7 +58,7 @@ void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
             case rp3d::CollisionShapeName::BOX:
             {
                 colliderInstance.ModelId = Models::CUBICBB;
-                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.x);
+                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.z);
 				break;
 			}
             default:

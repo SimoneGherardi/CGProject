@@ -21,7 +21,7 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
 
     RaycastTargets = ECSWorld.filter_builder()
         .term<Collider>()
-        .term<RigidBody>().oper(flecs::Or)
+        .term<RigidBody>().optional()
         .term<CollisionBody>().optional()
         .build();
 
@@ -53,13 +53,15 @@ void GameEngine::_InitPrefabs()
     _Prefabs[PREFABS::BUSH] = [this](const char* name) {
         return ECSWorld.entity(name)
             .add<Transform>()
+            .set<CollisionBody>({ NULL })
+            .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
             .set<Renderer>({ Models::BUSH });
     };
     _Prefabs[PREFABS::COIN] = [this](const char* name) {
         return ECSWorld.entity(name)
             .add<Transform>()
             .set<CollisionBody>({ NULL })
-            .set<Collider>({ {1, 1, 0.2}, rp3d::CollisionShapeName::BOX, true, NULL })
+            .set<Collider>({ {0.3, 1, 1}, rp3d::CollisionShapeName::BOX, true, NULL })
             .set<Renderer>({ Models::COIN });
     };
     _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
@@ -267,19 +269,12 @@ rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo
     GameEngine &engine = GameEngine::GetInstance();
 
     engine.RaycastTargets.iter([&](flecs::iter& it) {
-        flecs::id vs_id = it.id(2);
-        if (vs_id == engine.ECSWorld.id<CollisionBody>()) {
-            auto cb = it.field<CollisionBody>(2);
-            for (auto i : it) {
-                if (cb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
-			}
-        }
-        else if (vs_id == engine.ECSWorld.id<RigidBody>()) {
-            auto rb = it.field<RigidBody>(2);
-            for (auto i : it) {
-                if (rb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
-            }
-        }
+        auto rb = it.field<RigidBody>(2);
+        auto cb = it.field<CollisionBody>(3);
+        for (int i = 0; i < it.count(); i++) {
+			if (it.is_set(2) && rb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
+			if (it.is_set(3) && cb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
+		}
     });
     
     Infos.push_back(raycastInfo);

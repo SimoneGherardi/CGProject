@@ -184,10 +184,10 @@ void main()
 		vec3 diffuseIBL = kd * albedo * irradiance;
 
 		// Sample pre-filtered specular reflection environment at correct mipmap level.
-		// int specularTextureLevels = textureQueryLevels(cubeSampler);
-		// vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb;
+		int specularTextureLevels = textureQueryLevels(cubeSampler);
+		vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb * (1-roughness);
 		// vec3 specularIrradiance = mix(texture(cubeSampler, Lr).rgb, globalData.AmbientLight, roughness);
-		vec3 specularIrradiance = texture(cubeSampler, Lr).rgb * (1-roughness);
+		// vec3 specularIrradiance = texture(cubeSampler, Lr).rgb * (1-roughness);
 
 		// Total specular IBL contribution.
 		vec3 specularIBL = (F0) * specularIrradiance;

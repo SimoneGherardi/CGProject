@@ -51,7 +51,8 @@ void __copyPixelsToImage(
     const uint8_t* pixels,
     DeviceMemory* stagingMemory,
     VkImage image,
-    const uint32_t baseLayer = 0
+    const uint32_t baseLayer = 0,
+	const uint32_t mipLevel = 0
 )
 {
 	ImmediateCommandBuffer immediate = ImmediateCommandBuffer(context);
@@ -68,7 +69,7 @@ void __copyPixelsToImage(
 		region.bufferImageHeight = 0;
 
 		region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		region.imageSubresource.mipLevel = 0;
+		region.imageSubresource.mipLevel = mipLevel;
 		region.imageSubresource.baseArrayLayer = baseLayer;
 		region.imageSubresource.layerCount = 1;
 
@@ -92,7 +93,7 @@ void __copyPixelsToImage(
 
 
 // TODO move in a library
-void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layers)
+void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t layers, uint32_t startMip, uint32_t mipLevels)
 {
 	ImmediateCommandBuffer immediate = ImmediateCommandBuffer(context);
 	immediate.Submit([=](VkCommandBuffer cmd) {
@@ -107,8 +108,8 @@ void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat form
 
 		barrier.image = image;
 		barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-		barrier.subresourceRange.baseMipLevel = 0;
-		barrier.subresourceRange.levelCount = 1;
+		barrier.subresourceRange.baseMipLevel = startMip;
+		barrier.subresourceRange.levelCount = mipLevels;
 		barrier.subresourceRange.baseArrayLayer = 0;
 		barrier.subresourceRange.layerCount = layers;
 
@@ -124,6 +125,22 @@ void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat form
 			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
 		}
 		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
+		{
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL)
+		{
+			barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+			sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL)
 		{
 			barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
 			barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
@@ -201,17 +218,18 @@ SkyboxImageBuilder SkyboxImageBuilder::AddFacePixeldata(
         ImageBuffer = DestinationMemory->NewImage(
             Width,
             Height,
-            VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
             6,
-            VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
+            VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT,
+			MipLevels
         );
-        __transitionImageLayout(Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 6);
+        __transitionImageLayout(Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 6, 0, MipLevels);
     }
     assert(Width == width);
     assert(Height == height);
     assert(Channels == channels);
 	__applyRotation(width, height, rotation, data);
-    __copyPixelsToImage(Context, Width, Height, Channels, data, StagingMemory, ImageBuffer.Image, face);
+    __copyPixelsToImage(Context, Width, Height, Channels, data, StagingMemory, ImageBuffer.Image, face, 0);
     State = BUILDING;
     return *this;
 }
@@ -237,19 +255,53 @@ SkyboxImageBuilder SkyboxImageBuilder::AddFacePixeldata(
 SkyboxImage SkyboxImageBuilder::Build()
 {
     assert(State == BUILDING);
-    __transitionImageLayout(
-        Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 6);
+	// build mipmaps
+	__transitionImageLayout(Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 6, 0, 1);
+	ImmediateCommandBuffer buf = ImmediateCommandBuffer(Context);
+	int32_t size = Width;
+	for (int i = 1; i < MipLevels; i++)
+	{
+		VkImageBlit blit = {};
+		blit.srcOffsets[0] = { 0,0,0 };
+		blit.srcOffsets[1] = { size, size, 1 };
+		blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.srcSubresource.mipLevel = i - 1;
+		blit.srcSubresource.baseArrayLayer = 0;
+		blit.srcSubresource.layerCount = 6;
+		blit.dstOffsets[0] = { 0,0,0 };
+		blit.dstOffsets[1] = { size > 1 ? size/2 : 1, size > 1 ? size/2 : 1, 1 };
+		blit.dstSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		blit.dstSubresource.mipLevel = i;
+		blit.dstSubresource.baseArrayLayer = 0;
+		blit.dstSubresource.layerCount = 6;
+		buf.Submit([=](VkCommandBuffer cmd) {
+			vkCmdBlitImage(cmd,
+				ImageBuffer.Image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+				ImageBuffer.Image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+				1, &blit, VK_FILTER_LINEAR
+			);
+		});
+		buf.Wait();
+		__transitionImageLayout(Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, 6, i, 1);
+		if (size > 1) { size /= 2; }
+	}
+	buf.Cleanup();
+	__transitionImageLayout(Context, ImageBuffer.Image, ImageBuffer.Format, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 6, 0, MipLevels);
 	VkImageView view = initializeImageView(
 		Context->Device,
 		ImageBuffer.Image,
 		ImageBuffer.Format,
 		VK_IMAGE_ASPECT_COLOR_BIT,
-		1,
+		MipLevels,
 		VK_IMAGE_VIEW_TYPE_CUBE,
 		6
 	);
     VkSampler sampler;
     VkSamplerCreateInfo samplerCreateInfo = VulkanStructs::SamplerCreateInfo(VK_FILTER_NEAREST, VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE);
+	samplerCreateInfo.mipLodBias = 0;
+	samplerCreateInfo.minLod = 0;
+	samplerCreateInfo.maxLod = MipLevels;
+	samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
 	CheckVkResult(vkCreateSampler(Context->Device, &samplerCreateInfo, nullptr, &sampler));
 
     VkDescriptorImageInfo imageInfo = {};

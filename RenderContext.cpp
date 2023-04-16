@@ -331,7 +331,7 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 void RenderContext::_InitializeSkybox(const VulkanContext context, DeviceMemory* stagingMemory, DeviceMemory* memory)
 {
 	SkyboxImageBuilder b = {};
-	Skybox = b.Prepare(context, 1, stagingMemory, memory)
+	Skybox = b.Prepare(context, 6, stagingMemory, memory)
 		.AddFace(SKYBOX_PATH + std::string("/posz.jpg"), FRONT)
 		.AddFace(SKYBOX_PATH + std::string("/negz.jpg"), BACK)
 		.AddFace(SKYBOX_PATH + std::string("/posx.jpg"), LEFT)

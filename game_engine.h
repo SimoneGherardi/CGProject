@@ -6,22 +6,7 @@
 #include "camera.h"
 #include <map>
 #include <optional>
-
-enum PREFABS {
-	MONKEY,
-	BUSH,
-	COIN,
-	GRASSBLOCK,
-	ROCK1,
-	ROCK2,
-	SIGN,
-	TREE1,
-	TREE2,
-	WOODBRIDGE,
-	WOODPLATFORM,
-	WOODSHELF,
-	CUBE,
-};
+#include "prefab.h"
 
 struct RaycastInfo : rp3d::RaycastInfo {
 	flecs::entity Entity;

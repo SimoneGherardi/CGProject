@@ -1,6 +1,6 @@
 #pragma once
 #include <flecs.h>
-#include "game_engine.h"
+#include "prefab.h"
 
 typedef struct Prefab
 {

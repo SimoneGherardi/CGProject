@@ -56,10 +56,11 @@ void CameraInfos::Inputs(GLFWwindow* window)
 {
 	char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	char middleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-	char lSfhitEvent = glfwGetMouseButton(window, GLFW_KEY_LEFT_SHIFT);
+	char lSfhitEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 	GameEngine& gameEngine = GameEngine::GetInstance();
 
+	int lastKey = GLFW_KEY_LAST;
 	// Handles mouse inputs
 	// Camera rotation
 	if (middleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS)

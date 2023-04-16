@@ -48,6 +48,7 @@ private:
 	void _InitPrefabs();
 	void _TestEcs();
 	void _SetupPhysicsLogger();
+	
 
 public:
 	static GameEngine& GetInstance();
@@ -86,4 +87,6 @@ public:
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 
 	void SetIsEditor(bool isEditor);
+	void SerializeEntities();
+	void DeserializeEntities(std::string filename);
 };

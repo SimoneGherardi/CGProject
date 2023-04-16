@@ -51,10 +51,8 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     PrefabContainerDimensions = ImVec2(SceneDimensions[0], ((float)windowSize.Height) - SceneDimensions.y - MenuBarHeight);
     LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleFactor), ((float)windowSize.Height) - MenuBarHeight);
     LogEditPromptDimensions = ImVec2(LogDimensions.x, LogDimensions.y * 0.5);
-
-    ButtonDimensions = ImVec2(200, 50);
-    LogEntryDimensions = ImVec2(100, 50);
-    LogEditPromptDimensions = ImVec2(200, 100);
+    ButtonDimensions = ImVec2((float)windowSize.Width * 0.09, (float)windowSize.Width * 0.05);
+    LogEntryDimensions = ImVec2(LogDimensions.y, ((float)windowSize.Height) * 0.1);
 
     // Positions
     SceneCenterPosition = glm::vec2((((SceneDimensions[0] / 2) + HorizontalBorder) / WindowWidth * 2) - 1, (((SceneDimensions[1] / 2) + MenuBarHeight) / WindowHeight) * 2 - 1);
@@ -268,11 +266,15 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(MenuBarPosition);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("Menu Bar", NULL, flags);
-    if (ImGui::Button("Open")) {
-        Counter++;
+    if (ImGui::Button("Open")) 
+    {
+        
     }
     ImGui::SameLine();
-    if (ImGui::Button("Save")) {}
+    if (ImGui::Button("Save")) 
+    {
+        GameEngine::GetInstance().SerializeEntities();
+    }
     ImGui::End();
 
     // Scene 

@@ -4,6 +4,7 @@
 #include <glm/gtx/transform.hpp>
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include <filesystem>
 
 flecs::entity DEBUGGO;
 
@@ -306,3 +307,43 @@ void GameEngine::SetIsEditor(bool isEditor)
     ShowBoundingBoxes = isEditor;
     IsEditor = isEditor;
 }
+
+void GameEngine::SerializeEntities() {
+    flecs::entity_to_json_desc_t serializer;
+    char buffer[2048];
+    struct stat sb;
+    std::string RootName = "./resources/scene";
+    int ret = stat(RootName.c_str(), &sb);
+    int tmp = errno;
+    if (stat(RootName.c_str(), &sb) != 0)
+    {
+        std::filesystem::create_directory(RootName);
+    };
+
+    std::ofstream Outfile;
+    std::string entitiesString;
+    for (auto entity : Entities) {
+        entitiesString += (std::string)entity.to_json(&serializer);
+        entitiesString += "\n";
+    }
+    std::string fileName = RootName + "/" + "scene.json";
+    Outfile.open(fileName, std::ios::out);
+    Outfile.write(entitiesString.c_str(), entitiesString.size());
+    Outfile.close();
+}
+
+/*
+void  GameEngine::DeserializeEntities(std::string filename)
+{
+    flecs::json_to_entity_desc_t serializer;
+	std::ifstream Infile;
+	Infile.open(filename, std::ios::in);
+	std::string line;
+    while (std::getline(Infile, line))
+    {
+		flecs::entity entity = ECSWorld.plec;
+		Entities.push_back(entity);
+	}
+	Infile.close();
+}
+*/

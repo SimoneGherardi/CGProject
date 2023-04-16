@@ -268,11 +268,15 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(MenuBarPosition);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("Menu Bar", NULL, flags);
-    if (ImGui::Button("Open")) {
-        Counter++;
+    if (ImGui::Button("Open")) 
+    {
+        
     }
     ImGui::SameLine();
-    if (ImGui::Button("Save")) {}
+    if (ImGui::Button("Save")) 
+    {
+        GameEngine::GetInstance().SerializeEntities();
+    }
     ImGui::End();
 
     // Scene 

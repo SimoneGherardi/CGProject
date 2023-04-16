@@ -4,6 +4,6 @@
 class ObjLoader : Loader3D
 {
 public:
-	void LoadMesh(const char* FName, ModelData& MD, VertexDescriptor& VD);
+	void LoadMesh(const char* FName, ModelInfo& MD, VertexDescriptor& VD);
 };
 

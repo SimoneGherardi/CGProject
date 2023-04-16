@@ -7,26 +7,27 @@ ImmediateCommandBuffer::ImmediateCommandBuffer(
 {
 	auto fenceCreateInfo = VulkanStructs::FenceCreateInfo();
 	CheckVkResult(
-		vkCreateFence(_Context.Device, &fenceCreateInfo, nullptr, &_Fence)
+		vkCreateFence(_Context->Device, &fenceCreateInfo, nullptr, &_Fence)
 	);
 
-	auto poolCreateInfo = VulkanStructs::CommandPoolCreateInfo();
+	auto poolCreateInfo = VulkanStructs::CommandPoolCreateInfo(
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+	);
 	CheckVkResult(
-		vkCreateCommandPool(_Context.Device, &poolCreateInfo, nullptr, &_Pool)
+		vkCreateCommandPool(_Context->Device, &poolCreateInfo, nullptr, &_Pool)
 	);
 
 	auto bufCreateInfo = VulkanStructs::CommandBufferAllocateInfo(_Pool, 1);
 	CheckVkResult(
-		vkAllocateCommandBuffers(_Context.Device, &bufCreateInfo, &_Buffer)
+		vkAllocateCommandBuffers(_Context->Device, &bufCreateInfo, &_Buffer)
 	);
 }
 
 void ImmediateCommandBuffer::Cleanup() const
 {
-	vkResetCommandPool(_Context.Device, _Pool, 0);
-
-	vkDestroyCommandPool(_Context.Device, _Pool, nullptr);
-	vkDestroyFence(_Context.Device, _Fence, nullptr);
+	vkResetCommandPool(_Context->Device, _Pool, 0);
+	vkDestroyCommandPool(_Context->Device, _Pool, nullptr);
+	vkDestroyFence(_Context->Device, _Fence, nullptr);
 }
 
 
@@ -42,11 +43,13 @@ void ImmediateCommandBuffer::Submit(EnqueueFunction_T&& function) const
 
 	VkSubmitInfo submit = VulkanStructs::SubmitInfo(&cmd);
 
-	CheckVkResult(vkQueueSubmit(_Context.GraphicsQueue, 1, &submit, _Fence));
+	CheckVkResult(vkQueueSubmit(_Context->GraphicsQueue, 1, &submit, _Fence));
 }
 
 void ImmediateCommandBuffer::Wait() const
 {
-	vkWaitForFences(_Context.Device, 1, &_Fence, true, (uint64_t) (2 * 1e9));
-	vkResetFences(_Context.Device, 1, &_Fence);
+	// https://community.khronos.org/t/vkcommandbuffer-is-in-use-pending-state/108662/6
+	vkWaitForFences(_Context->Device, 1, &_Fence, VK_TRUE, (uint64_t) (2 * 1e9));
+	vkResetFences(_Context->Device, 1, &_Fence);
+	vkResetCommandBuffer(_Buffer, 0);
 }

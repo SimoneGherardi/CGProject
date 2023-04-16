@@ -42,6 +42,14 @@ extern void initializeRenderPass(
     VkRenderPass* renderPass
 );
 
+extern void initializeGUIRenderPass(
+    const VkPhysicalDevice physicalDevice,
+    const VkDevice device,
+    const VkFormat format,
+    const VkSampleCountFlagBits msaaSamples,
+    VkRenderPass* renderPass
+);
+
 extern void cleanupRenderPass(const VkDevice device, VkRenderPass renderPass);
 
 extern VkFormat findDepthFormat(const VkPhysicalDevice physicalDevice);

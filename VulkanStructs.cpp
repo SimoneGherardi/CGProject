@@ -1,5 +1,6 @@
 #include "VulkanStructs.h"
 
+
 const VkCommandPoolCreateInfo VulkanStructs::CommandPoolCreateInfo(const VkCommandPoolResetFlags flags /*= 0*/)
 {
     VkCommandPoolCreateInfo info = {};
@@ -181,7 +182,14 @@ const VkPipelineLayoutCreateInfo VulkanStructs::PipelineLayoutCreateInfo() {
     return info;
 }
 
-const VkImageCreateInfo VulkanStructs::ImageCreateInfo(const VkFormat format, const VkImageUsageFlags usageFlags, const VkExtent3D extent)
+const VkImageCreateInfo VulkanStructs::ImageCreateInfo(
+    const VkFormat format,
+    const VkImageUsageFlags usageFlags, 
+    const VkExtent3D extent,
+    const uint32_t arrayLayers,
+    const VkImageCreateFlags createFlags,
+    const uint32_t mipLevels
+)
 {
     VkImageCreateInfo info = { };
     info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -189,11 +197,12 @@ const VkImageCreateInfo VulkanStructs::ImageCreateInfo(const VkFormat format, co
     info.imageType = VK_IMAGE_TYPE_2D;
     info.format = format;
     info.extent = extent;
-    info.mipLevels = 1;
-    info.arrayLayers = 1;
+    info.mipLevels = mipLevels;
     info.samples = VK_SAMPLE_COUNT_1_BIT;
     info.tiling = VK_IMAGE_TILING_OPTIMAL;
     info.usage = usageFlags;
+    info.arrayLayers = arrayLayers;
+    info.flags = createFlags;
     return info;
 }
 
@@ -302,5 +311,104 @@ const VkImageMemoryBarrier VulkanStructs::ImageBarrier(const VkImage image, cons
     result.subresourceRange.aspectMask = aspectMask;
     result.subresourceRange.levelCount = VK_REMAINING_MIP_LEVELS;
     result.subresourceRange.layerCount = VK_REMAINING_ARRAY_LAYERS;
+    return result;
+}
+
+
+const VkVertexInputBindingDescription VulkanStructs::VertexInputBindingDescription(
+    const uint32_t binding,
+    const uint32_t size,
+    const VkVertexInputRate rate
+)
+{
+    VkVertexInputBindingDescription result = {};
+    result.binding = binding;
+    result.stride = size;
+    result.inputRate = rate;
+    return result;
+}
+
+const std::vector<VkVertexInputAttributeDescription> VulkanStructs::VertexInputAttributeDescription(
+    const uint32_t binding
+)
+{
+    std::vector<VkVertexInputAttributeDescription> result = {};
+    VkVertexInputAttributeDescription tmp = {};
+    tmp.binding = binding;
+    tmp.location = 0;
+    tmp.format = VK_FORMAT_R32G32B32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Position);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 1;
+    tmp.format = VK_FORMAT_R32G32B32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Normal);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 2;
+    tmp.format = VK_FORMAT_R32G32_SFLOAT;
+    tmp.offset = offsetof(VertexData, UV);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 3;
+    tmp.format = VK_FORMAT_R32G32B32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Tangent);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 4;
+    tmp.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Color);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 5;
+    tmp.format = VK_FORMAT_R32_UINT;
+    tmp.offset = offsetof(VertexData, WeightsOffset);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 6;
+    tmp.format = VK_FORMAT_R32_UINT;
+    tmp.offset = offsetof(VertexData, WeightsCount);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 7;
+    tmp.format = VK_FORMAT_R32_UINT;
+    tmp.offset = offsetof(VertexData, BonesOffset);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 8;
+    tmp.format = VK_FORMAT_R32_UINT;
+    tmp.offset = offsetof(VertexData, BonesCount);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 9;
+    tmp.format = VK_FORMAT_R32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Metallic);
+    result.push_back(tmp);
+
+    tmp = {};
+    tmp.binding = binding;
+    tmp.location = 10;
+    tmp.format = VK_FORMAT_R32_SFLOAT;
+    tmp.offset = offsetof(VertexData, Roughness);
+    result.push_back(tmp);
+
     return result;
 }

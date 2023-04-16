@@ -47,7 +47,7 @@ void CheckVkResult(VkResult result)
 {
     if (result != VK_SUCCESS) {
         PrintVkError(result);
-        throw std::runtime_error("VkResult check failed");
+        throw "VkResult check failed";
     }
 }
 

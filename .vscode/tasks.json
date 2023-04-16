@@ -1,0 +1,22 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "make"
+        },
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "glslc resources/shaders/NewPBR.vert -o resources/shaders/NewPBR.vert.spv"
+        },
+        {
+            "label": "make",
+            "type": "shell",
+            "command": "glslc resources/shaders/NewPBR.frag -o resources/shaders/NewPBR.frag.spv"
+        }
+    ]
+}

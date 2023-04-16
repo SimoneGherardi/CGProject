@@ -1,0 +1,88 @@
+#ifndef EDITOR_CLASS_H
+#define EDITOR_CLASS_H
+
+#pragma once
+#include "imgui.h"
+#include "imgui_internal.h"
+#include <GLFW/glfw3.h>
+#include "stb_image.h"
+#include "glm/ext.hpp"
+#include <iostream>
+#include "flecs.h"
+#include "glm/gtx/string_cast.hpp"
+#include <string>
+#include <vector>
+#include <map>
+#include "game_engine.h"
+
+
+
+struct WindowSize {
+	int Width, Height;
+};
+
+class EditorGUI
+{
+public:
+	float WindowWidth;
+	float WindowHeight;
+    ImVec4 ClearColor;
+    bool ShowDemoWindow;
+    bool ShowAnotherWindow;
+    int Counter = 0;
+
+    // Dimensions
+    float ScaleFactor;
+    float MenuBarHeight;
+    float HorizontalBorder;
+    ImVec2 MenuBarDimensions;
+    ImVec2 SceneDimensions;
+    ImVec2 PrefabContainerDimensions;
+    ImVec2 LogDimensions;
+    ImVec2 ButtonDimensions;
+    ImVec2 LogEntryDimensions;
+    ImVec2 LogEditPromptDimensions;
+
+    // Positions
+    glm::vec2 SceneCenterPosition;
+    ImVec2 MenuBarPosition;
+    ImVec2 ScenePosition;
+    ImVec2 PrefabContainerPosition;
+    ImVec2 LogPosition;
+    ImVec2 LogEditPromptPositions;
+
+    std::map<PREFABS, std::string> Prefabs;
+
+    static EditorGUI* GetInstance();
+    void Initialize(WindowSize windowSize, GLFWwindow* window);
+    void ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window);
+    void AddLogEntry(flecs::entity* entity);
+    bool CheckMouseInsideScene(float mouseX, float mouseY);
+    bool ScaledGetCursorPos(GLFWwindow* window, double* xpos, double* ypos);
+    void Inputs(GLFWwindow* window);
+    void CheckSpaceForPrompt(double* spawnX, double* spawnY, ImVec2 dimensions);
+    void PrintPrompt();
+    bool CheckMouseInsidePrompt(float mouseX, float mouseY);
+    double MouseToNorm(double mouse, double dimension);
+    double NormToMouse(double norm, double dimension);
+    double ScaleMouseX(double mouseX);
+    double ScaleMouseY(double mouseY);  
+    void PrefabAddButton(const char* label, PREFABS prefab);
+    void SetPrefabsMap();
+    
+protected:
+    EditorGUI();
+    GLFWwindow* _Window;
+    static EditorGUI* _Instance;
+
+    double _LastMouseX;
+    double _LastMouseY;
+    char _LastLeftEvent = GLFW_RELEASE;
+    char _LastMiddleEvent = GLFW_RELEASE;
+    char _LastLSfhitEvent = GLFW_RELEASE;
+    char _LastSpaceEvent = GLFW_RELEASE;
+    bool _FirstClick = true;
+    double _FirstZValueObject = 0;
+
+};
+#endif

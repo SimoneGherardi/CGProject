@@ -336,3 +336,19 @@ void GameEngine::SerializeEntities() {
     Outfile.write(entitiesString.c_str(), entitiesString.size());
     Outfile.close();
 }
+
+/*
+void  GameEngine::DeserializeEntities(std::string filename)
+{
+    flecs::json_to_entity_desc_t serializer;
+	std::ifstream Infile;
+	Infile.open(filename, std::ios::in);
+	std::string line;
+    while (std::getline(Infile, line))
+    {
+		flecs::entity entity = ECSWorld.plec;
+		Entities.push_back(entity);
+	}
+	Infile.close();
+}
+*/

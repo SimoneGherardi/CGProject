@@ -88,4 +88,5 @@ public:
 
 	void SetIsEditor(bool isEditor);
 	void SerializeEntities();
+	void DeserializeEntities(std::string filename);
 };

@@ -174,6 +174,7 @@ void GameEngine::_TestEcs()
     
     ECSWorld.entity("testball")
         .set<Transform>({ {0, 4, 6} })
+        .set<AngularVelocity>({rp3d::Quaternion::fromEulerAngles(0, 0.002f, 0), 1.0f})
         .set<Renderer>({Models::SPHERE});
 }
 

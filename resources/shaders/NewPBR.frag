@@ -167,8 +167,9 @@ void main()
 	vec3 ambientLighting;
 	{
 		// Sample diffuse irradiance at normal direction.
-		//vec3 irradiance = texture(cubeSampler, N).rgb;
-		vec3 irradiance = vec3(0.5f, 0.5f, 0.5f);
+		// vec3 irradiance = texture(cubeSampler, N).rgb;
+		// vec3 irradiance = vec3(0.5f, 0.5f, 0.5f);
+		vec3 irradiance = globalData.AmbientLight;
 
 		// Calculate Fresnel term for ambient lighting.
 		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions

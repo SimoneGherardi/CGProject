@@ -49,4 +49,5 @@ void MemoryTransferer::TransferStaged(const Buffer stagingBuffer, const VkDevice
 		});
 		cmd.Wait();
 	}
+	cmd.Cleanup();
 }

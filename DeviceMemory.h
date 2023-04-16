@@ -39,7 +39,7 @@ struct DeviceMemory
 	);
 
 	Buffer NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags usage);
-	Image NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage);
+	Image NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage, const uint32_t arrayLayers = 1, const VkImageCreateFlags createFlags = 0);
 	void FreeBuffer(const Buffer buffer);
 	void FreeImage(const Image image);
 	void Cleanup();

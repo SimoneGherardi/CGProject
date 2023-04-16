@@ -167,6 +167,14 @@ void GameEngine::_TestEcs()
     DEBUGGO = ECSWorld.entity("Debuggo")
         .set<Transform>({ {10, 10, 1} })
         .set<Renderer>({ Models::DEBUG });
+    
+    ECSWorld.entity("skybox")
+        .set<Transform>({ {10, 10, 2} })
+        .set<Renderer>({Models::SKYBOX_MODEL_ID});
+    
+    ECSWorld.entity("testball")
+        .set<Transform>({ {0, 4, 6} })
+        .set<Renderer>({Models::SPHERE});
 }
 
 void GameEngine::_SetupPhysicsLogger()

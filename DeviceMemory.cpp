@@ -1,10 +1,10 @@
 #include "DeviceMemory.h"
 #include "VulkanStructs.h"
 
-VkDeviceSize _getAlignedSize(VkDeviceSize size)
+VkDeviceSize _getAlignedSize(VkDeviceSize size, VkDeviceSize alignment = ALIGNMENT)
 {
-	if (size % ALIGNMENT == 0) return size;
-	return (size / ALIGNMENT + 1) * ALIGNMENT;
+	if (size % alignment == 0) return size;
+	return (size / alignment + 1) * alignment;
 }
 
 const uint32_t findMemoryType(
@@ -81,7 +81,7 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 	return Buffer{ b, size, alignedSize, offset, Memory };
 }
 
-Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage)
+Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage, const uint32_t arrayLayers, const VkImageCreateFlags createFlags)
 {
 	VkImage image;
 	VkFormat format = VK_FORMAT_R8G8B8A8_SRGB;
@@ -92,7 +92,9 @@ Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height
 	VkImageCreateInfo imageInfo = VulkanStructs::ImageCreateInfo(
 		format,
 		usage,
-		extent
+		extent,
+		arrayLayers,
+		createFlags
 	);
 
 	CheckVkResult(vkCreateImage(
@@ -105,9 +107,9 @@ Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height
 	VkMemoryRequirements memReqs;
 	vkGetImageMemoryRequirements(Context->Device, image, &memReqs);
 	VkDeviceSize size = memReqs.size;
-	auto alignedSize = _getAlignedSize(size);
+	auto alignedSize = _getAlignedSize(size, memReqs.alignment);
 
-	auto offset = Blocks.FindAvailableOffset(alignedSize);
+	auto offset = Blocks.FindAvailableOffset(alignedSize, memReqs.alignment);
 	if (offset == -1) {
 		throw "Cannot allocate image";
 	}
@@ -119,7 +121,7 @@ Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height
 		offset
 	));
 
-	Blocks.Allocate(alignedSize);
+	Blocks.Allocate(alignedSize, memReqs.alignment);
 	return Image{ image, size, alignedSize, offset, Memory, format, extent };
 }
 

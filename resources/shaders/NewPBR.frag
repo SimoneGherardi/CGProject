@@ -41,6 +41,9 @@ layout(set = 0, binding = 0) uniform GlobalData{
 	vec3 SunColor;
 
 	vec3 AmbientLight;
+
+	int SkyboxId;
+	int SkyboxTextureId;
 } globalData;
 
 struct ObjectData{
@@ -57,7 +60,8 @@ layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer{
 } objectBuffer;
 
 layout(set = 2, binding = 0) uniform sampler samp;
-layout(set = 2, binding = 1) uniform texture2D Textures[8192];
+layout(set = 2, binding = 1) uniform samplerCube cubeSampler;
+layout(set = 2, binding = 2) uniform texture2D Textures[8192];
 
 // GGX/Towbridge-Reitz normal distribution function.
 // Uses Disney's reparametrization of alpha = roughness^2.
@@ -102,7 +106,6 @@ void main()
 	}
 	float metalness = inMetallic;
 	float roughness = inRoughness;
-
 	// Outgoing light direction (vector from world-space fragment position to the "eye").
 	vec3 eyePosition = globalData.CameraPosition.xyz;
 	vec3 vertPosition = inPosition.xyz / inPosition.w;
@@ -158,9 +161,42 @@ void main()
 	directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
 
 	// Ambient lighting (IBL).
-	vec3 ambientLighting = globalData.AmbientLight;
+	// vec3 ambientLighting = globalData.AmbientLight;
+
+	// Ambient lighting (IBL).
+	vec3 ambientLighting;
+	{
+		// Sample diffuse irradiance at normal direction.
+		//vec3 irradiance = texture(cubeSampler, N).rgb;
+		vec3 irradiance = vec3(0.5f, 0.5f, 0.5f);
+
+		// Calculate Fresnel term for ambient lighting.
+		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
+		// use cosLo instead of angle with light's half-vector (cosLh above).
+		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
+		vec3 F = fresnelSchlick(F0, cosLo);
+
+		// Get diffuse contribution factor (as with direct lighting).
+		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
+
+		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
+		vec3 diffuseIBL = kd * albedo * irradiance;
+
+		// Sample pre-filtered specular reflection environment at correct mipmap level.
+		int specularTextureLevels = textureQueryLevels(cubeSampler);
+		vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb;
+
+		// Total specular IBL contribution.
+		vec3 specularIBL = (F0) * specularIrradiance;
+
+		// Total ambient lighting contribution.
+		ambientLighting = diffuseIBL + specularIBL;
+	}
 
 	// Final fragment color.
 	outFragColor = vec4(directLighting + ambientLighting, 1.0f);
-	// outFragColor = vec4(allLight, 1.0);
+	if (data.modelId == globalData.SkyboxId)
+	{
+		outFragColor = texture(cubeSampler, normalize(inPosition.xyz));
+	}
 }

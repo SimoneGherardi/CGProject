@@ -182,7 +182,14 @@ const VkPipelineLayoutCreateInfo VulkanStructs::PipelineLayoutCreateInfo() {
     return info;
 }
 
-const VkImageCreateInfo VulkanStructs::ImageCreateInfo(const VkFormat format, const VkImageUsageFlags usageFlags, const VkExtent3D extent)
+const VkImageCreateInfo VulkanStructs::ImageCreateInfo(
+    const VkFormat format,
+    const VkImageUsageFlags usageFlags, 
+    const VkExtent3D extent,
+    const uint32_t arrayLayers,
+    const VkImageCreateFlags createFlags,
+    const uint32_t mipLevels
+)
 {
     VkImageCreateInfo info = { };
     info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -190,11 +197,12 @@ const VkImageCreateInfo VulkanStructs::ImageCreateInfo(const VkFormat format, co
     info.imageType = VK_IMAGE_TYPE_2D;
     info.format = format;
     info.extent = extent;
-    info.mipLevels = 1;
-    info.arrayLayers = 1;
+    info.mipLevels = mipLevels;
     info.samples = VK_SAMPLE_COUNT_1_BIT;
     info.tiling = VK_IMAGE_TILING_OPTIMAL;
     info.usage = usageFlags;
+    info.arrayLayers = arrayLayers;
+    info.flags = createFlags;
     return info;
 }
 

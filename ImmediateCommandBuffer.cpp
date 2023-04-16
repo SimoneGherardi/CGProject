@@ -10,7 +10,9 @@ ImmediateCommandBuffer::ImmediateCommandBuffer(
 		vkCreateFence(_Context->Device, &fenceCreateInfo, nullptr, &_Fence)
 	);
 
-	auto poolCreateInfo = VulkanStructs::CommandPoolCreateInfo();
+	auto poolCreateInfo = VulkanStructs::CommandPoolCreateInfo(
+		VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT
+	);
 	CheckVkResult(
 		vkCreateCommandPool(_Context->Device, &poolCreateInfo, nullptr, &_Pool)
 	);
@@ -46,6 +48,8 @@ void ImmediateCommandBuffer::Submit(EnqueueFunction_T&& function) const
 
 void ImmediateCommandBuffer::Wait() const
 {
-	vkWaitForFences(_Context->Device, 1, &_Fence, true, (uint64_t) (2 * 1e9));
+	// https://community.khronos.org/t/vkcommandbuffer-is-in-use-pending-state/108662/6
+	vkWaitForFences(_Context->Device, 1, &_Fence, VK_TRUE, (uint64_t) (2 * 1e9));
 	vkResetFences(_Context->Device, 1, &_Fence);
+	vkResetCommandBuffer(_Buffer, 0);
 }

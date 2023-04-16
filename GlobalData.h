@@ -1,6 +1,8 @@
 #pragma once
 #include "defines.h"
 #include <glm/glm.hpp>
+#include "Models.h"
+#include "RenderContext.h"
 
 /*
     Scalars have to be aligned by N (= 4 bytes given 32 bit floats).
@@ -17,13 +19,15 @@ struct GlobalData
 	glm::mat4 CameraProjection;
 	glm::mat4 CameraViewProjection;
 	glm::vec3 CameraPosition;
-	uint8_t _pad0;
+	float _pad0;
 
 	glm::vec3 SunDirection;
-	uint8_t _pad1;
+	float _pad1;
 	glm::vec3 SunColor;
-	uint8_t _pad2;
+	float _pad2;
 
 	glm::vec3 AmbientLight;
-	uint8_t _pad3;
+
+	uint32_t SkyboxId = Models::SKYBOX_MODEL_ID;
+	uint32_t SkyboxTextureIndex = RenderContext::GetInstance().Models[Models::SKYBOX_MODEL_ID].TextureId;
 };

@@ -31,6 +31,8 @@ layout(set = 0, binding = 0) uniform GlobalData{
 	vec3 SunColor;
 
 	vec3 AmbientLight;
+
+	int SkyboxId;
 } globalData;
 
 struct ObjectData{
@@ -50,7 +52,8 @@ void main()
 {
 	vec3 tangent = Tangent.xyz * Tangent.w;
 	vec3 bitangent = cross(tangent, Normal);
-	mat4 model = objectBuffer.objects[gl_InstanceIndex].model;
+	ObjectData data = objectBuffer.objects[gl_InstanceIndex];
+	mat4 model = data.model;
     mat4 transform = globalData.CameraViewProjection * model;
 	outTangentBasis = mat3(tangent, bitangent, Normal);
 	outColor = vec4(Color.xyz, 1.0f);
@@ -60,5 +63,15 @@ void main()
 	outNormal = normalize(mat3(model) * Normal);
 	outMetallic = Metallic;
 	outRoughness = Roughness;
-	gl_Position = transform * vec4(Position, 1.0f);
+	if (data.modelId == globalData.SkyboxId) {
+		mat4 r = globalData.CameraView * model;
+		r[3][0] = 0;
+		r[3][1] = 0;
+		r[3][2] = 0;
+		vec4 v = inverse(r) * inverse(globalData.CameraProjection) * vec4(Position, 1.0f);
+		outPosition = v;
+		gl_Position = vec4(Position, 1);
+	} else {
+		gl_Position = transform * vec4(Position, 1.0f);
+	}
 }

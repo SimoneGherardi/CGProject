@@ -32,7 +32,8 @@ namespace Models
 		CUBICBB,
 		SPHEREBB,
 		CAPSULEBB,
-		SPHERE
+		SPHERE,
+		SKYBOX
 	};
 
 	const std::vector<ModelLoadInfo> ModelsToLoad = {
@@ -54,6 +55,9 @@ namespace Models
 		{CUBICBB, "cubic-bb"},
 		{SPHEREBB, "sphere-bb"},
 		{CAPSULEBB, "capsule-bb"},
-		{SPHERE, "test_sphere"}
+		{SPHERE, "test_sphere"},
+		{SKYBOX, "skybox"}
 	};
+
+	const ModelId SKYBOX_MODEL_ID = SKYBOX;
 }

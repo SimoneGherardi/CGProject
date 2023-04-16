@@ -1,13 +1,19 @@
 #include "MemoryBlock.h"
 
-VkDeviceSize MemoryBlock::FindAvailableOffset(VkDeviceSize size)
+VkDeviceSize _getAligned(VkDeviceSize size, VkDeviceSize alignment)
+{
+	if (size % alignment == 0) return size;
+	return (size / alignment + 1) * alignment;
+}
+
+VkDeviceSize MemoryBlock::FindAvailableOffset(VkDeviceSize size, VkDeviceSize alignment)
 {
 	VkDeviceSize offset = 0;
 	for (auto& allocation : Allocations) {
 		if (allocation.first - offset >= size) {
 			return offset;
 		}
-		offset = allocation.first + allocation.second;
+		offset = _getAligned(allocation.first + allocation.second, alignment);
 	}
 	if (Size - offset >= size) {
 		return offset;
@@ -15,9 +21,9 @@ VkDeviceSize MemoryBlock::FindAvailableOffset(VkDeviceSize size)
 	throw "NO MORE AVAILABLE BLOCKS";
 }
 
-VkDeviceSize MemoryBlock::Allocate(VkDeviceSize size)
+VkDeviceSize MemoryBlock::Allocate(VkDeviceSize size, VkDeviceSize alignment)
 {
-	VkDeviceSize offset = FindAvailableOffset(size);
+	VkDeviceSize offset = FindAvailableOffset(size, alignment);
 	Allocations[offset] = size;
 	return offset;
 }

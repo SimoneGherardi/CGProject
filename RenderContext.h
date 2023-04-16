@@ -9,6 +9,7 @@
 #include "Models.h"
 #include "InstanceData.h"
 #include "DeviceMemory.h"
+#include "ImageCubeMap.h"
 
 struct Texture
 {
@@ -25,9 +26,11 @@ struct RenderContext
 	std::vector<VertexData> Vertices = {};
 	std::vector<uint16_t> Indices = {};
 	std::vector<Texture> Textures = {};
-	std::vector<VkDescriptorImageInfo> TexturesImageInfos = {};
 
+	std::vector<VkDescriptorImageInfo> TexturesImageInfos = {};
 	VkSampler TextureSampler;
+
+	SkyboxImage Skybox;
 
 	std::map<ModelId, BakedModelInfo> Models = {};
 
@@ -41,6 +44,8 @@ struct RenderContext
 	static RenderContext& GetInstance();
 
 private:
+	void _InitializeSkybox(const VulkanContext context, DeviceMemory* stagingMemory, DeviceMemory* memory);
+
 	BakedModelInfo _BakeModel(
 		const VulkanContext context,
 		const ModelId id,

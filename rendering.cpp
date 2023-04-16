@@ -52,7 +52,7 @@ void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
             case rp3d::CollisionShapeName::CAPSULE:
             {
                 colliderInstance.ModelId = Models::CAPSULEBB;
-                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.x);
+                size = glm::vec3(collider->Size.x, collider->Size.y, collider->Size.z);
                 break;
             }
             case rp3d::CollisionShapeName::BOX:

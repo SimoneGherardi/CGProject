@@ -160,6 +160,11 @@ void RenderingEngine::_InitializeDescriptorSet()
 		&_FrameDataDescriptorPool
 	);
 
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up frame data descriptor pool");
+		cleanupDescriptorPool(&_Context, _FrameDataDescriptorPool);
+	});
+
 	VkDescriptorSetLayoutBinding layoutBinding = getDescriptorSetLayoutBinding(
 		0,
 		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -176,7 +181,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 		nullptr
 	);
 
-	VkDescriptorSetLayoutBinding textureBindings[2];
+	VkDescriptorSetLayoutBinding textureBindings[3];
 	textureBindings[0] = getDescriptorSetLayoutBinding(
 		0,
 		VK_DESCRIPTOR_TYPE_SAMPLER,
@@ -186,16 +191,18 @@ void RenderingEngine::_InitializeDescriptorSet()
 	);
 	textureBindings[1] = getDescriptorSetLayoutBinding(
 		1,
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		1,
+		VK_SHADER_STAGE_FRAGMENT_BIT,
+		nullptr
+	);
+	textureBindings[2] = getDescriptorSetLayoutBinding(
+		2,
 		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
 		RenderContext::GetInstance().TexturesImageInfos.size(),
 		VK_SHADER_STAGE_FRAGMENT_BIT,
 		nullptr
 	);
-
-	_CleanupStack.push([=]() {
-		LOGDBG("cleaning up frame data descriptor pool");
-		cleanupDescriptorPool(&_Context, _FrameDataDescriptorPool);
-		});
 
 	initializeDescriptorSetLayout(
 		_Context.Device,
@@ -213,7 +220,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 
 	initializeDescriptorSetLayout(
 		_Context.Device,
-		2,
+		3,
 		textureBindings,
 		&_TexturesDescriptorSetLayout
 	);
@@ -236,9 +243,19 @@ void RenderingEngine::_InitializeDescriptorSet()
 		1,
 		&samplerInfo
 	);
+
 	updateDescriptorSetImages(
 		&_Context,
 		1,
+		_TexturesDescriptorSet,
+		VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+		1,
+		&RenderContext::GetInstance().Skybox.ImageInfo
+	);
+
+	updateDescriptorSetImages(
+		&_Context,
+		2,
 		_TexturesDescriptorSet,
 		VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE,
 		RenderContext::GetInstance().TexturesImageInfos.size(),
@@ -271,7 +288,7 @@ void RenderingEngine::_InitializeDescriptorSet()
 			VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT
 		);
 
-		f->Objects.Update(&_Context);
+		// f->Objects.Update(&_Context);
 
 		initializeDescriptorSet(
 			&_Context,
@@ -313,7 +330,7 @@ void RenderingEngine::_InitializePipeline()
 		"resources/shaders/NewPBR.frag.spv",
 		_Swapchain.GetExtent(),
 		VK_SAMPLE_COUNT_2_BIT,
-		VK_COMPARE_OP_LESS,
+		VK_COMPARE_OP_LESS_OR_EQUAL,
 		VK_POLYGON_MODE_FILL,
 		VK_CULL_MODE_NONE,
 		false,
@@ -431,7 +448,7 @@ void RenderingEngine::_InitializeRenderTargets()
 		1,
 		VK_SAMPLE_COUNT_1_BIT,
 		VK_IMAGE_TILING_OPTIMAL,
-		VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+		VK_IMAGE_USAGE_SAMPLED_BIT | VK_IMAGE_USAGE_INPUT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		VK_IMAGE_ASPECT_COLOR_BIT
 	);
@@ -581,20 +598,19 @@ void RenderingEngine::_InitializeGui()
 		ImGui_ImplVulkan_CreateFontsTexture(cmd);
 		});
 	_GuiCommandBuffer->Wait();
+	_GuiCommandBuffer->Cleanup();
 
 	ImGui_ImplVulkan_DestroyFontUploadObjects();
 
 
 	//ImGui Render texture
 	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
-	//Maso devo fare il cleanup? <3
 
 	EditGUI = EditorGUI::GetInstance();
 	EditGUI->Initialize(_WindowSize, _Window);
 
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up gui");
-		_GuiCommandBuffer->Cleanup();
 		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
 		ImGui_ImplVulkan_Shutdown();
 		});

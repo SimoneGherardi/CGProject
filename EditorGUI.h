@@ -9,10 +9,12 @@
 #include "glm/ext.hpp"
 #include <iostream>
 #include "flecs.h"
-
 #include "glm/gtx/string_cast.hpp"
 #include <string>
 #include <vector>
+#include <map>
+#include "game_engine.h"
+
 
 struct WindowSize {
 	int Width, Height;
@@ -36,9 +38,9 @@ public:
     ImVec2 SceneDimensions;
     ImVec2 PrefabContainerDimensions;
     ImVec2 LogDimensions;
-    ImVec2 ButtonDimensions = ImVec2(200, 50);
-    ImVec2 LogEntryDimensions  = ImVec2(100, 50);
-    ImVec2 LogEditPromptDimensions = ImVec2(200, 100);
+    ImVec2 ButtonDimensions;
+    ImVec2 LogEntryDimensions;
+    ImVec2 LogEditPromptDimensions;
 
     // Positions
     glm::vec2 SceneCenterPosition;
@@ -48,7 +50,8 @@ public:
     ImVec2 LogPosition;
     ImVec2 LogEditPromptPositions;
 
-	
+    std::map<PREFABS, std::string> Prefabs;
+
     static EditorGUI* GetInstance();
     void Initialize(WindowSize windowSize, GLFWwindow* window);
     void ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window);
@@ -62,8 +65,9 @@ public:
     double MouseToNorm(double mouse, double dimension);
     double NormToMouse(double norm, double dimension);
     double ScaleMouseX(double mouseX);
-    double ScaleMouseY(double mouseY);
-    
+    double ScaleMouseY(double mouseY);  
+    void PrefabAddButton(const char* label, PREFABS prefab);
+    void SetPrefabsMap();
     
 protected:
     EditorGUI();

@@ -1,5 +1,4 @@
 #include "EditorGUI.h"
-#include "game_engine.h"
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
 #include "glm/ext.hpp"
@@ -19,6 +18,22 @@ EditorGUI* EditorGUI::GetInstance() {
     return _Instance;
 }
 
+void EditorGUI::SetPrefabsMap() {
+    Prefabs.insert({ PREFABS::MONKEY , "Monkey" });
+    Prefabs.insert({ PREFABS::BUSH , "Bush"});
+    Prefabs.insert({ PREFABS::COIN , "Coin"});
+    Prefabs.insert({ PREFABS::GRASSBLOCK , "Grass Block"});
+    Prefabs.insert({ PREFABS::ROCK1 , "Rock 1"});
+    Prefabs.insert({ PREFABS::ROCK2 , "Rock 2"});
+    Prefabs.insert({ PREFABS::SIGN , "Sign"});
+    Prefabs.insert({ PREFABS::TREE1 , "Tree 1"});
+    Prefabs.insert({ PREFABS::TREE2 , "Tree 2"});
+    Prefabs.insert({ PREFABS::WOODBRIDGE , "Wood Bridge"});
+    Prefabs.insert({ PREFABS::WOODPLATFORM , "Wood Platform"});
+    Prefabs.insert({ PREFABS::WOODSHELF , "Wood Shelf"});
+    Prefabs.insert({ PREFABS::CUBE , "Cube"});
+}
+
 void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     _Window = window;
     WindowHeight = windowSize.Height;
@@ -28,14 +43,18 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ShowAnotherWindow = true;
 
     // Dimensions
-    ScaleFactor = 0.8f;
+    ScaleFactor = 0.7f;
     MenuBarHeight = ((float)windowSize.Height) * 0.04;
     HorizontalBorder = 0.0f;
     MenuBarDimensions = ImVec2(((float)windowSize.Width), MenuBarHeight);
     SceneDimensions = ImVec2(((float)windowSize.Width) * ScaleFactor, ((float)windowSize.Height) * ScaleFactor + 0.5 * MenuBarHeight);
-    PrefabContainerDimensions = ImVec2(SceneDimensions[0], ((float)windowSize.Height) - SceneDimensions.y);
+    PrefabContainerDimensions = ImVec2(SceneDimensions[0], ((float)windowSize.Height) - SceneDimensions.y - MenuBarHeight);
     LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleFactor), ((float)windowSize.Height) - MenuBarHeight);
     LogEditPromptDimensions = ImVec2(LogDimensions.x, LogDimensions.y * 0.5);
+
+    ButtonDimensions = ImVec2(200, 50);
+    LogEntryDimensions = ImVec2(100, 50);
+    LogEditPromptDimensions = ImVec2(200, 100);
 
     // Positions
     SceneCenterPosition = glm::vec2((((SceneDimensions[0] / 2) + HorizontalBorder) / WindowWidth * 2) - 1, (((SceneDimensions[1] / 2) + MenuBarHeight) / WindowHeight) * 2 - 1);
@@ -44,6 +63,8 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     PrefabContainerPosition = ImVec2(0, SceneDimensions.y + MenuBarHeight);
     LogPosition = ImVec2(SceneDimensions.x, MenuBarHeight);
     LogEditPromptPositions = ImVec2(LogPosition.x, LogDimensions.y * 2/3);
+    
+    SetPrefabsMap();
 }
 
 bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
@@ -98,8 +119,6 @@ double EditorGUI::NormToMouse(double norm, double dimension) {
     // Converts normalized coordinates to mouse coordinates, dimension is the width or height of the window for respectively mouse x or y
     return ((-norm + 1) / 2) * dimension;
 }
-
-
 
 void EditorGUI::Inputs(GLFWwindow* window) {
     // Mouse left button
@@ -233,6 +252,15 @@ void EditorGUI::PrintPrompt() {
     ImGui::End();
 }
 
+void EditorGUI::PrefabAddButton(const char* label, PREFABS prefab) {
+    if (ImGui::Button(label, ButtonDimensions)) {
+        std::string name = label;
+        name = std::to_string(GameEngine::GetInstance().Entities.size()) + " " + name;
+        GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
+            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) });
+    }
+}
+
 void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window) {
 
     // Menu bar
@@ -265,30 +293,22 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(PrefabContainerPosition);
     flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse;
 
-
     ImGui::Begin("Prefab Container", NULL, flags);
-    if (ImGui::Button("Square Block", ButtonDimensions)) {
-        std::string name = "SUZA";
-        name += std::to_string(GameEngine::GetInstance().Entities.size());
-        GameEngine::GetInstance().InstantiateEntity(PREFABS::MONKEY, name.c_str())
-            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) });
+    float prefabWindowSize = PrefabContainerDimensions.x;
+    for (auto const& [key, val] : Prefabs)
+    {
+        PrefabAddButton(val.c_str(), key);
+        prefabWindowSize -= ButtonDimensions.x;
+        if (prefabWindowSize > ButtonDimensions.x)
+        {
+            ImGui::SameLine();
+        }
+        else
+        {
+            prefabWindowSize = PrefabContainerDimensions.x;
+        }
+        
     }
-    ImGui::SameLine();
-    if (ImGui::Button("T Block", ButtonDimensions)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("L Block", ButtonDimensions)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Reverse L Block", ButtonDimensions)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Z Block", ButtonDimensions)) {
-    }
-    ImGui::SameLine();
-    if (ImGui::Button("Reverse Z Block", ButtonDimensions)) {
-    }
-    ImGui::SameLine();
 
     ImGui::End();
 

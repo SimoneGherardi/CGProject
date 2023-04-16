@@ -21,7 +21,7 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
 
     RaycastTargets = ECSWorld.filter_builder()
         .term<Collider>()
-        .term<RigidBody>().optional().oper(flecs::Or)
+        .term<RigidBody>().oper(flecs::Or)
         .term<CollisionBody>().optional()
         .build();
 

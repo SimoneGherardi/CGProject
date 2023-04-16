@@ -20,7 +20,7 @@ enum PREFABS {
 	WOODBRIDGE,
 	WOODPLATFORM,
 	WOODSHELF,
-	CUBE
+	CUBE,
 };
 
 struct RaycastInfo : rp3d::RaycastInfo {

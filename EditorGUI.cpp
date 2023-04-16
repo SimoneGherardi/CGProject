@@ -5,7 +5,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include "Models.h"
 #include "Angles.h"
-#include "prefabs.h"
+#include "prefab.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
@@ -268,7 +268,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open")) 
     {
-        //GameEngine::GetInstance().DeserializeEntities("C:\\Users\\Xxenr\\Documents\\GitHub\\CGProject\\resources\\scene\\scene.json");
+        GameEngine::GetInstance().DeserializeEntities("D:\\Documents_Data\\Visual_Studio_2022\\Projects\\CGProject\\CGProject\\resources\\scene\\scene.txt");
     }
     ImGui::SameLine();
     if (ImGui::Button("Save")) 

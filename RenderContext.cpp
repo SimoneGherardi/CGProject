@@ -11,7 +11,7 @@
 #define PACK_VEC3(v) glm::vec3(v[0], v[1], v[2])
 #define PACK_VEC4(v) glm::vec4(v[0], v[1], v[2], v[3])
 
-#define SKYBOX_PATH "resources/textures/sky1/"
+#define SKYBOX_PATH "resources/textures/Plants/"
 #define ASSET_PATH "resources/models/gltf/"
 
 std::set<std::string> _GetOrderedFilesFromDirectory(std::string directory)
@@ -141,36 +141,6 @@ Texture createTexture(
 		source.Width,
 		source.Height,
 		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT
-	);
-	transitionImageLayout(context, t.ImageItem.Image, t.ImageItem.Format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
-	copyPixelsToImage(context, source, stagingMemory, t.ImageItem.Image);
-	transitionImageLayout(context, t.ImageItem.Image, t.ImageItem.Format, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
-	t.View = initializeImageView(
-		context->Device,
-		t.ImageItem.Image,
-		t.ImageItem.Format,
-		VK_IMAGE_ASPECT_COLOR_BIT,
-		1,
-		VK_IMAGE_VIEW_TYPE_2D,
-		1
-	);
-	return t;
-}
-
-Texture createSkyboxTexture(
-	const VulkanContext context,
-	const GLTFTexture source,
-	DeviceMemory* stagingMemory,
-	DeviceMemory* memory
-)
-{
-	Texture t = {};
-	t.ImageItem = memory->NewImage(
-		source.Width,
-		source.Height,
-		VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-		6,
-		VK_IMAGE_CREATE_CUBE_COMPATIBLE_BIT
 	);
 	transitionImageLayout(context, t.ImageItem.Image, t.ImageItem.Format, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
 	copyPixelsToImage(context, source, stagingMemory, t.ImageItem.Image);
@@ -331,7 +301,7 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 void RenderContext::_InitializeSkybox(const VulkanContext context, DeviceMemory* stagingMemory, DeviceMemory* memory)
 {
 	SkyboxImageBuilder b = {};
-	Skybox = b.Prepare(context, 6, stagingMemory, memory)
+	Skybox = b.Prepare(context, 8, stagingMemory, memory)
 		.AddFace(SKYBOX_PATH + std::string("/posz.jpg"), FRONT)
 		.AddFace(SKYBOX_PATH + std::string("/negz.jpg"), BACK)
 		.AddFace(SKYBOX_PATH + std::string("/posx.jpg"), LEFT)

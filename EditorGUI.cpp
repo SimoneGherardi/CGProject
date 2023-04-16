@@ -2,6 +2,9 @@
 #include "game_engine.h"
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
+#include "glm/ext.hpp"
+#include "glm/gtx/string_cast.hpp"
+#include <glm/ext/matrix_transform.hpp>
 #include "Models.h"
 #include "Angles.h"
 
@@ -82,26 +85,74 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     // Mouse left button
     double mouseX;
     double mouseY;
-
-    if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    if (ScaledGetCursorPos(window, &mouseX, &mouseY))
     {
-        // Stores the coordinates of the cursor
-
-        if (ScaledGetCursorPos(window, &mouseX, &mouseY)) {
+        // Only inside Scene
+        if (_LastLeftEvent == GLFW_PRESS && glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+        {
+            // Stores the coordinates of the cursor
             // Only inside the scene window
             auto mousePosition = glm::vec2((mouseX / WindowWidth * 2) - 1, (mouseY / WindowHeight) * 2 - 1);
             std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
-            
+
             std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
 
             if (raycasts.size() > 0) {
-				GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
-			}
+                GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
+            }
             else {
-				GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
-			}
+                GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
+            }
         }
+    
     }
+    /*
+    if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_PRESS)
+    {
+        if (ScaledGetCursorPos(window, &mouseX, &mouseY)) {
+            glm::vec2 mousePosition = glm::vec2((mouseX / WindowWidth * 2) - 1, (mouseY / WindowHeight) * 2 - 1);;
+
+            //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+            if (firstClick)
+            {
+              
+                std::vector<RaycastInfo*> raycasts = GameEngine::GetInstance().RaycastFromCamera(mousePosition, 10);
+                if (raycasts.size() > 0) {
+                    GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
+                }
+                else {
+                    GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
+                }
+                glfwSetCursorPos(window, (WindowWidth / 2), (WindowHeight / 2));
+                firstClick = false;
+            }
+            if (GameEngine::GetInstance().SelectedEntityId != FLECS_INVALID_ENTITY) {
+
+                rp3d::Vector3 cameraPosition = GameEngine::GetInstance().WorldToCameraSpace(GameEngine::GetInstance().SelectedEntity().get<Transform>()->Position);
+
+                cameraPosition.y += mousePosition.y;
+                cameraPosition.x += mousePosition.x;
+
+                rp3d::Vector3 newWorldPosition = GameEngine::GetInstance().CameraToWorldSpace(cameraPosition);
+
+                Transform* transform = GameEngine::GetInstance().SelectedEntity().get_mut<Transform>();
+                transform->Position.x = newWorldPosition.x;
+                transform->Position.y = newWorldPosition.y;
+                transform->Position.z = newWorldPosition.z;
+
+                // Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
+                glfwSetCursorPos(window, (WindowWidth / 2), (WindowHeight / 2));
+            }
+        }
+    } else if (glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT) == GLFW_RELEASE)
+    {
+        // Unhides cursor since camera is not looking around anymore
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+        firstClick = true;
+    }
+    */
+
+    
 
     _LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 }

@@ -28,6 +28,7 @@ public:
     bool ShowAnotherWindow;
     int Counter = 0;
     char _LastLeftEvent = GLFW_RELEASE;
+    bool firstClick = true;
 
     // Dimensions
     float ScaleFactor;

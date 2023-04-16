@@ -1,11 +1,11 @@
 #include "EditorGUI.h"
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
-#include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include <glm/ext/matrix_transform.hpp>
 #include "Models.h"
 #include "Angles.h"
+#include "prefabs.h"
 
 EditorGUI* EditorGUI::_Instance = nullptr;
 
@@ -268,7 +268,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open")) 
     {
-        GameEngine::GetInstance().DeserializeEntities("C:\\Users\\Xxenr\\Documents\\GitHub\\CGProject\\resources\\scene\\scene.json");
+        //GameEngine::GetInstance().DeserializeEntities("C:\\Users\\Xxenr\\Documents\\GitHub\\CGProject\\resources\\scene\\scene.json");
     }
     ImGui::SameLine();
     if (ImGui::Button("Save")) 

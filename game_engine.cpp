@@ -338,29 +338,84 @@ void GameEngine::SerializeEntities() {
     std::ofstream Outfile;
     std::string entitiesString;
     for (auto entity : Entities) {
+        entitiesString += "ENTITY\n";
+        entitiesString += entity.name();
+        entitiesString += "\n";
         rp3d::Vector3 position = entity.get<Transform>()->Position;
+        entitiesString += position.to_string();
+        entitiesString += "\n";
         rp3d::Quaternion rotation = entity.get<Transform>()->Rotation;
+        entitiesString += rotation.to_string();
+        entitiesString += "\n";
         PREFABS prefabs = entity.get<Prefab>()->Prefab;
-        entitiesString += "";
+        entitiesString += std::to_string(prefabs);
         entitiesString += "\n";
     }
-    std::string fileName = RootName + "/" + "scene.json";
+    std::string fileName = RootName + "/" + "scene.txt";
     Outfile.open(fileName, std::ios::out);
     Outfile.write(entitiesString.c_str(), entitiesString.size());
     Outfile.close();
 }
 
+PREFABS GetPrefabFromInt(int X)
+{
+    switch (X)
+    {
+    case 0:
+        return PREFABS::MONKEY;
+    case 1:
+        return PREFABS::BUSH;
+    case 2:
+        return PREFABS::COIN;
+    case 3:
+        return PREFABS::GRASSBLOCK;
+    case 4:
+        return PREFABS::ROCK1;
+    case 5:
+        return PREFABS::ROCK2;
+    case 6:
+        return PREFABS::SIGN;
+    case 7:
+        return PREFABS::TREE1;
+    case 8:
+        return PREFABS::TREE2;
+    case 9:
+        return PREFABS::WOODBRIDGE;
+    case 10:
+        return PREFABS::WOODPLATFORM;
+    case 11:
+        return PREFABS::WOODSHELF;
+    case 12:
+        return PREFABS::CUBE;
+    default:
+        return PREFABS::MONKEY;
+    }
+}
+
 void  GameEngine::DeserializeEntities(std::string filename)
 {
-	std::ifstream Infile;
-	Infile.open(filename, std::ios::in);
-	std::string line;
+    std::ifstream Infile;
+    Infile.open(filename, std::ios::in);
+    std::string line;
 
     while (std::getline(Infile, line))
     {
-		std::string name = ECSWorld.from_json(line.c_str());
-        flecs::entity e = ECSWorld.lookup(name.c_str());
-		Entities.push_back(e);
-	}
-	Infile.close();
+        std::getline(Infile, line);
+        std::string name = line;
+        std::getline(Infile, line);
+        rp3d::Vector3 position;
+        sscanf_s(line.c_str(), "Vector3(%f,%f,%f)", &position.x, &position.y, &position.z);
+        std::getline(Infile, line);
+        rp3d::Quaternion rotation;
+        sscanf_s(line.c_str(), "Quaternion(%f,%f,%f,%f)", &rotation.x, &rotation.y, &rotation.z, &rotation.w);
+        std::getline(Infile, line);
+        int tmpprefab;
+        sscanf_s(line.c_str(), "%d", &tmpprefab);
+        PREFABS prefab = GetPrefabFromInt(tmpprefab);
+
+        GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
+            .set<Transform>({ position, rotation });
+
+    };
+    Infile.close();
 }

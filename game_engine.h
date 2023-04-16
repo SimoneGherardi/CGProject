@@ -4,6 +4,7 @@
 #include "reactphysics3d/reactphysics3d.h"
 #include "ecs_modules.h"
 #include "camera.h"
+#include "prefabs.h"
 #include <map>
 #include <optional>
 #include "prefab.h"

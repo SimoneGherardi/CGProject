@@ -268,7 +268,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open")) 
     {
-        
+        GameEngine::GetInstance().DeserializeEntities("C:\\Users\\Xxenr\\Documents\\GitHub\\CGProject\\resources\\scene\\scene.json");
     }
     ImGui::SameLine();
     if (ImGui::Button("Save")) 

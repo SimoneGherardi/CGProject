@@ -16,6 +16,7 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
     _PreviousFrameTime = std::chrono::system_clock::now();
 
+    ECSWorld.import<General>();
     ECSWorld.import<Movement>();
     ECSWorld.import<Physics>();
     ECSWorld.import<Rendering>();
@@ -45,6 +46,7 @@ void GameEngine::_InitPrefabs()
 {
     _Prefabs[PREFABS::MONKEY] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({PREFABS::MONKEY})
             .add<Transform>()
             .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
             .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
@@ -53,6 +55,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::BUSH] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
             .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -60,6 +63,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::COIN] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::COIN })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
             .set<Collider>({ {0.3, 1, 1}, rp3d::CollisionShapeName::BOX, true, NULL })
@@ -67,6 +71,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::GRASSBLOCK })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {2.2, 2.2, 2.2}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -74,6 +79,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::ROCK1] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::ROCK1 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
@@ -81,6 +87,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::ROCK2] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::ROCK2 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
@@ -88,6 +95,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::SIGN] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::SIGN })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {0.1, 4, 0.1}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -95,6 +103,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::TREE1] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::TREE1 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -102,6 +111,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::TREE2] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::TREE2 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -109,6 +119,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::WOODBRIDGE] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::WOODBRIDGE })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -116,6 +127,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::WOODPLATFORM] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::WOODPLATFORM })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -123,6 +135,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::WOODSHELF] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::WOODSHELF })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
             .set<Collider>({ {1, 0.2, 0.5}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -130,6 +143,7 @@ void GameEngine::_InitPrefabs()
     };
     _Prefabs[PREFABS::CUBE] = [this](const char* name) {
         return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::CUBE })
             .add<Transform>()
             .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
             .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
@@ -310,7 +324,8 @@ void GameEngine::SetIsEditor(bool isEditor)
 
 void GameEngine::SerializeEntities() {
     flecs::entity_to_json_desc_t serializer;
-    char buffer[2048];
+    serializer.serialize_path = true;
+    serializer.serialize_values = true;
     struct stat sb;
     std::string RootName = "./resources/scene";
     int ret = stat(RootName.c_str(), &sb);
@@ -323,7 +338,10 @@ void GameEngine::SerializeEntities() {
     std::ofstream Outfile;
     std::string entitiesString;
     for (auto entity : Entities) {
-        entitiesString += (std::string)entity.to_json(&serializer);
+        rp3d::Vector3 position = entity.get<Transform>()->Position;
+        rp3d::Quaternion rotation = entity.get<Transform>()->Rotation;
+        PREFABS prefabs = entity.get<Prefab>()->Prefab;
+        entitiesString += "";
         entitiesString += "\n";
     }
     std::string fileName = RootName + "/" + "scene.json";
@@ -332,18 +350,17 @@ void GameEngine::SerializeEntities() {
     Outfile.close();
 }
 
-/*
 void  GameEngine::DeserializeEntities(std::string filename)
 {
-    flecs::json_to_entity_desc_t serializer;
 	std::ifstream Infile;
 	Infile.open(filename, std::ios::in);
 	std::string line;
+
     while (std::getline(Infile, line))
     {
-		flecs::entity entity = ECSWorld.plec;
-		Entities.push_back(entity);
+		std::string name = ECSWorld.from_json(line.c_str());
+        flecs::entity e = ECSWorld.lookup(name.c_str());
+		Entities.push_back(e);
 	}
 	Infile.close();
 }
-*/

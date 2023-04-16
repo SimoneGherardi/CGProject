@@ -125,6 +125,8 @@ void EditorGUI::Inputs(GLFWwindow* window) {
                 std::vector<RaycastInfo*> raycasts = gameEngine.RaycastFromCamera(mousePositionNorm, 10);
                 if (raycasts.size() > 0) {
                     GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
+                    rp3d::Vector3 cameraPosition = gameEngine.WorldToCameraSpace(gameEngine.SelectedEntity().get<Transform>()->Position);
+                    _FirstZValueObject = cameraPosition.z;
                 }
                 else {
                     GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
@@ -136,17 +138,16 @@ void EditorGUI::Inputs(GLFWwindow* window) {
                 _LastMouseY = mouseY;
             }
             if (GameEngine::GetInstance().SelectedEntityId != FLECS_INVALID_ENTITY) {
-
                 // Fetches the coordinates of the cursor
-                ScaledGetCursorPos(window, &mouseX, &mouseY);
+                
                 glm::vec2 mousePositionNorm = glm::vec2(MouseToNorm(mouseX, WindowWidth), MouseToNorm(mouseY, WindowHeight));
-                glm::vec2 lastmousePositionNorm = glm::vec2(MouseToNorm(_LastMouseX, WindowWidth), MouseToNorm(_LastMouseY, WindowHeight));
+                glm::vec2 lastMousePositionNorm = glm::vec2(MouseToNorm(_LastMouseX, WindowWidth), MouseToNorm(_LastMouseY, WindowHeight));
 
                 rp3d::Vector3 cameraPosition = gameEngine.WorldToCameraSpace(gameEngine.SelectedEntity().get<Transform>()->Position);
 
-                cameraPosition.x += (mousePositionNorm.x - lastmousePositionNorm.x)/ScaleFactor;
-                cameraPosition.y -= (mousePositionNorm.y - lastmousePositionNorm.y)/ScaleFactor;
-
+                cameraPosition.x += (mousePositionNorm.x - lastMousePositionNorm.x) * (-_FirstZValueObject);
+                cameraPosition.y -= (mousePositionNorm.y - lastMousePositionNorm.y) * (-_FirstZValueObject) * 0.7;
+                cameraPosition.z = _FirstZValueObject;
 
                 rp3d::Vector3 newWorldPosition = gameEngine.CameraToWorldSpace(cameraPosition);
 
@@ -175,9 +176,6 @@ void EditorGUI::Inputs(GLFWwindow* window) {
             else {
                 gameEngine.SelectedEntityId = FLECS_INVALID_ENTITY;
             }
-
-
-            //glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             
             _FirstClick = true;
         }

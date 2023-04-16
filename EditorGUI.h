@@ -77,6 +77,7 @@ protected:
     char _LastLSfhitEvent = GLFW_RELEASE;
     char _LastSpaceEvent = GLFW_RELEASE;
     bool _FirstClick = true;
+    double _FirstZValueObject = 0;
 
 };
 #endif

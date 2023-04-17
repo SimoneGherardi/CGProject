@@ -122,8 +122,6 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     // Mouse left button
     double mouseX;
     double mouseY;
-    double mouseXSpawn;
-    double mouseYSpawn;
 
     char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     GameEngine& gameEngine = GameEngine::GetInstance();

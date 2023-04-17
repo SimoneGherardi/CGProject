@@ -65,7 +65,7 @@ void CameraInfos::CameraZoom(double offset)
 {
 	// Zooms in and out
 	auto transform = CameraEntity.get_mut<Transform>();
-	auto translation = Orientation * (float)offset * sensitivityScroll;
+	auto translation = Orientation * (float)offset * SensitivityScroll;
 	transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
 }
 
@@ -73,7 +73,7 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 {
 	// Slide left and right
 	auto transform = CameraEntity.get_mut<Transform>();
-	auto translation = glm::normalize(glm::cross(Orientation, Up)) * (float)offset * sensitivityScroll;
+	auto translation = glm::normalize(glm::cross(Orientation, Up)) * (float)offset * SensitivityScroll;
 	transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
 }
 
@@ -85,35 +85,30 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 	GameEngine& gameEngine = GameEngine::GetInstance();
 	auto transform = CameraEntity.get_mut<Transform>();
-
-	int lastKey = GLFW_KEY_LAST;
+	double mouseX;
+	double mouseY;
+	glfwGetCursorPos(window, &mouseX, &mouseY);
 	// Handles mouse inputs
 	// Camera rotation
 	if (middleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS)
 	{
-		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
 		// Prevents camera from jumping on the first click
 		if (_FirstClick)
 		{
-			glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
+			//glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
 			_FirstClick = false;
+			_LastMouseX = mouseX;
+			_LastMouseY = mouseY;
+			
 		}
 
-		// Stores the coordinates of the cursor
-		double mouseX;
-		double mouseY;
-		// Fetches the coordinates of the cursor
-		glfwGetCursorPos(window, &mouseX, &mouseY);
-
-		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
-		// and then "transforms" them into degrees 
-		float rotX = - sensitivityRotation * (float)(mouseY - (Height / 2)) / Height;
-		float rotY = - sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
+		// And then "transforms" them into degrees 
+		float rotX = - SensitivityRotation * (float)(mouseY - _LastMouseY) / Height;
+		float rotY = - SensitivityRotation * (float)(mouseX - _LastMouseX) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+
 
 		// Decides whether or not the next vertical Orientation is legal or not
 		if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
@@ -124,15 +119,11 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Rotates the Orientation left and right
 		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
 
-		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
+		_LastMouseX = mouseX;
+		_LastMouseY = mouseY;
 	}
 	else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS )
 	{
-		// Unhides cursor since camera is not looking around anymore
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		
-		// Makes sure the next time the camera looks around it doesn't jump
 		_FirstClick = true;
 	}
 
@@ -141,40 +132,34 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	{
 		if (middleEvent == GLFW_PRESS)
 		{
-		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
-		// Prevents camera from jumping on the first click
+			// Stores the coordinates of the cursor
+			double mouseX;
+			double mouseY;
+			glfwGetCursorPos(window, &mouseX, &mouseY);
 		if (_FirstClick)
 		{
-			glfwSetCursorPos(window, (Width / 2), (Height / 2));
+			//glfwSetCursorPos(window, (Width / 2), (Height / 2));
 			_FirstClick = false;
+			_LastMouseX = mouseX;
+			_LastMouseY = mouseY;
 		}
 
-		// Stores the coordinates of the cursor
-		double mouseX;
-		double mouseY;
-		// Fetches the coordinates of the cursor
-		glfwGetCursorPos(window, &mouseX, &mouseY);
+		
  
-		float translationY = (float)(mouseY - (Height / 2)) / Height;
-		float translationX = -(float)(mouseX - (Width / 2)) / Width;
+		float translationY = (float)(mouseY - _LastMouseY) / Height;
+		float translationX = -(float)(mouseX - _LastMouseX) / Width;
 
 		// Calculates upcoming change in the Position
-		glm::vec3 translation = sensitivityTranslation * (glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY);
+		glm::vec3 translation = SensitivityTranslation * (glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY);
 
 		// Update Position
 		transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
 
-		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (Width / 2), (Height / 2));
+		_LastMouseX = mouseX;
+		_LastMouseY = mouseY;
 		}
 		else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS)
 		{
-			// Unhides cursor since camera is not looking around anymore
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			
-			// Makes sure the next time the camera looks around it doesn't jump
 			_FirstClick = true;
 		}
 	}
@@ -205,6 +190,6 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	_LastMiddleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-	_LastLSfhitEvent = glfwGetMouseButton(window, GLFW_KEY_LEFT_SHIFT);
+	_LastLSfhitEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	_LastSpaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 }

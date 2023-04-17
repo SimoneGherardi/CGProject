@@ -23,10 +23,10 @@ public:
 	int Height;
 
 	// Adjust the speed of the camera and it's sensitivity when looking around
-	float speed = 0.1f;
-	float sensitivityRotation = 100.0f;
-	float sensitivityTranslation = 25.0f;
-	float sensitivityScroll = 0.5f;
+	float Speed = 0.1f;
+	float SensitivityRotation = 100.0f;
+	float SensitivityTranslation = 15.0f;
+	float SensitivityScroll = 0.5f;
 
 	// Camera constructor to set up initial values
 	CameraInfos(int width, int height, float FOVDeg, glm::vec3 position);
@@ -45,6 +45,8 @@ public:
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
 private:
+	double _LastMouseX;
+	double _LastMouseY;
 	char _LastLeftEvent = GLFW_RELEASE;
 	char _LastMiddleEvent = GLFW_RELEASE;
 	char _LastLSfhitEvent = GLFW_RELEASE;

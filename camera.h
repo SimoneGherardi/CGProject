@@ -10,6 +10,7 @@
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
+#include <chrono>
 #include "flecs.h"
 #include "reactphysics3d/reactphysics3d.h"
 
@@ -50,7 +51,18 @@ private:
 	char _LastLeftEvent = GLFW_RELEASE;
 	char _LastMiddleEvent = GLFW_RELEASE;
 	char _LastLSfhitEvent = GLFW_RELEASE;
+	char _LastPEvent = GLFW_RELEASE;
+	char _LastWEvent = GLFW_RELEASE;
+	char _LastAEvent = GLFW_RELEASE;
+	char _LastSEvent = GLFW_RELEASE;
+	char _LastDEvent = GLFW_RELEASE;
 	char _LastSpaceEvent = GLFW_RELEASE;
 	bool _FirstClick = true;
+	std::chrono::time_point<std::chrono::system_clock> _LastWTime;
+	std::chrono::time_point<std::chrono::system_clock> _LastATime;
+	std::chrono::time_point<std::chrono::system_clock> _LastSTime;
+	std::chrono::time_point<std::chrono::system_clock> _LastDTime;
+
+
 };
 #endif

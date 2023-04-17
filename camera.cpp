@@ -252,7 +252,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 	_LastLeftEvent = leftEvent;
 	_LastMiddleEvent = middleEvent;
-	_LastLSfhitEvent = lShiftEvent;
+	_LastLShiftEvent = lShiftEvent;
 	_LastSpaceEvent = spaceEvent;
 	_LastPEvent = pEvent;
 	_LastWEvent = wEvent;

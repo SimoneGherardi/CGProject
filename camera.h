@@ -50,7 +50,7 @@ private:
 	double _LastMouseY;
 	char _LastLeftEvent = GLFW_RELEASE;
 	char _LastMiddleEvent = GLFW_RELEASE;
-	char _LastLSfhitEvent = GLFW_RELEASE;
+	char _LastLShiftEvent = GLFW_RELEASE;
 	char _LastPEvent = GLFW_RELEASE;
 	char _LastWEvent = GLFW_RELEASE;
 	char _LastAEvent = GLFW_RELEASE;

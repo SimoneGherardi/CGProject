@@ -65,7 +65,7 @@ void CameraInfos::CameraZoom(double offset)
 {
 	// Zooms in and out
 	auto transform = CameraEntity.get_mut<Transform>();
-	auto translation = Orientation * (float)offset * sensitivityScroll;
+	auto translation = Orientation * (float)offset * SensitivityScroll;
 	transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
 }
 
@@ -73,44 +73,138 @@ void CameraInfos::CameraHorizontalSlide(double offset)
 {
 	// Slide left and right
 	auto transform = CameraEntity.get_mut<Transform>();
-	auto translation = glm::normalize(glm::cross(Orientation, Up)) * (float)offset * sensitivityScroll;
+	auto translation = glm::normalize(glm::cross(Orientation, Up)) * (float)offset * SensitivityScroll;
 	transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
 }
 
 void CameraInfos::Inputs(GLFWwindow* window)
 {
+	// read inputs
 	char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
 	char middleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-	char lSfhitEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
+	char lShiftEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
+	char pEvent = glfwGetKey(window, GLFW_KEY_P);
 	GameEngine& gameEngine = GameEngine::GetInstance();
 	auto transform = CameraEntity.get_mut<Transform>();
+	double mouseX;
+	double mouseY;
+	glfwGetCursorPos(window, &mouseX, &mouseY);
 
-	int lastKey = GLFW_KEY_LAST;
-	// Handles mouse inputs
-	// Camera rotation
-	if (middleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS)
+	// Switch between editor and game mode
+	if (pEvent == GLFW_RELEASE && _LastPEvent == GLFW_PRESS)
 	{
-		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
-		// Prevents camera from jumping on the first click
-		if (_FirstClick)
+		gameEngine.SetIsEditor(!gameEngine.IsEditor);
+		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
+		if (gameEngine.IsEditor)
 		{
-			glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
-			_FirstClick = false;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else
+		{
+			_LastMouseX = mouseX;
+			_LastMouseY = mouseY;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+	}
+	
+	if (gameEngine.IsEditor == true)
+	{
+		// Handles inputs in editor mode
+	// Camera rotation
+		if (middleEvent == GLFW_PRESS && lShiftEvent != GLFW_PRESS)
+		{
+			// Prevents camera from jumping on the first click
+			if (_FirstClick)
+			{
+				//glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
+				_FirstClick = false;
+				_LastMouseX = mouseX;
+				_LastMouseY = mouseY;
+			}
+
+			float rotX = -SensitivityRotation * (float)(mouseY - _LastMouseY) / Height;
+			float rotY = -SensitivityRotation * (float)(mouseX - _LastMouseX) / Width;
+
+			// Calculates upcoming vertical change in the Orientation
+			glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+
+
+			// Decides whether or not the next vertical Orientation is legal or not
+			if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+			{
+				Orientation = newOrientation;
+			}
+
+			// Rotates the Orientation left and right
+			Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
+
+			_LastMouseX = mouseX;
+			_LastMouseY = mouseY;
+		}
+		else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS && lShiftEvent != GLFW_PRESS)
+		{
+			_FirstClick = true;
 		}
 
-		// Stores the coordinates of the cursor
-		double mouseX;
-		double mouseY;
-		// Fetches the coordinates of the cursor
-		glfwGetCursorPos(window, &mouseX, &mouseY);
+		// Camera translation
+		if (lShiftEvent == GLFW_PRESS)
+		{
+			if (middleEvent == GLFW_PRESS)
+			{
+				glfwGetCursorPos(window, &mouseX, &mouseY);
+				if (_FirstClick)
+				{
+					_FirstClick = false;
+					_LastMouseX = mouseX;
+					_LastMouseY = mouseY;
+				}
 
-		// Normalizes and shifts the coordinates of the cursor such that they begin in the middle of the screen
-		// and then "transforms" them into degrees 
-		float rotX = - sensitivityRotation * (float)(mouseY - (Height / 2)) / Height;
-		float rotY = - sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
+				float translationY = (float)(mouseY - _LastMouseY) / Height;
+				float translationX = -(float)(mouseX - _LastMouseX) / Width;
+
+				// Calculates upcoming change in the Position
+				glm::vec3 translation = SensitivityTranslation * (glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY);
+
+				// Update Position
+				transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
+
+				_LastMouseX = mouseX;
+				_LastMouseY = mouseY;
+			}
+			else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS)
+			{
+				_FirstClick = true;
+			}
+		}
+
+		// Handles scroll and swipe inputs
+		double yoffset = 0;
+		double xoffset = 0;
+		glfwSetScrollCallback(window, scroll_callback);
+		yoffset = global_yoffset;
+		xoffset = global_xoffset;
+		if (yoffset != 0)
+		{
+			CameraZoom(yoffset);
+			global_yoffset = 0;
+		};
+		if (xoffset != 0)
+		{
+			CameraHorizontalSlide(xoffset);
+			global_xoffset = 0;
+		};
+
+		WASD(window, SpeedEditor);
+		
+	}
+	
+	// Handles keyboard inputs for movement in playing mode
+	if (gameEngine.IsEditor == false)
+	{
+		// And then "transforms" them into degrees 
+		float rotX = SensitivityRotation * (float)(mouseY - _LastMouseY) / Height;
+		float rotY = SensitivityRotation * (float)(mouseX - _LastMouseX) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
 		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
@@ -124,87 +218,64 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		// Rotates the Orientation left and right
 		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
 
-		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
-	}
-	else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS && lSfhitEvent != GLFW_PRESS )
-	{
-		// Unhides cursor since camera is not looking around anymore
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-		
-		// Makes sure the next time the camera looks around it doesn't jump
-		_FirstClick = true;
-	}
+		_LastMouseX = mouseX;
+		_LastMouseY = mouseY;
 
-	// Camera translation
-	if (lSfhitEvent == GLFW_PRESS)
-	{
-		if (middleEvent == GLFW_PRESS)
+		if (spaceEvent == GLFW_PRESS && _LastSpaceEvent == GLFW_RELEASE)
 		{
-		// Hides mouse cursor
-		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-		
-		// Prevents camera from jumping on the first click
-		if (_FirstClick)
-		{
-			glfwSetCursorPos(window, (Width / 2), (Height / 2));
-			_FirstClick = false;
+			_JumpDuration = 0.3;
 		}
 
-		// Stores the coordinates of the cursor
-		double mouseX;
-		double mouseY;
-		// Fetches the coordinates of the cursor
-		glfwGetCursorPos(window, &mouseX, &mouseY);
- 
-		float translationY = (float)(mouseY - (Height / 2)) / Height;
-		float translationX = -(float)(mouseX - (Width / 2)) / Width;
-
-		// Calculates upcoming change in the Position
-		glm::vec3 translation = sensitivityTranslation * (glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY);
-
-		// Update Position
-		transform->Position += rp3d::Vector3(translation.x, translation.y, translation.z);
-
-		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
-		glfwSetCursorPos(window, (Width / 2), (Height / 2));
-		}
-		else if (middleEvent == GLFW_RELEASE && _LastMiddleEvent == GLFW_PRESS)
+		if (_JumpDuration > 0)
 		{
-			// Unhides cursor since camera is not looking around anymore
-			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-			
-			// Makes sure the next time the camera looks around it doesn't jump
-			_FirstClick = true;
+			rp3d::Vector3 force(0, 1500, 0);
+			auto body = CameraEntity.get<RigidBody>()->Body;
+			body->applyLocalForceAtCenterOfMass(force);
+			_JumpDuration -= gameEngine.DeltaTime.count();
 		}
+
+		WASD(window, SpeedGame);
 	}
 
 	
-	if (spaceEvent == GLFW_RELEASE && _LastSpaceEvent == GLFW_PRESS)
+
+	_LastLeftEvent = leftEvent;
+	_LastMiddleEvent = middleEvent;
+	_LastLShiftEvent = lShiftEvent;
+	_LastSpaceEvent = spaceEvent;
+	_LastPEvent = pEvent;
+	
+}
+
+void CameraInfos::WASD(GLFWwindow* window, float speed)
+{
+	char wEvent = glfwGetKey(window, GLFW_KEY_W);
+	char aEvent = glfwGetKey(window, GLFW_KEY_A);
+	char sEvent = glfwGetKey(window, GLFW_KEY_S);
+	char dEvent = glfwGetKey(window, GLFW_KEY_D);
+
+	if (wEvent == GLFW_PRESS)
 	{
-		gameEngine.SetIsEditor(!gameEngine.IsEditor);
-		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
+		CameraZoom(movement);
 	}
-
-	// Handles scroll and swipe inputs
-	double yoffset = 0;
-	double xoffset = 0;
-	glfwSetScrollCallback(window, scroll_callback);
-	yoffset = global_yoffset;
-	xoffset = global_xoffset;
-	if (yoffset != 0)
+	if (aEvent == GLFW_PRESS)
 	{
-		CameraZoom(yoffset);
-		global_yoffset = 0;
-	};
-	if (xoffset != 0)
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
+		CameraHorizontalSlide(-movement);
+	}
+	if (sEvent == GLFW_PRESS)
 	{
-		CameraHorizontalSlide(xoffset);
-		global_xoffset = 0;
-	};
-
-	_LastLeftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-	_LastMiddleEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_MIDDLE);
-	_LastLSfhitEvent = glfwGetMouseButton(window, GLFW_KEY_LEFT_SHIFT);
-	_LastSpaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
+		CameraZoom(-movement);
+	}
+	if (dEvent == GLFW_PRESS)
+	{
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
+		CameraHorizontalSlide(movement);
+	}
+	_LastWEvent = wEvent;
+	_LastAEvent = aEvent;
+	_LastSEvent = sEvent;
+	_LastDEvent = dEvent;
 }

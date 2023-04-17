@@ -356,7 +356,7 @@ void GameEngine::SetIsEditor(bool isEditor)
     IsEditor = isEditor;
 }
 
-void GameEngine::SerializeEntities() {
+void GameEngine::SerializeEntities(const char* filename) {
     flecs::entity_to_json_desc_t serializer;
     serializer.serialize_path = true;
     serializer.serialize_values = true;
@@ -385,8 +385,8 @@ void GameEngine::SerializeEntities() {
         entitiesString += std::to_string(prefabs);
         entitiesString += "\n";
     }
-    std::string fileName = RootName + "/" + "scene.txt";
-    Outfile.open(fileName, std::ios::out);
+    std::string filePath = RootName + "/" + filename;
+    Outfile.open(filePath, std::ios::out);
     Outfile.write(entitiesString.c_str(), entitiesString.size());
     Outfile.close();
 }
@@ -397,10 +397,20 @@ PREFABS GetPrefabFromInt(int X)
     return p;
 }
 
-void  GameEngine::DeserializeEntities(std::string filename)
+void  GameEngine::DeserializeEntities(const char* filename)
 {
+    struct stat sb;
+    std::string RootName = "./resources/scene";
+    int ret = stat(RootName.c_str(), &sb);
+    int tmp = errno;
+    if (stat(RootName.c_str(), &sb) != 0)
+    {
+        std::cout << "Scene directory does not exist";
+        return;
+    };
+    std::string filePath = RootName + "/" + filename;
     std::ifstream Infile;
-    Infile.open(filename, std::ios::in);
+    Infile.open(filePath, std::ios::in);
     std::string line;
 
     while (std::getline(Infile, line))

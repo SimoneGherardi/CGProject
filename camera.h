@@ -10,6 +10,7 @@
 #include<glm/gtc/type_ptr.hpp>
 #include<glm/gtx/rotate_vector.hpp>
 #include<glm/gtx/vector_angle.hpp>
+#include <chrono>
 #include "flecs.h"
 #include "reactphysics3d/reactphysics3d.h"
 
@@ -23,10 +24,12 @@ public:
 	int Height;
 
 	// Adjust the speed of the camera and it's sensitivity when looking around
-	float speed = 0.1f;
-	float sensitivityRotation = 100.0f;
-	float sensitivityTranslation = 25.0f;
-	float sensitivityScroll = 0.5f;
+	float SpeedGame = 20.0f;
+	float SpeedEditor = 15.0f;
+	float SensitivityRotation = 100.0f;
+	float SensitivityTranslation = 15.0f;
+	float SensitivityInGameTranslation = 10.0f;
+	float SensitivityScroll = 0.5f;
 
 	// Camera constructor to set up initial values
 	CameraInfos(int width, int height, float FOVDeg, glm::vec3 position);
@@ -44,11 +47,26 @@ public:
 	void Inputs(GLFWwindow* window);
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
+	void WASD(GLFWwindow* window, float speed);
 private:
+	double _LastMouseX;
+	double _LastMouseY;
 	char _LastLeftEvent = GLFW_RELEASE;
 	char _LastMiddleEvent = GLFW_RELEASE;
-	char _LastLSfhitEvent = GLFW_RELEASE;
+	char _LastLShiftEvent = GLFW_RELEASE;
+	char _LastPEvent = GLFW_RELEASE;
+	char _LastWEvent = GLFW_RELEASE;
+	char _LastAEvent = GLFW_RELEASE;
+	char _LastSEvent = GLFW_RELEASE;
+	char _LastDEvent = GLFW_RELEASE;
 	char _LastSpaceEvent = GLFW_RELEASE;
 	bool _FirstClick = true;
+	double _JumpDuration;
+	std::chrono::time_point<std::chrono::system_clock> _LastWTime;
+	std::chrono::time_point<std::chrono::system_clock> _LastATime;
+	std::chrono::time_point<std::chrono::system_clock> _LastSTime;
+	std::chrono::time_point<std::chrono::system_clock> _LastDTime;
+
+
 };
 #endif

@@ -42,6 +42,7 @@ public:
     ImVec2 ButtonDimensions;
     ImVec2 LogEntryDimensions;
     ImVec2 LogEditPromptDimensions;
+    ImVec2 OpenSavePromptDimensions;
 
     // Positions
     glm::vec2 SceneCenterPosition;
@@ -49,7 +50,8 @@ public:
     ImVec2 ScenePosition;
     ImVec2 PrefabContainerPosition;
     ImVec2 LogPosition;
-    ImVec2 LogEditPromptPositions;
+    ImVec2 LogEditPromptPosition;
+    ImVec2 OpenSavePromptPosition;
 
     std::map<PREFABS, std::string> Prefabs;
 
@@ -83,6 +85,7 @@ protected:
     char _LastSpaceEvent = GLFW_RELEASE;
     bool _FirstClick = true;
     double _FirstZValueObject = 0;
-
+    bool _OpenPrompt;
+    bool _SavePrompt;
 };
 #endif

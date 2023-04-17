@@ -228,23 +228,32 @@ void EditorGUI::PrintPrompt() {
     ImGui::NewLine();
     // Managing rotation
     
-    std::string ButtonName = "Position";
+    std::string Label = "Position";
     
     // Managing position
     tmpPosition = gameEngine.SelectedEntity().get<Transform>()->Position;
     float tmpPositionVec[3] = { tmpPosition.x, tmpPosition.y, tmpPosition.z };
-    ImGui::InputFloat3(ButtonName.c_str(), tmpPositionVec);
+    ImGui::InputFloat3(Label.c_str(), tmpPositionVec);
     tmpPosition = rp3d::Vector3(tmpPositionVec[0], tmpPositionVec[1], tmpPositionVec[2]);
 
-    ButtonName = "Rotation";
+    Label = "Rotation";
     AnglesQuaternion tmpQuat = AnglesQuaternion(gameEngine.SelectedEntity().get<Transform>()->Rotation);
     AnglesEulerAngles tmpRotation = ToAnglesEulerAngles(tmpQuat);
     tmpRotation.toDegrees();
-    ImGui::InputFloat3(ButtonName.c_str(), tmpRotation.XYZ);
+    ImGui::InputFloat3(Label.c_str(), tmpRotation.XYZ);
     tmpRotation.toRadians();
     rp3d::Quaternion newRotation = rp3d::Quaternion::fromEulerAngles(tmpRotation.XYZ[0], tmpRotation.XYZ[1], tmpRotation.XYZ[2]);
     
     gameEngine.SelectedEntity().set<Transform>({ tmpPosition, newRotation });
+
+    std::string ButtonName = "Delete Object";
+    if (ImGui::Button(ButtonName.c_str(), ButtonDimensions)) {
+		if (gameEngine.SelectedEntityId != 0) 
+        {
+            gameEngine.DeleteEntity(gameEngine.SelectedEntity());
+            gameEngine.SelectedEntityId = 0;
+        }
+	}
     ImGui::End();
 }
 
@@ -252,7 +261,7 @@ void EditorGUI::PrefabAddButton(const char* label, PREFABS prefab) {
     if (ImGui::Button(label, ButtonDimensions)) {
         std::string name = label;
         name = std::to_string(GameEngine::GetInstance().Entities.size()) + " " + name;
-        GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
+        GameEngine::GetInstance().SelectedEntityId = GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
             .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) });
     }
 }

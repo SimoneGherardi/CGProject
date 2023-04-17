@@ -648,6 +648,9 @@ void RenderingEngine::InitializeSizeDependent()
 		_InitializeGui();
 	}
 
+	GameEngine::GetInstance().Camera().Width = _WindowSize.Width;
+	GameEngine::GetInstance().Camera().Height = _WindowSize.Height;
+
  	TRACEEND;
 }
 

@@ -4,7 +4,7 @@
 #include "glm/gtx/string_cast.hpp"
 #include "math.h"
 
-CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg)
+CameraInfos::CameraInfos(float FOVDeg, glm::vec3 position): FOVDeg(FOVDeg)
 {
 	CameraEntity = GameEngine::GetInstance().ECSWorld.entity("camera")
 		.set<Transform>({ {position.x, position.y, position.z}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})

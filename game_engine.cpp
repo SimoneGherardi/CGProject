@@ -55,7 +55,7 @@ CameraInfos& GameEngine::Camera()
 {
     if (_Camera == nullptr)
     {
-        _Camera = new CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14));
+        _Camera = new CameraInfos(60, glm::vec3(0, 7, 14));
     }
 	return *_Camera;
 }

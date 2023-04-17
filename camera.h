@@ -20,8 +20,8 @@ public:
 	// Stores the main vectors of the camera
 	float FOVDeg;
 	// Stores the width and height of the window
-	int Width;
-	int Height;
+	int Width = 1;
+	int Height = 1;
 
 	// Adjust the speed of the camera and it's sensitivity when looking around
 	float SpeedGame = 20.0f;
@@ -32,7 +32,7 @@ public:
 	float SensitivityScroll = 0.5f;
 
 	// Camera constructor to set up initial values
-	CameraInfos(int width, int height, float FOVDeg, glm::vec3 position);
+	CameraInfos(float FOVDeg, glm::vec3 position);
 
 	glm::vec3 Orientation = glm::normalize(glm::vec3(0, -0.4, -1));
 	glm::vec3 Up = glm::vec3(0.0f, 1.0f, 0.0f);

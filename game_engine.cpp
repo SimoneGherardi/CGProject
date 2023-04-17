@@ -7,14 +7,14 @@
 #include <filesystem>
 #include <sys/stat.h>
 
-#if _WINDLL
+#if _WIN32
 #else
 #define sscanf_s(buf, fmt, ...) sscanf((buf), (fmt), __VA_ARGS__)
 #endif
 
 flecs::entity DEBUGGO;
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)))
+GameEngine::GameEngine()
 {
     SetIsEditor(IsEditor);
 
@@ -35,9 +35,13 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
 
     _InitPrefabs();
     
-    ECSWorld.entity("skybox")
+    /*ECSWorld.entity("skybox")
         .set<Transform>({ {0, 0, 0} })
-        .set<Renderer>({Models::SKYBOX_MODEL_ID});
+        .set<Renderer>({Models::SKYBOX_MODEL_ID});*/
+
+    DEBUGGO = ECSWorld.entity("Debuggo")
+        .set<Transform>({ {10, 10, 1} })
+        .set<Renderer>({ Models::DEBUG });
     //_TestEcs();
 }
 
@@ -49,7 +53,11 @@ GameEngine& GameEngine::GetInstance()
 
 CameraInfos& GameEngine::Camera()
 {
-	return _Camera;
+    if (_Camera == nullptr)
+    {
+        _Camera = new CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14));
+    }
+	return *_Camera;
 }
 
 void GameEngine::_InitPrefabs()
@@ -190,10 +198,6 @@ void GameEngine::_TestEcs()
         .set<Transform>({ { 6, 0, 0 } });
     InstantiateEntity(PREFABS::GRASSBLOCK)
         .set<Transform>({ { 8, 0, 0 } });
-
-    DEBUGGO = ECSWorld.entity("Debuggo")
-        .set<Transform>({ {10, 10, 1} })
-        .set<Renderer>({ Models::DEBUG });
     
     ECSWorld.entity("coin")
         .set<Transform>({ {4, 2, 0} })
@@ -261,7 +265,7 @@ flecs::entity GameEngine::SelectedEntity()
 rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
 {
     GameEngine &engine = GameEngine::GetInstance();
-    glm::vec4 positionFromCamera = engine._Camera.ViewMatrix() * glm::vec4(position.x, position.y, position.z, 1);
+    glm::vec4 positionFromCamera = engine._Camera->ViewMatrix() * glm::vec4(position.x, position.y, position.z, 1);
     positionFromCamera = positionFromCamera / positionFromCamera.w;
     return rp3d::Vector3(positionFromCamera.x, positionFromCamera.y, positionFromCamera.z);
 }
@@ -269,7 +273,7 @@ rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
 rp3d::Vector3 GameEngine::CameraToWorldSpace(rp3d::Vector3 position)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    glm::vec4 positionInWorld = glm::inverse(engine._Camera.ViewMatrix()) * glm::vec4(position.x, position.y, position.z, 1);
+    glm::vec4 positionInWorld = glm::inverse(engine._Camera->ViewMatrix()) * glm::vec4(position.x, position.y, position.z, 1);
     positionInWorld = positionInWorld / positionInWorld.w;
     return rp3d::Vector3(positionInWorld.x, positionInWorld.y, positionInWorld.z);
 }
@@ -278,7 +282,7 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
 {
     GameEngine &engine = GameEngine::GetInstance();
     auto x = glm::vec4(position.x, position.y, position.z, 1);
-	glm::vec4 positionFromScreen = engine._Camera.Matrix() * x;
+	glm::vec4 positionFromScreen = engine._Camera->Matrix() * x;
 	positionFromScreen = positionFromScreen / positionFromScreen.w;
     return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
@@ -286,7 +290,7 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
 rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    auto I = glm::inverse(engine._Camera.Matrix());
+    auto I = glm::inverse(engine._Camera->Matrix());
     auto d = I * glm::vec4(screenPoint.x, screenPoint.y, screenPoint.z, 1.0);
     d /= d.w;
     return rp3d::Vector3(d.x, d.y, d.z);
@@ -321,9 +325,11 @@ rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo
 std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
 {
     GameEngine &engine = GameEngine::GetInstance();
-    CameraInfos camera = engine._Camera;
-    rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
+    CameraInfos camera = *engine._Camera;
+    auto cameraPos = _Camera->CameraEntity.get<Transform>()->Position;
+    rp3d::Vector3 origin{ cameraPos.x, cameraPos.y, cameraPos.z };
     auto pos = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
+    DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(pos.x, pos.y, pos.z);
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();

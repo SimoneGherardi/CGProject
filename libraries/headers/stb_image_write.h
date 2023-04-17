@@ -1,4 +1,4 @@
-#if _WINDLL
+#if _WIN32
 #else
 #define sprintf_s(buf, ...) snprintf((buf), sizeof(buf), __VA_ARGS__)
 #endif

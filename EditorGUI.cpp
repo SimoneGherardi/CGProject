@@ -139,7 +139,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
             if (_FirstClick)
             {
                 glm::vec2 mousePositionNorm = glm::vec2(MouseToNorm(mouseX, WindowWidth), MouseToNorm(mouseY, WindowHeight));
-                std::vector<RaycastInfo*> raycasts = gameEngine.RaycastFromCamera(mousePositionNorm, 10);
+                std::vector<RaycastInfo*> raycasts = gameEngine.RaycastFromCamera(mousePositionNorm, 100);
                 if (raycasts.size() > 0) {
                     GameEngine::GetInstance().SelectedEntityId = raycasts[0]->Entity;
                     rp3d::Vector3 cameraPosition = gameEngine.WorldToCameraSpace(gameEngine.SelectedEntity().get<Transform>()->Position);

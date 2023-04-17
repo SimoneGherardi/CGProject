@@ -695,7 +695,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	f->Global.Data.CameraView = camera->ViewMatrix();
 	f->Global.Data.CameraProjection = camera->ProjectionMatrix();
 	f->Global.Data.CameraViewProjection = camera->Matrix();
-	f->Global.Data.CameraPosition = camera->Position;
+	f->Global.Data.CameraPosition = camera->Position();
 	// f->Global.Data.CameraPosition = glm::vec4(camera->Position, 1.0f);
 
 	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);

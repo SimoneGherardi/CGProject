@@ -355,6 +355,24 @@
     <ClCompile Include="general.cpp">
       <Filter>Source Files\ecs</Filter>
     </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageCubeMap.cpp">
+      <Filter>Source Files\scene_elements</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -574,6 +592,9 @@
       <Filter>Header Files\ecs</Filter>
     </ClInclude>
     <ClInclude Include="prefab.h">
+      <Filter>Header Files\scene_elements</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageCubeMap.h">
       <Filter>Header Files\scene_elements</Filter>
     </ClInclude>
   </ItemGroup>

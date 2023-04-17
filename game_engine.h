@@ -27,13 +27,12 @@ private:
 	std::chrono::system_clock::time_point _CurrentFrameTime;
 	std::chrono::system_clock::time_point _PreviousFrameTime;
 
-	CameraInfos _Camera;
+	CameraInfos* _Camera;
 
 	std::map<PREFABS, std::function<flecs::entity(const char*)>> _Prefabs;
 	void _InitPrefabs();
 	void _TestEcs();
 	void _SetupPhysicsLogger();
-	
 
 public:
 	static GameEngine& GetInstance();

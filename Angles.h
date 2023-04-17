@@ -1,7 +1,6 @@
 #pragma once
-#define _USE_MATH_DEFINES
-#include <cmath>
-// #include <corecrt_math_defines.h>
+#include <math.h>
+#include "math.h"
 
 struct AnglesQuaternion {
     float Quat[4];

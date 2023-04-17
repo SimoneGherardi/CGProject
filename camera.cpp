@@ -2,10 +2,22 @@
 #include "game_engine.h"
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
+#include "math.h"
 
-CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg), Position(position)
-{}
+CameraInfos::CameraInfos(int width, int height, float FOVDeg, glm::vec3 position): Width(width), Height(height), FOVDeg(FOVDeg)
+{
+	CameraEntity = GameEngine::GetInstance().ECSWorld.entity("camera")
+		.set<Transform>({ {position.x, position.y, position.z}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})
+		.set<RigidBody>({ 7.0f, rp3d::BodyType::DYNAMIC, NULL })
+		.set<Collider>({ {1, 4, 1}, rp3d::CollisionShapeName::CAPSULE, false, NULL })
+		.add<Velocity>();
+}
 
+glm::vec3 CameraInfos::Position()
+{
+	auto transform = CameraEntity.get<Transform>();
+	return glm::vec3(transform->Position.x, transform->Position.y, transform->Position.z);
+}
 
 glm::mat4 CameraInfos::ProjectionMatrix()
 {
@@ -17,9 +29,17 @@ glm::mat4 CameraInfos::ProjectionMatrix()
 
 glm::mat4 CameraInfos::ViewMatrix()
 {
-	glm::mat4 view = glm::mat4(1.0f);
-	view = glm::lookAt(Position, Position + Orientation, Up);
-	return view;
+	auto transform = CameraEntity.get<Transform>();
+	rp3d::Transform t = rp3d::Transform(rp3d::Vector3(transform->Position.x, transform->Position.y, transform->Position.z), transform->Rotation);
+	float matrix[16];
+	t.getOpenGLMatrix(matrix);
+	auto ModelMatrix = glm::mat4(
+		matrix[0], matrix[1], matrix[2], matrix[3],
+		matrix[4], matrix[5], matrix[6], matrix[7],
+		matrix[8], matrix[9], matrix[10], matrix[11],
+		matrix[12], matrix[13], matrix[14], matrix[15]
+	);
+	return ModelMatrix;
 }
 
 glm::mat4 CameraInfos::Matrix()
@@ -39,17 +59,30 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	global_xoffset = xoffset;
 }
 
+rp3d::Vector3 CameraInfos::RotationAxis()
+{
+	auto transform = CameraEntity.get_mut<Transform>();
+	rp3d::Vector3 rotationAxis;
+	rp3d::decimal rotationAngle;
+	transform->Rotation.getRotationAngleAxis(rotationAngle, rotationAxis);
+	return rotationAxis;
+}
+
 void CameraInfos::CameraZoom(double offset)
 {
 	// Zooms in and out
-	Position += Orientation * (float)offset * sensitivityScroll;
+	auto transform = CameraEntity.get_mut<Transform>();
+	auto rotationAxis = transform->Rotation.getMatrix() * rp3d::Vector3(0, 0, -1);
+	transform->Position += rotationAxis * (float)offset * sensitivityScroll;
 }
 
 void CameraInfos::CameraHorizontalSlide(double offset)
 {
 	// Slide left and right
-	glm::vec3 Horizontal = glm::normalize(glm::cross(Orientation, Up));
-	Position += Horizontal * (float)offset * sensitivityScroll;
+	auto transform = CameraEntity.get_mut<Transform>();
+	auto rotationAxis = RotationAxis();
+	rp3d::Vector3 xAxis = transform->Rotation.getMatrix() * rp3d::Vector3(1, 0, 0);
+	transform->Position += xAxis * (float)offset * sensitivityScroll;
 }
 
 void CameraInfos::Inputs(GLFWwindow* window)
@@ -59,6 +92,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	char lSfhitEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 	GameEngine& gameEngine = GameEngine::GetInstance();
+	auto transform = CameraEntity.get_mut<Transform>();
 
 	int lastKey = GLFW_KEY_LAST;
 	// Handles mouse inputs
@@ -87,16 +121,17 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		float rotY = - sensitivityRotation * (float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming vertical change in the Orientation
-		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+		auto newRotation = transform->Rotation * rp3d::Quaternion::fromEulerAngles(rotX, rotY, 0);
+		newRotation.normalize();
 
 		// Decides whether or not the next vertical Orientation is legal or not
-		if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
+		/*if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
 		{
 			Orientation = newOrientation;
-		}
+		}*/
 
 		// Rotates the Orientation left and right
-		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
+		transform->Rotation = newRotation;
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, ((float)Width / 2), ((float)Height / 2));
@@ -135,10 +170,12 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		float translationX = -(float)(mouseX - (Width / 2)) / Width;
 
 		// Calculates upcoming change in the Position
-		glm::vec3 translation = glm::normalize(glm::cross(Orientation, Up)) * translationX + glm::normalize(Up) * translationY;
+		auto xAxis = transform->Rotation.getMatrix() * rp3d::Vector3(1, 0, 0);
+		auto yAxis = transform->Rotation.getMatrix() * rp3d::Vector3(0, 1, 0);
+		rp3d::Vector3 translation = xAxis * translationX + yAxis * translationY;
 
 		// Update Position
-		Position += sensitivityTranslation * translation;
+		transform->Position += sensitivityTranslation * translation;
 
 		// Sets mouse cursor to the middle of the screen so that it doesn't end up roaming around
 		glfwSetCursorPos(window, (Width / 2), (Height / 2));

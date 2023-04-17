@@ -221,6 +221,7 @@
     <ClCompile Include="graphics_pipeline_states.cpp" />
     <ClCompile Include="graphics_pipeline_layout.cpp" />
     <ClCompile Include="image.cpp" />
+    <ClCompile Include="ImageCubeMap.cpp" />
     <ClCompile Include="image_views.cpp" />
     <ClCompile Include="ImmediateCommandBuffer.cpp" />
     <ClCompile Include="instance.cpp" />
@@ -292,6 +293,7 @@
     <ClInclude Include="graphics_pipeline_states.h" />
     <ClInclude Include="graphics_pipeline_layout.h" />
     <ClInclude Include="image.h" />
+    <ClInclude Include="ImageCubeMap.h" />
     <ClInclude Include="image_views.h" />
     <ClInclude Include="ImmediateCommandBuffer.h" />
     <ClInclude Include="instance.h" />

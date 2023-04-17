@@ -36,7 +36,7 @@ void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
     );
     RenderingEngine::GetInstance().GetCurrentFrameData()->Objects.InstanceDataStore.Add(renderer.Mesh, d);
 
-    if (GameEngine::GetInstance().ShowBoundingBoxes && e.has<Collider>())
+    if (e.has<Collider>() && GameEngine::GetInstance().ShowBoundingBoxes)
     {
         auto collider = e.get<Collider>();
         GPUInstanceData colliderInstance = {};

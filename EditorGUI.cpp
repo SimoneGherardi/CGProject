@@ -282,6 +282,8 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open") || _OpenPrompt) 
     {
+        GameEngine::GetInstance().DeserializeEntities("scene.txt");
+        /*
         _OpenPrompt = true;
         char* buff = (char*)calloc(128, 1);
         ImGui::SetNextWindowSize(OpenSavePromptDimensions);
@@ -293,11 +295,15 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 			GameEngine::GetInstance().DeserializeEntities(buff);
             _OpenPrompt = false;
 		}
+        
         ImGui::End();
+        */
     }
     ImGui::SameLine();
     if (ImGui::Button("Save") || _SavePrompt) 
     {
+        GameEngine::GetInstance().SerializeEntities("scene.txt");
+        /*
         _SavePrompt = true;
         char* buff = (char*)calloc(128, 1);
 		ImGui::SetNextWindowSize(OpenSavePromptDimensions);
@@ -309,7 +315,9 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
 			GameEngine::GetInstance().SerializeEntities(buff);
             _SavePrompt = false;
 		}
+        
 		ImGui::End();
+        */
     }
 
     ImGui::End();

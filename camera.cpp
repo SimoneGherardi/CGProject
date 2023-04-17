@@ -220,9 +220,24 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		_LastMouseX = mouseX;
 		_LastMouseY = mouseY;
+
+		if (spaceEvent == GLFW_PRESS && _LastSpaceEvent == GLFW_RELEASE)
+		{
+			_JumpDuration = 0.3;
+		}
+
+		if (_JumpDuration > 0)
+		{
+			rp3d::Vector3 force(0, 1500, 0);
+			auto body = CameraEntity.get<RigidBody>()->Body;
+			body->applyLocalForceAtCenterOfMass(force);
+			_JumpDuration -= gameEngine.DeltaTime.count();
+		}
+
+		WASD(window, SpeedGame);
 	}
 
-	WASD(window, SpeedGame);
+	
 
 	_LastLeftEvent = leftEvent;
 	_LastMiddleEvent = middleEvent;

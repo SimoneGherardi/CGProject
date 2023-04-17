@@ -24,8 +24,8 @@ public:
 	int Height;
 
 	// Adjust the speed of the camera and it's sensitivity when looking around
-	float SpeedGame = 0.1f;
-	float SpeedEditor = 0.05f;
+	float SpeedGame = 20.0f;
+	float SpeedEditor = 15.0f;
 	float SensitivityRotation = 100.0f;
 	float SensitivityTranslation = 15.0f;
 	float SensitivityInGameTranslation = 10.0f;
@@ -61,6 +61,7 @@ private:
 	char _LastDEvent = GLFW_RELEASE;
 	char _LastSpaceEvent = GLFW_RELEASE;
 	bool _FirstClick = true;
+	double _JumpDuration;
 	std::chrono::time_point<std::chrono::system_clock> _LastWTime;
 	std::chrono::time_point<std::chrono::system_clock> _LastATime;
 	std::chrono::time_point<std::chrono::system_clock> _LastSTime;

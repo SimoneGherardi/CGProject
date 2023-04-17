@@ -59,6 +59,7 @@ public:
 	void operator=(GameEngine const&) = delete;
 
 	flecs::entity InstantiateEntity(PREFABS prefab, const char* name = nullptr);
+	void DeleteEntity(flecs::entity);
 	flecs::entity EntityFromId(flecs::entity_t id);
 	flecs::entity SelectedEntity();
 

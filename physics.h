@@ -18,7 +18,8 @@ typedef struct Collider
 {
     rp3d::Vector3 Size;
     rp3d::CollisionShapeName Type;
-    bool isTrigger;
+    bool isTrigger = false;
+    float bounciness = 0;
     rp3d::Collider* RP3DCollider;
 } Collider;
 

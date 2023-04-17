@@ -49,6 +49,7 @@ void CreateCollider(rp3d::CollisionBody* body, Collider& collider)
     }
     collider.RP3DCollider = body->addCollider(shape, rp3d::Transform::identity());
     collider.RP3DCollider->setIsTrigger(collider.isTrigger);
+    collider.RP3DCollider->getMaterial().setBounciness(collider.bounciness);
 }
 
 void CreateColliderCollisioniBody(flecs::entity e, CollisionBody& body, Collider& collider)

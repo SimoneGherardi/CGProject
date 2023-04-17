@@ -85,10 +85,6 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	char lShiftEvent = glfwGetKey(window, GLFW_KEY_LEFT_SHIFT);
 	char spaceEvent = glfwGetKey(window, GLFW_KEY_SPACE);
 	char pEvent = glfwGetKey(window, GLFW_KEY_P);
-	char wEvent = glfwGetKey(window, GLFW_KEY_W);
-	char aEvent = glfwGetKey(window, GLFW_KEY_A);
-	char sEvent = glfwGetKey(window, GLFW_KEY_S);
-	char dEvent = glfwGetKey(window, GLFW_KEY_D); 
 	GameEngine& gameEngine = GameEngine::GetInstance();
 	auto transform = CameraEntity.get_mut<Transform>();
 	double mouseX;
@@ -100,6 +96,16 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	{
 		gameEngine.SetIsEditor(!gameEngine.IsEditor);
 		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
+		if (gameEngine.IsEditor)
+		{
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
+		else
+		{
+			_LastMouseX = mouseX;
+			_LastMouseY = mouseY;
+			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
 	}
 	
 	if (gameEngine.IsEditor == true)
@@ -117,7 +123,6 @@ void CameraInfos::Inputs(GLFWwindow* window)
 				_LastMouseY = mouseY;
 			}
 
-			// And then "transforms" them into degrees 
 			float rotX = -SensitivityRotation * (float)(mouseY - _LastMouseY) / Height;
 			float rotY = -SensitivityRotation * (float)(mouseX - _LastMouseX) / Width;
 
@@ -147,13 +152,9 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		{
 			if (middleEvent == GLFW_PRESS)
 			{
-				// Stores the coordinates of the cursor
-				double mouseX;
-				double mouseY;
 				glfwGetCursorPos(window, &mouseX, &mouseY);
 				if (_FirstClick)
 				{
-					//glfwSetCursorPos(window, (Width / 2), (Height / 2));
 					_FirstClick = false;
 					_LastMouseX = mouseX;
 					_LastMouseY = mouseY;
@@ -193,68 +194,99 @@ void CameraInfos::Inputs(GLFWwindow* window)
 			CameraHorizontalSlide(xoffset);
 			global_xoffset = 0;
 		};
+
+		WASD(window, SpeedEditor);
 		
 	}
 	
 	// Handles keyboard inputs for movement in playing mode
 	if (gameEngine.IsEditor == false)
 	{
-		
-		if (wEvent == GLFW_PRESS)
+		// And then "transforms" them into degrees 
+		float rotX = SensitivityRotation * (float)(mouseY - _LastMouseY) / Height;
+		float rotY = SensitivityRotation * (float)(mouseX - _LastMouseX) / Width;
+
+		// Calculates upcoming vertical change in the Orientation
+		glm::vec3 newOrientation = glm::rotate(Orientation, glm::radians(-rotX), glm::normalize(glm::cross(Orientation, Up)));
+
+		// Decides whether or not the next vertical Orientation is legal or not
+		if (abs(glm::angle(newOrientation, Up) - glm::radians(90.0f)) <= glm::radians(85.0f))
 		{
-			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-			if (_LastWEvent == GLFW_RELEASE)
-			{
-				_LastWTime = now;
-			}
-			std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastWTime;
-			double movement = (pressDuration.count() / (1000 * 60)) * Speed;
-			CameraZoom(movement);
-			_LastWTime = now;
+			Orientation = newOrientation;
 		}
-		if (aEvent == GLFW_PRESS)
-		{
-			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-			if (_LastAEvent == GLFW_RELEASE)
-			{
-				_LastATime = now;
-			}
-			std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastATime;
-			double movement = (pressDuration.count() / (1000 * 60)) * Speed;
-			CameraHorizontalSlide(-movement);
-			_LastATime = now;
-		}
-		if (sEvent == GLFW_PRESS)
-		{
-			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-			if (_LastSEvent == GLFW_RELEASE)
-			{
-				_LastSTime = now;
-			}
-			std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastSTime;
-			double movement = (pressDuration.count() / (1000 * 60)) * Speed;
-			CameraZoom(-movement);
-			_LastSTime = now;
-		}
-		if (dEvent == GLFW_PRESS)
-		{
-			std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-			if (_LastDEvent == GLFW_RELEASE)
-			{
-				_LastDTime = now;
-			}
-			std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastDTime;
-			double movement = (pressDuration.count() / (1000 * 60)) * Speed;
-			CameraHorizontalSlide(movement);
-			_LastDTime = now;
-		}
+
+		// Rotates the Orientation left and right
+		Orientation = glm::rotate(Orientation, glm::radians(-rotY), Up);
+
+		_LastMouseX = mouseX;
+		_LastMouseY = mouseY;
 	}
+
+	WASD(window, SpeedGame);
 
 	_LastLeftEvent = leftEvent;
 	_LastMiddleEvent = middleEvent;
 	_LastLShiftEvent = lShiftEvent;
 	_LastSpaceEvent = spaceEvent;
 	_LastPEvent = pEvent;
+	
+}
+
+void CameraInfos::WASD(GLFWwindow* window, float speed)
+{
+	char wEvent = glfwGetKey(window, GLFW_KEY_W);
+	char aEvent = glfwGetKey(window, GLFW_KEY_A);
+	char sEvent = glfwGetKey(window, GLFW_KEY_S);
+	char dEvent = glfwGetKey(window, GLFW_KEY_D);
+
+	if (wEvent == GLFW_PRESS)
+	{
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		if (_LastWEvent == GLFW_RELEASE)
+		{
+			_LastWTime = now;
+		}
+		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastWTime;
+		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		CameraZoom(movement);
+		_LastWTime = now;
+	}
+	if (aEvent == GLFW_PRESS)
+	{
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		if (_LastAEvent == GLFW_RELEASE)
+		{
+			_LastATime = now;
+		}
+		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastATime;
+		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		CameraHorizontalSlide(-movement);
+		_LastATime = now;
+	}
+	if (sEvent == GLFW_PRESS)
+	{
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		if (_LastSEvent == GLFW_RELEASE)
+		{
+			_LastSTime = now;
+		}
+		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastSTime;
+		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		CameraZoom(-movement);
+		_LastSTime = now;
+	}
+	if (dEvent == GLFW_PRESS)
+	{
+		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
+		if (_LastDEvent == GLFW_RELEASE)
+		{
+			_LastDTime = now;
+		}
+		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastDTime;
+		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		CameraHorizontalSlide(movement);
+		_LastDTime = now;
+	}
 	_LastWEvent = wEvent;
 	_LastAEvent = aEvent;
 	_LastSEvent = sEvent;

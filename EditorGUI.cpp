@@ -41,6 +41,8 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ShowDemoWindow = false;
     ShowAnotherWindow = true;
+    _OpenPrompt = false;
+    _SavePrompt = false;
 
     // Dimensions
     ScaleFactor = 0.7f;
@@ -53,6 +55,7 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     LogEditPromptDimensions = ImVec2(LogDimensions.x, LogDimensions.y * 0.5);
     ButtonDimensions = ImVec2((float)windowSize.Width * 0.09, (float)windowSize.Width * 0.05);
     LogEntryDimensions = ImVec2(LogDimensions.y, ((float)windowSize.Height) * 0.1);
+    OpenSavePromptDimensions = ImVec2((float)windowSize.Width * 0.3, (float)windowSize.Width * 0.05);
 
     // Positions
     SceneCenterPosition = glm::vec2((((SceneDimensions[0] / 2) + HorizontalBorder) / WindowWidth * 2) - 1, (((SceneDimensions[1] / 2) + MenuBarHeight) / WindowHeight) * 2 - 1);
@@ -60,7 +63,8 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     ScenePosition = ImVec2(0, MenuBarHeight);
     PrefabContainerPosition = ImVec2(0, SceneDimensions.y + MenuBarHeight);
     LogPosition = ImVec2(SceneDimensions.x, MenuBarHeight);
-    LogEditPromptPositions = ImVec2(LogPosition.x, LogDimensions.y * 2/3);
+    LogEditPromptPosition = ImVec2(LogPosition.x, LogDimensions.y * 2/3);
+    OpenSavePromptPosition = ImVec2((WindowWidth - OpenSavePromptDimensions.x) / 2, (WindowHeight - OpenSavePromptDimensions.y) / 2);
     
     SetPrefabsMap();
 }
@@ -75,7 +79,7 @@ bool EditorGUI::CheckMouseInsideScene(float mouseX, float mouseY) {
 }
 
 bool EditorGUI::CheckMouseInsidePrompt(float mouseX, float mouseY) {
-    if (mouseX > LogEditPromptPositions.x && mouseX <= LogEditPromptPositions.x + LogEditPromptDimensions.x && mouseY > LogEditPromptPositions.y && mouseY < LogEditPromptPositions.y + LogEntryDimensions.y) {
+    if (mouseX > LogEditPromptPosition.x && mouseX <= LogEditPromptPosition.x + LogEditPromptDimensions.x && mouseY > LogEditPromptPosition.y && mouseY < LogEditPromptPosition.y + LogEntryDimensions.y) {
         return true;
     }
     else {
@@ -123,6 +127,9 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     double mouseX;
     double mouseY;
 
+    if (_OpenPrompt || _SavePrompt) {
+		return;
+	}
     char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     GameEngine& gameEngine = GameEngine::GetInstance();
 
@@ -217,7 +224,7 @@ void EditorGUI::PrintPrompt() {
 		return;
 	}
     ImGui::SetNextWindowSize(LogEditPromptDimensions);
-    ImGui::SetNextWindowPos(LogEditPromptPositions);
+    ImGui::SetNextWindowPos(LogEditPromptPosition);
 
     rp3d::Vector3 tmpPosition;
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
@@ -273,15 +280,38 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::SetNextWindowPos(MenuBarPosition);
     ImGuiWindowFlags flags = ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoTitleBar;
     ImGui::Begin("Menu Bar", NULL, flags);
-    if (ImGui::Button("Open")) 
+    if (ImGui::Button("Open") || _OpenPrompt) 
     {
-        GameEngine::GetInstance().DeserializeEntities("D:\\Documents_Data\\Visual_Studio_2022\\Projects\\CGProject\\CGProject\\resources\\scene\\scene.txt");
+        _OpenPrompt = true;
+        char* buff = (char*)calloc(128, 1);
+        ImGui::SetNextWindowSize(OpenSavePromptDimensions);
+        ImGui::SetNextWindowPos(OpenSavePromptPosition);
+        ImGui::Begin("Open", NULL, flags);
+        ImGui::InputTextWithHint("##fileopen", "Insert file name", buff, 256);
+        if (ImGui::Button("Open"))
+        {
+			GameEngine::GetInstance().DeserializeEntities(buff);
+            _OpenPrompt = false;
+		}
+        ImGui::End();
     }
     ImGui::SameLine();
-    if (ImGui::Button("Save")) 
+    if (ImGui::Button("Save") || _SavePrompt) 
     {
-        GameEngine::GetInstance().SerializeEntities();
+        _SavePrompt = true;
+        char* buff = (char*)calloc(128, 1);
+		ImGui::SetNextWindowSize(OpenSavePromptDimensions);
+		ImGui::SetNextWindowPos(OpenSavePromptPosition);
+		ImGui::Begin("Save", NULL, flags);
+        ImGui::InputTextWithHint("##filesave", "Insert file name", buff, 256);
+        if (ImGui::Button("Save"))
+        {
+			GameEngine::GetInstance().SerializeEntities(buff);
+            _SavePrompt = false;
+		}
+		ImGui::End();
     }
+
     ImGui::End();
 
     // Scene 

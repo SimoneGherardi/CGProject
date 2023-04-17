@@ -72,6 +72,6 @@ public:
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 
 	void SetIsEditor(bool isEditor);
-	void SerializeEntities();
-	void DeserializeEntities(std::string filename);
+	void SerializeEntities(const char* filename);
+	void DeserializeEntities(const char* filename);
 };

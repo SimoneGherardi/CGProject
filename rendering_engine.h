@@ -98,6 +98,7 @@ private:
 	DeviceMemory* _DeviceLocalMemory;
 
 	CleanupStack _CleanupStack;
+	CleanupStack _CleanupStackSizeDependent;
 
 	
 
@@ -123,7 +124,7 @@ private:
 	void _InitializeSurface(SurfaceFactory* factory);
 	void _InitializePhysicalDevice();
 	void _InitializeLogicalDevice();
-	void _InitializeSwapchain(WindowSize windowSize);
+	void _InitializeSwapchain();
 	void _InitializeRenderPass();
 	void _InitializeGUIRenderPass();
 	void _InitializeAllocators();
@@ -145,7 +146,8 @@ public:
 	EditorGUI* EditGUI;
 	FrameData* GetCurrentFrameData();
 
-	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window);
+	void InitializeSizeDependent();
+	void Initialize(const char* title, SurfaceFactory* factory, GLFWwindow* window);
 	void Render(float delta, CameraInfos* camera);
 	void Cleanup();
 

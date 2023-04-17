@@ -11,9 +11,11 @@ GLFWwindow* initializeWindow(
     glfwInit();
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+    // glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
     auto window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+
+    glfwSetWindowSizeLimits(window, 360, 240, GLFW_DONT_CARE, GLFW_DONT_CARE);
 
     glfwSetWindowUserPointer(window, pointer);
     glfwSetFramebufferSizeCallback(window, resizeCallback);

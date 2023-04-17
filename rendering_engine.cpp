@@ -79,16 +79,19 @@ void RenderingEngine::_InitializeLogicalDevice() {
 	TRACEEND;
 }
 
-void RenderingEngine::_InitializeSwapchain(WindowSize windowSize) {
+void RenderingEngine::_InitializeSwapchain() {
 	TRACESTART;
+	int width, height;
+	glfwGetFramebufferSize(_Window, &width, &height);
 	_Swapchain.Initialize(
-		windowSize.Width, windowSize.Height,
+		width, height,
 		_Context.PhysicalDevice, _Context.Device, _Context.Surface
 	);
-	_CleanupStack.push([=]() {
+	_WindowSize = { width, height };
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up logical device");
 		_Swapchain.Cleanup();
-		});
+	});
 	TRACEEND;
 }
 
@@ -101,7 +104,7 @@ void RenderingEngine::_InitializeRenderPass() {
 		VK_SAMPLE_COUNT_2_BIT,
 		&_RenderPass
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render pass");
 		cleanupRenderPass(_Context.Device, _RenderPass);
 		});
@@ -119,7 +122,7 @@ void RenderingEngine::_InitializeGUIRenderPass() {
 		VK_SAMPLE_COUNT_2_BIT,
 		&_GUIRenderPass
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render pass");
 		cleanupRenderPass(_Context.Device, _GUIRenderPass);
 		});
@@ -338,7 +341,7 @@ void RenderingEngine::_InitializePipeline()
 		_RenderPass,
 		&_Pipeline
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up pipeline");
 		cleanupGraphicsPipeline(_Context.Device, _Pipeline);
 		cleanupGraphicsPipelineLayout(_Context.Device, _PipelineLayout);
@@ -476,7 +479,7 @@ void RenderingEngine::_InitializeRenderTargets()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render targets");
 		_ColorGUIRenderTarget.Cleanup();
 		_DepthGUIRenderTarget.Cleanup();
@@ -494,7 +497,9 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		std::array<VkImageView, 3> attachments = {
 			_ColorRenderTarget.GetImageView(),
 			_DepthRenderTarget.GetImageView(),
-			_ColorResolveRenderTarget.GetImageView(),
+			GameEngine::GetInstance().IsEditor ? 
+				_ColorResolveRenderTarget.GetImageView() :
+				_Swapchain.GetImagesViews()[i],
 		};
 
 		initializeFrameBuffer(
@@ -506,7 +511,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 			&_SwapChainFramebuffers[i]
 		);
 
-		_CleanupStack.push([=]() {
+		_CleanupStackSizeDependent.push([=]() {
 			LOGDBG("cleaning up framebuffer");
 			cleanupFrameBuffer(
 				_Context.Device,
@@ -519,6 +524,10 @@ void RenderingEngine::_InitializeFrameBuffer() {
 
 void RenderingEngine::_InitializeGUIFrameBuffer() {
 	TRACESTART;
+	if (!GameEngine::GetInstance().IsEditor)
+	{
+		return;
+	}
 	_GUISwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
 	for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
 		std::array<VkImageView, 3> attachments = {
@@ -536,13 +545,13 @@ void RenderingEngine::_InitializeGUIFrameBuffer() {
 			&_GUISwapChainFramebuffers[i]
 		);
 
-		_CleanupStack.push([=]() {
+		_CleanupStackSizeDependent.push([=]() {
 			LOGDBG("cleaning up framebuffer");
 			cleanupFrameBuffer(
 				_Context.Device,
 				_GUISwapChainFramebuffers[i]
 			);
-			});
+		});
 	}
 	TRACEEND;
 }
@@ -609,7 +618,7 @@ void RenderingEngine::_InitializeGui()
 	EditGUI = EditorGUI::GetInstance();
 	EditGUI->Initialize(_WindowSize, _Window);
 
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up gui");
 		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
 		ImGui_ImplVulkan_Shutdown();
@@ -617,10 +626,34 @@ void RenderingEngine::_InitializeGui()
 	TRACEEND;
 }
 
-void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window)
+void RenderingEngine::InitializeSizeDependent()
+{
+ 	TRACESTART;
+	vkDeviceWaitIdle(_Context.Device);
+
+	_CleanupStackSizeDependent.flush();
+
+	_InitializeSwapchain();
+	_InitializeRenderPass();
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		_InitializeGUIRenderPass();
+	}
+	_InitializePipeline();
+	_InitializeRenderTargets();
+	_InitializeFrameBuffer();
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		_InitializeGUIFrameBuffer();
+		_InitializeGui();
+	}
+
+ 	TRACEEND;
+}
+
+void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, GLFWwindow* window)
 {
 	TRACESTART;
-	_WindowSize = windowSize;
 	_Window = window;
 	_InitializeInstance(title);
 #ifdef ENABLE_VALIDATION_LAYERS
@@ -630,23 +663,15 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	_InitializePhysicalDevice();
 	_InitializeLogicalDevice();
 
-	_InitializeSwapchain(windowSize);
-	_InitializeRenderPass();
-	_InitializeGUIRenderPass();
-
 	_InitializeSyncStructures();
 	_InitializeAllocators();
 	_InitializeModels();
 	_InitializeDescriptorSet();
-	_InitializePipeline();
 	_InitializeCommandPool();
 	_InitializeGUICommandPool();
 	_InitializeCommandBuffers();
 	_InitializeGUICommandBuffers();
-	_InitializeRenderTargets();
-	_InitializeFrameBuffer();
-	_InitializeGUIFrameBuffer();
-	_InitializeGui();
+
 	TRACEEND;
 }
 
@@ -656,12 +681,18 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	_RenderFence->Wait();
 	_RenderFence->Reset();
 	uint32_t imageIndex;
-	CheckVkResult(
-		vkAcquireNextImageKHR(
-			_Context.Device, _Swapchain.GetSwapchain(),
-			1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
-		)
+	// RenderingEngine::GetInstance().InitializeSizeDependent({WIDTH, HEIGHT});
+	auto result = vkAcquireNextImageKHR(
+		_Context.Device, _Swapchain.GetSwapchain(),
+		1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
 	);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		InitializeSizeDependent();
+		return;
+	} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw std::runtime_error("failed to acquire swap chain image!");
+	}
+	CheckVkResult(result);
 	_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	VkCommandBuffer cmd = _MainCommandBuffer->Buffer;
 
@@ -717,28 +748,31 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 
 	vkCmdEndRenderPass(cmd);
 
-	VkRenderPassBeginInfo uiRpInfo = {};
-	uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	uiRpInfo.pNext = nullptr;
-	uiRpInfo.renderPass = _RenderPass;
-	uiRpInfo.renderArea.offset.x = 0;
-	uiRpInfo.renderArea.offset.y = 0;
-	uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
-	uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
-	uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	uiRpInfo.pClearValues = clearValues.data();
-	vkCmdBeginRenderPass(
-		cmd,
-		&uiRpInfo,
-		VK_SUBPASS_CONTENTS_INLINE
-	);
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		VkRenderPassBeginInfo uiRpInfo = {};
+		uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		uiRpInfo.pNext = nullptr;
+		uiRpInfo.renderPass = _RenderPass;
+		uiRpInfo.renderArea.offset.x = 0;
+		uiRpInfo.renderArea.offset.y = 0;
+		uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
+		uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
+		uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		uiRpInfo.pClearValues = clearValues.data();
+		vkCmdBeginRenderPass(
+			cmd,
+			&uiRpInfo,
+			VK_SUBPASS_CONTENTS_INLINE
+		);
 
-	EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
+		EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
 
-	ImGui::Render();
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+		ImGui::Render();
+		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
 
-	vkCmdEndRenderPass(cmd);
+		vkCmdEndRenderPass(cmd);
+	}
 
 	_MainCommandBuffer->End();
 	_MainCommandBuffer->Submit(
@@ -760,13 +794,22 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	presentInfo.pWaitSemaphores = &(_RenderSemaphore->Instance);
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pImageIndices = &imageIndex;
-	CheckVkResult(vkQueuePresentKHR(_Context.GraphicsQueue, &presentInfo));
+	auto result2 = vkQueuePresentKHR(_Context.GraphicsQueue, &presentInfo);
+
+	if (result2 == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		InitializeSizeDependent();
+		return;
+	} else if (result != VK_SUCCESS) {
+		throw std::runtime_error("failed to present swap chain image!");
+	}
+	CheckVkResult(result2);
 }
 
 void RenderingEngine::Cleanup()
 {
 	TRACESTART;
 	RenderContext::GetInstance().Cleanup(&_Context);
+	_CleanupStackSizeDependent.flush();
 	_CleanupStack.flush();
 	TRACEEND;
 }

@@ -241,51 +241,23 @@ void CameraInfos::WASD(GLFWwindow* window, float speed)
 
 	if (wEvent == GLFW_PRESS)
 	{
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-		if (_LastWEvent == GLFW_RELEASE)
-		{
-			_LastWTime = now;
-		}
-		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastWTime;
-		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
 		CameraZoom(movement);
-		_LastWTime = now;
 	}
 	if (aEvent == GLFW_PRESS)
 	{
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-		if (_LastAEvent == GLFW_RELEASE)
-		{
-			_LastATime = now;
-		}
-		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastATime;
-		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
 		CameraHorizontalSlide(-movement);
-		_LastATime = now;
 	}
 	if (sEvent == GLFW_PRESS)
 	{
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-		if (_LastSEvent == GLFW_RELEASE)
-		{
-			_LastSTime = now;
-		}
-		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastSTime;
-		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
 		CameraZoom(-movement);
-		_LastSTime = now;
 	}
 	if (dEvent == GLFW_PRESS)
 	{
-		std::chrono::time_point<std::chrono::system_clock> now = std::chrono::system_clock::now();
-		if (_LastDEvent == GLFW_RELEASE)
-		{
-			_LastDTime = now;
-		}
-		std::chrono::duration pressDuration = std::chrono::system_clock::now() - _LastDTime;
-		double movement = (pressDuration.count() / (1000 * 60)) * speed;
+		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
 		CameraHorizontalSlide(movement);
-		_LastDTime = now;
 	}
 	_LastWEvent = wEvent;
 	_LastAEvent = aEvent;

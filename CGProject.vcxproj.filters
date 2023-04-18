@@ -259,9 +259,6 @@
     <ClCompile Include="InstanceDataStore.cpp">
       <Filter>Source Files\3d</Filter>
     </ClCompile>
-    <ClCompile Include="tests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rendering_engine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -375,6 +372,24 @@
     </ClCompile>
     <ClCompile Include="ImageCubeMap.cpp">
       <Filter>Source Files\scene_elements</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="libraries\imgui\*.cpp">
       <Filter>Source Files</Filter>
@@ -563,9 +578,6 @@
     </ClInclude>
     <ClInclude Include="CommandBuffer.h">
       <Filter>Header Files\utilities</Filter>
-    </ClInclude>
-    <ClInclude Include="tests.h">
-      <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SaveToBin.h">
       <Filter>Header Files\3d</Filter>

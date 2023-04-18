@@ -101,6 +101,7 @@ int main(int argc, char** argv)
             const millisec duration = clock::now() - start;
             delta = duration.count();
         }
+        rendEngine.WaitIdle();
         cleanup();
     }
     catch (const std::exception& e) {

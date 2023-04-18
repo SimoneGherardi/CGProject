@@ -18,6 +18,11 @@ public:
 	virtual rp3d::decimal notifyRaycastHit(const rp3d::RaycastInfo& info);
 };
 
+class PhysicsEventListener : public rp3d::EventListener {
+public:
+	void onTrigger(const rp3d::OverlapCallback::CallbackData& callbackData);
+};
+
 constexpr std::chrono::duration<double> PHYSICS_TIMESTEP = std::chrono::duration<double>(1.0f / 60.0f);
 
 class GameEngine
@@ -70,6 +75,8 @@ public:
 	rp3d::Vector3 ScreenToWorldSpace(glm::vec3 screenPoint);
 
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
+
+	flecs::entity EntityFromBody(rp3d::CollisionBody*);
 
 	void SetIsEditor(bool isEditor);
 	void SerializeEntities(const char* filename);

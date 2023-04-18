@@ -24,6 +24,7 @@ void CreateRigidBody(flecs::entity e, Transform& transform, RigidBody& rigidbody
     rp3d::Transform initialTransform(position, rotation);
     rigidbody.Body = engine.PhysicsWorld->createRigidBody(initialTransform);
     rigidbody.Body->setType(rigidbody.Type);
+    if (!rigidbody.CanRotate) rigidbody.Body->setAngularLockAxisFactor(rp3d::Vector3(0, 0, 0));
     rigidbody.Body->setMass(rigidbody.Weight);
 }
 

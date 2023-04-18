@@ -77,6 +77,9 @@
     <Filter Include="Header Files\scene_elements">
       <UniqueIdentifier>{c8ebfd6e-f0e9-4a8a-9dd8-4921e4b4f1b5}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\libraries\reactphysics3d">
+      <UniqueIdentifier>{43dfa455-3845-4ee8-949f-6376ed2ee1e9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -373,6 +376,24 @@
     <ClCompile Include="ImageCubeMap.cpp">
       <Filter>Source Files\scene_elements</Filter>
     </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\imgui\backends\*.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="test.h">
@@ -596,6 +617,9 @@
     </ClInclude>
     <ClInclude Include="ImageCubeMap.h">
       <Filter>Header Files\scene_elements</Filter>
+    </ClInclude>
+    <ClInclude Include="libraries\imgui\MyVulkanImGUI.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

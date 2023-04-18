@@ -76,7 +76,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
-            .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
+            .set<Collider>({ {1, 0.1, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
             .set<Renderer>({ Models::BUSH });
     };
     _Prefabs[PREFABS::COIN] = [this](const char* name) {
@@ -84,7 +84,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::COIN })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
-            .set<Collider>({ {0.3, 1, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
+            .set<Collider>({ {0.2, 0.9, 0.9}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
             .set<Renderer>({ Models::COIN });
     };
     _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
@@ -92,7 +92,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::GRASSBLOCK })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {2.2, 2.2, 2.2}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
+            .set<Collider>({ {2.1, 2.1, 2.1}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
             .set<Renderer>({ Models::GRASSBLOCK });
     };
     _Prefabs[PREFABS::ROCK1] = [this](const char* name) {
@@ -100,7 +100,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::ROCK1 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
+            .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK1 });
     };
     _Prefabs[PREFABS::ROCK2] = [this](const char* name) {
@@ -108,7 +108,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::ROCK2 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
+            .set<Collider>({ {1.7, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK2 });
     };
     _Prefabs[PREFABS::SIGN] = [this](const char* name) {
@@ -116,7 +116,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::SIGN })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.1, 4, 0.1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {0.1, 1.8, 0.1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::SIGN });
     };
     _Prefabs[PREFABS::TREE1] = [this](const char* name) {
@@ -124,7 +124,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::TREE1 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {0.4, 3.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE1 });
     };
     _Prefabs[PREFABS::TREE2] = [this](const char* name) {
@@ -132,7 +132,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::TREE2 })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {0.4, 4.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE2 });
     };
     _Prefabs[PREFABS::WOODBRIDGE] = [this](const char* name) {
@@ -140,7 +140,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::WOODBRIDGE })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {2, 0.2, 2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODBRIDGE });
     };
     _Prefabs[PREFABS::WOODPLATFORM] = [this](const char* name) {
@@ -148,7 +148,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::WOODPLATFORM })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {1.5, 0.8, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODPLATFORM });
     };
     _Prefabs[PREFABS::WOODSHELF] = [this](const char* name) {
@@ -156,7 +156,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::WOODSHELF })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 0.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {1.5, 0.2, 0.7}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODSHELF });
     };
     _Prefabs[PREFABS::CUBE] = [this](const char* name) {
@@ -164,9 +164,18 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::CUBE })
             .add<Transform>()
             .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
+            .set<Collider>({ {1.5, 1.5, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
+    };
+
+    _Prefabs[PREFABS::BRICK] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::BRICK })
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<Collider>({ {8.5, 0.5,8.5}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
+            .set<Renderer>({ Models::BRICK });
     };
 }
 

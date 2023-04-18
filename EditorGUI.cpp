@@ -128,9 +128,9 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     double mouseX;
     double mouseY;
 
-    if (_OpenPrompt || _SavePrompt) {
-		return;
-	}
+    //if (_OpenPrompt || _SavePrompt) {
+	//	return;
+	//}
     char leftEvent = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
     GameEngine& gameEngine = GameEngine::GetInstance();
 
@@ -259,7 +259,7 @@ void EditorGUI::PrintPrompt() {
 		if (gameEngine.SelectedEntityId != 0) 
         {
             gameEngine.DeleteEntity(gameEngine.SelectedEntity());
-            gameEngine.SelectedEntityId = 0;
+            gameEngine.SelectedEntityId = FLECS_INVALID_ENTITY;
         }
 	}
     ImGui::End();

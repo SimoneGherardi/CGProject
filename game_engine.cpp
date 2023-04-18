@@ -66,7 +66,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({PREFABS::MONKEY})
             .add<Transform>()
-            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
             .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
@@ -85,13 +85,14 @@ void GameEngine::_InitPrefabs()
             .add<Transform>()
             .set<CollisionBody>({ NULL })
             .set<Collider>({ {0.2, 0.9, 0.9}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
+            .set<AngularVelocity>({ rp3d::Quaternion::fromEulerAngles(0, 0.001, 0), 1 })
             .set<Renderer>({ Models::COIN });
     };
     _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::GRASSBLOCK })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {2.1, 2.1, 2.1}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
             .set<Renderer>({ Models::GRASSBLOCK });
     };
@@ -99,7 +100,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK1 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK1 });
     };
@@ -107,7 +108,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK2 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {1.7, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK2 });
     };
@@ -115,7 +116,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::SIGN })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {0.1, 1.8, 0.1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::SIGN });
     };
@@ -123,7 +124,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::TREE1 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {0.4, 3.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE1 });
     };
@@ -131,7 +132,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::TREE2 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {0.4, 4.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE2 });
     };
@@ -139,7 +140,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODBRIDGE })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {2, 0.2, 2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODBRIDGE });
     };
@@ -147,7 +148,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODPLATFORM })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {1.5, 0.8, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODPLATFORM });
     };
@@ -155,7 +156,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODSHELF })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {1.5, 0.2, 0.7}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODSHELF });
     };
@@ -163,7 +164,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::CUBE })
             .add<Transform>()
-            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
             .set<Collider>({ {1.5, 1.5, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
@@ -173,7 +174,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::BRICK })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {8.5, 0.5,8.5}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
             .set<Renderer>({ Models::BRICK });
     };

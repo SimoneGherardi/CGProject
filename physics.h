@@ -11,6 +11,7 @@ typedef struct RigidBody
 {
     float Weight;
     rp3d::BodyType Type;
+    bool CanRotate = true;
     rp3d::RigidBody* Body;
 } RigidBody;
 

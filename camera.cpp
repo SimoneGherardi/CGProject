@@ -8,7 +8,7 @@ CameraInfos::CameraInfos(float FOVDeg, glm::vec3 position): FOVDeg(FOVDeg)
 {
 	CameraEntity = GameEngine::GetInstance().ECSWorld.entity("camera")
 		.set<Transform>({ {position.x, position.y, position.z}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})
-		.set<RigidBody>({ 70.0f, rp3d::BodyType::DYNAMIC, NULL })
+		.set<RigidBody>({ 70.0f, rp3d::BodyType::DYNAMIC, false, NULL })
 		.set<Collider>({ {1, 2, 1}, rp3d::CollisionShapeName::BOX, false, 0, NULL })
 		.add<Velocity>();
 }

@@ -66,7 +66,5 @@ private:
 	std::chrono::time_point<std::chrono::system_clock> _LastATime;
 	std::chrono::time_point<std::chrono::system_clock> _LastSTime;
 	std::chrono::time_point<std::chrono::system_clock> _LastDTime;
-
-
 };
 #endif

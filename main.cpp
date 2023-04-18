@@ -64,9 +64,6 @@ int main(int argc, char** argv)
     try
     {
         initialize();
-        float delta = 0;
-        using clock = std::chrono::system_clock;
-        using millisec = std::chrono::duration<float>;
         GameEngine& engine = GameEngine::GetInstance();
         RenderingEngine& rendEngine = RenderingEngine::GetInstance();
         CameraInfos& Camera = engine.Camera();
@@ -76,10 +73,9 @@ int main(int argc, char** argv)
         bool lastIsEditor = engine.IsEditor;
 
         while (!glfwWindowShouldClose(Window)) {
-            const auto start = clock::now();
             glfwPollEvents();
             
-            engine.Loop(delta);
+            engine.Loop();
             
             // Read Inputs
             Camera.Inputs(Window);
@@ -97,9 +93,7 @@ int main(int argc, char** argv)
                 editorGUI->Inputs(Window);
             }
 
-            rendEngine.Render(delta, &Camera);
-            const millisec duration = clock::now() - start;
-            delta = duration.count();
+            rendEngine.Render(&Camera);
         }
         rendEngine.WaitIdle();
         cleanup();

@@ -704,7 +704,7 @@ void RenderingEngine::WaitIdle()
 	vkDeviceWaitIdle(_Context.Device);
 }
 
-void RenderingEngine::Render(float delta, CameraInfos* camera)
+void RenderingEngine::Render(CameraInfos* camera)
 {
 	Wait();
 
@@ -757,7 +757,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	f->Global.Data.CameraViewProjection = camera->Matrix();
 	f->Global.Data.CameraPosition = camera->Position();
 
-	_RenderCamera(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
+	_RenderCamera(&_Context, _WindowSize.Width, _WindowSize.Height, cmd, _PipelineLayout, f);
 
 	VkDeviceSize offset = 0;
 	vkCmdBindDescriptorSets(
@@ -833,7 +833,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	CheckVkResult(result2);
 }
 
-void RenderingEngine::_RenderCamera(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
+void RenderingEngine::_RenderCamera(const VulkanContext context, const float width, const float height, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
 {
 	GlobalData* data = &(frameData->Global.Data);
 

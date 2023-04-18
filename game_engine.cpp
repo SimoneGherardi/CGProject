@@ -246,7 +246,7 @@ std::chrono::system_clock::time_point GameEngine::GetCurrentFrameTime()
     return this->_CurrentFrameTime;
 }
 
-void GameEngine::Loop(float delta)
+void GameEngine::Loop()
 {
     _CurrentFrameTime = std::chrono::system_clock::now();
     DeltaTime = _CurrentFrameTime - _PreviousFrameTime;

@@ -23,7 +23,7 @@ public:
 	void onTrigger(const rp3d::OverlapCallback::CallbackData& callbackData);
 };
 
-constexpr std::chrono::duration<double> PHYSICS_TIMESTEP = std::chrono::duration<double>(1.0f / 60.0f);
+constexpr std::chrono::duration<double, std::ratio<1,1>> PHYSICS_TIMESTEP = std::chrono::duration<double, std::ratio<1,1>>(1.0f / 60.0f);
 
 class GameEngine
 {
@@ -41,8 +41,8 @@ private:
 
 public:
 	static GameEngine& GetInstance();
-	std::chrono::duration<double> DeltaTime = std::chrono::duration<double>::zero();
-	std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
+	std::chrono::duration<double, std::ratio<1,1>> DeltaTime = std::chrono::duration<double, std::ratio<1,1>>::zero();
+	std::chrono::duration<double, std::ratio<1,1>> Accumulator = std::chrono::duration<double, std::ratio<1,1>>::zero();
 	flecs::world ECSWorld;
 	std::vector<flecs::entity> Entities;
 	flecs::entity_t SelectedEntityId = FLECS_INVALID_ENTITY;
@@ -58,7 +58,7 @@ public:
 
 	CameraInfos& Camera();
 
-	void Loop(float delta);
+	void Loop();
 
 	GameEngine(GameEngine const&) = delete;
 	void operator=(GameEngine const&) = delete;

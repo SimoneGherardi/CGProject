@@ -224,7 +224,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		if (spaceEvent == GLFW_PRESS && _LastSpaceEvent == GLFW_RELEASE)
 		{
-			_JumpDuration = 0.03;
+			_JumpDuration = std::chrono::duration<double, std::ratio<1,1>>(0.03).count();
 		}
 
 		if (_JumpDuration > 0)

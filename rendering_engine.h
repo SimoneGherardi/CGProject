@@ -138,7 +138,7 @@ private:
 	void _InitializeModels();
 	void _InitializeGui();
 
-	void _RenderCamera(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData);
+	void _RenderCamera(const VulkanContext context, const float width, const float height, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData);
 
 	RenderingEngine() = default;
 public:
@@ -147,7 +147,7 @@ public:
 
 	void InitializeSizeDependent();
 	void Initialize(const char* title, SurfaceFactory* factory, GLFWwindow* window);
-	void Render(float delta, CameraInfos* camera);
+	void Render(CameraInfos* camera);
 	void Wait();
 	void WaitIdle();
 	void Cleanup();

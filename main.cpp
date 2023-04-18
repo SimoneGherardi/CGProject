@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 
             if (engine.IsEditor)
             {
-                ImGui_ImplVulkan_NewFrame();
+                Vulkan_NewFrame_GUI();
                 ImGui_ImplGlfw_NewFrame();
                 ImGui::NewFrame();
                 editorGUI->Inputs(Window);

@@ -26,6 +26,7 @@
 #include "RenderContext.h"
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "MyVulkanImGUI.h"
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
 #include "camera.h"

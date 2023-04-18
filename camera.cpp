@@ -223,12 +223,12 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		if (spaceEvent == GLFW_PRESS && _LastSpaceEvent == GLFW_RELEASE)
 		{
-			_JumpDuration = 0.3;
+			_JumpDuration = 0.03;
 		}
 
 		if (_JumpDuration > 0)
 		{
-			rp3d::Vector3 force(0, 1500, 0);
+			rp3d::Vector3 force(0, 2000, 0);
 			auto body = CameraEntity.get<RigidBody>()->Body;
 			body->applyLocalForceAtCenterOfMass(force);
 			_JumpDuration -= gameEngine.DeltaTime.count();

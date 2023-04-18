@@ -32,6 +32,7 @@ void EditorGUI::SetPrefabsMap() {
     Prefabs.insert({ PREFABS::WOODPLATFORM , "Wood Platform"});
     Prefabs.insert({ PREFABS::WOODSHELF , "Wood Shelf"});
     Prefabs.insert({ PREFABS::CUBE , "Cube"});
+    Prefabs.insert({ PREFABS::BRICK , "Brick" });
 }
 
 void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){

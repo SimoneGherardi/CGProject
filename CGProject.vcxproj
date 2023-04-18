@@ -301,6 +301,7 @@
     <ClInclude Include="InstanceDataStore.h" />
     <ClInclude Include="ioutils.h" />
     <ClInclude Include="libraries\imgui\imgui_internal.h" />
+    <ClInclude Include="libraries\imgui\MyVulkanImGUI.h" />
     <ClInclude Include="Loader3D.h" />
     <ClInclude Include="logical_device.h" />
     <ClInclude Include="ecs_modules.h" />

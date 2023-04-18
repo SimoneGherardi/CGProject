@@ -589,7 +589,7 @@ void RenderingEngine::_InitializeGui()
 		&_GuiDescriptorPool
 	);
 
-	ImGui_ImplVulkan_InitInfo init_info = {};
+	Vulkan_InitInfo_GUI init_info = {};
 	init_info.Instance = _Context.Instance;
 	init_info.PhysicalDevice = _Context.PhysicalDevice;
 	init_info.Device = _Context.Device;
@@ -599,21 +599,21 @@ void RenderingEngine::_InitializeGui()
 	init_info.ImageCount = 3;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_2_BIT;
 
-	ImGui_ImplVulkan_Init(&init_info, _RenderPass);
+	Vulkan_Init_GUI(&init_info, _RenderPass);
 
 	_GuiCommandBuffer = new ImmediateCommandBuffer(&_Context);
 
 	_GuiCommandBuffer->Submit([&](VkCommandBuffer cmd) {
-		ImGui_ImplVulkan_CreateFontsTexture(cmd);
+		Vulkan_CreateFontsTexture_GUI(cmd);
 		});
 	_GuiCommandBuffer->Wait();
 	_GuiCommandBuffer->Cleanup();
-
-	ImGui_ImplVulkan_DestroyFontUploadObjects();
+	
+	Vulkan_DestroyFontUploadObjects_GUI();
 
 
 	//ImGui Render texture
-	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	renderTextureId = Vulkan_AddTexture_GUI(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 	EditGUI = EditorGUI::GetInstance();
 	EditGUI->Initialize(_WindowSize, _Window);
@@ -621,7 +621,7 @@ void RenderingEngine::_InitializeGui()
 	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up gui");
 		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
-		ImGui_ImplVulkan_Shutdown();
+		Vulkan_Cleanup_GUI();
 		});
 	TRACEEND;
 }
@@ -772,7 +772,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
 
 		ImGui::Render();
-		ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+		Vulkan_RenderDrawData_GUI(ImGui::GetDrawData(), cmd);
 
 		vkCmdEndRenderPass(cmd);
 	}

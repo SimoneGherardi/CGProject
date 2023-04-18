@@ -382,7 +382,13 @@ void GameEngine::SerializeEntities(const char* filename) {
     std::string entitiesString;
     for (auto entity : Entities) {
         entitiesString += "ENTITY\n";
-        entitiesString += entity.name();
+        char nameNoId[128];
+        std::string nameWithoutId = (std::string)entity.name();
+        while (isdigit(nameWithoutId[0]) || nameWithoutId[0] == ' ')
+        {
+            nameWithoutId.erase(0, 1);
+        }
+        entitiesString += nameWithoutId;
         entitiesString += "\n";
         rp3d::Vector3 position = entity.get<Transform>()->Position;
         entitiesString += position.to_string();
@@ -427,6 +433,7 @@ void  GameEngine::DeserializeEntities(const char* filename)
         std::getline(Infile, line);
         std::string name = line;
         std::getline(Infile, line);
+        name = std::to_string(GameEngine::GetInstance().Entities.size()) + " " + name;
         rp3d::Vector3 position;
         sscanf_s(line.c_str(), "Vector3(%f,%f,%f)", &position.x, &position.y, &position.z);
         std::getline(Infile, line);
@@ -436,7 +443,7 @@ void  GameEngine::DeserializeEntities(const char* filename)
         int tmpprefab;
         sscanf_s(line.c_str(), "%d", &tmpprefab);
         PREFABS prefab = GetPrefabFromInt(tmpprefab);
-
+        
         GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
             .set<Transform>({ position, rotation });
 

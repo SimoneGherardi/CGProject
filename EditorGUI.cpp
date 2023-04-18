@@ -283,6 +283,11 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open") || _OpenPrompt) 
     {
+        GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
+        for (auto entity : GameEngine::GetInstance().Entities) {
+            entity.destruct();
+        }
+        GameEngine::GetInstance().Entities.erase(GameEngine::GetInstance().Entities.begin(), GameEngine::GetInstance().Entities.end());
         GameEngine::GetInstance().DeserializeEntities("scene.txt");
         /*
         _OpenPrompt = true;

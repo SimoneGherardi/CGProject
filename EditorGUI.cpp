@@ -55,7 +55,7 @@ void EditorGUI::Initialize(WindowSize windowSize, GLFWwindow* window){
     LogDimensions = ImVec2(((float)windowSize.Width) * (1.0f - ScaleFactor), ((float)windowSize.Height) - MenuBarHeight);
     LogEditPromptDimensions = ImVec2(LogDimensions.x, LogDimensions.y * 0.5);
     ButtonDimensions = ImVec2((float)windowSize.Width * 0.09, (float)windowSize.Width * 0.05);
-    LogEntryDimensions = ImVec2(LogDimensions.y, ((float)windowSize.Height) * 0.1);
+    LogEntryDimensions = ImVec2(LogDimensions.x, ((float)windowSize.Height) * 0.03);
     OpenSavePromptDimensions = ImVec2((float)windowSize.Width * 0.3, (float)windowSize.Width * 0.05);
 
     // Positions
@@ -369,6 +369,17 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::PushItemWidth(LogDimensions.x - MenuBarHeight*0.4);
     uint32_t index = 0;
     GameEngine& gameEngine = GameEngine::GetInstance();
+
+    for (auto& entity : gameEngine.Entities)
+    {
+        std::string tmp = "##" + std::to_string(entity.id());
+        //ImGui::SameLine();
+        if (ImGui::Button(entity.name(), ImVec2(LogEntryDimensions)))
+        {
+            gameEngine.SelectedEntityId = entity;
+        }
+    }
+    /*
     ImGui::ListBoxHeader(" ", gameEngine.Entities.size(), gameEngine.Entities.size());
         for (auto& entity : gameEngine.Entities)
         {
@@ -382,6 +393,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
             ImGui::Text(entity.name());
         }
     ImGui::ListBoxFooter();
+    */
     ImGui::End();
 
     PrintPrompt();

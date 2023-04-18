@@ -164,6 +164,7 @@ void __transitionImageLayout(VulkanContext context, VkImage image, VkFormat form
 		);
 	});
 	immediate.Wait();
+	immediate.Cleanup();
 }
 
 
@@ -302,6 +303,8 @@ SkyboxImage SkyboxImageBuilder::Build()
 	samplerCreateInfo.minLod = 0;
 	samplerCreateInfo.maxLod = MipLevels;
 	samplerCreateInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+	samplerCreateInfo.magFilter = VK_FILTER_LINEAR;
+	samplerCreateInfo.minFilter = VK_FILTER_LINEAR;
 	CheckVkResult(vkCreateSampler(Context->Device, &samplerCreateInfo, nullptr, &sampler));
 
     VkDescriptorImageInfo imageInfo = {};
@@ -317,7 +320,14 @@ SkyboxImage SkyboxImageBuilder::Build()
     i.ImageView = view;
     i.Sampler = sampler;
     i.ImageInfo = imageInfo;
+	i.Context = Context;
     State = BUILT;
 
     return i;
+}
+
+void SkyboxImage::Cleanup()
+{
+	vkDestroyImageView(Context->Device, ImageView, nullptr);
+	vkDestroySampler(Context->Device, Sampler, nullptr);
 }

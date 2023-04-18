@@ -3,6 +3,9 @@
 #include "camera.h"
 #include "VulkanStructs.h"
 
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(+0.4f, -1.0f, -0.6f));
+glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f) * 1.5f;
+glm::vec3 AMBIENT_LIGHT = glm::vec3(1.f,1.f,1.f) * 0.2f;
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -310,6 +313,16 @@ void RenderingEngine::_InitializeDescriptorSet()
 		);
 	}
 
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up frame data objects");
+		for (size_t i = 0; i < FRAME_OVERLAP; i++)
+		{
+			auto f = _FrameData[i];
+			// f.Global.Cleanup(&_Context);
+			// f.Objects.Cleanup(&_Context);
+		}
+	});
+
 	TRACEEND;
 }
 
@@ -390,7 +403,7 @@ void RenderingEngine::_InitializeGUICommandPool() {
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command pool");
 		cleanupCommandPool(_Context.Device, _GUICommandPool);
-		});
+	});
 	TRACEEND;
 }
 
@@ -620,9 +633,10 @@ void RenderingEngine::_InitializeGui()
 
 	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up gui");
+		vkDestroySampler(_Context.Device, renderSamplerForGUI, nullptr);
 		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
 		Vulkan_Cleanup_GUI();
-		});
+	});
 	TRACEEND;
 }
 
@@ -678,13 +692,23 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, GLF
 	TRACEEND;
 }
 
-void RenderingEngine::Render(float delta, CameraInfos* camera)
+void RenderingEngine::Wait()
 {
-	// TODO refactor
 	_RenderFence->Wait();
 	_RenderFence->Reset();
+}
+
+void RenderingEngine::WaitIdle()
+{
+	Wait();
+	vkDeviceWaitIdle(_Context.Device);
+}
+
+void RenderingEngine::Render(float delta, CameraInfos* camera)
+{
+	Wait();
+
 	uint32_t imageIndex;
-	// RenderingEngine::GetInstance().InitializeSizeDependent({WIDTH, HEIGHT});
 	auto result = vkAcquireNextImageKHR(
 		_Context.Device, _Swapchain.GetSwapchain(),
 		1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
@@ -696,12 +720,14 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		throw std::runtime_error("failed to acquire swap chain image!");
 	}
 	CheckVkResult(result);
+
 	_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	VkCommandBuffer cmd = _MainCommandBuffer->Buffer;
 
 	std::array<VkClearValue, 2> clearValues;
 	clearValues[0].color = { {.05f, .0f, .05f, 1.0f} };
 	clearValues[1].depthStencil = { 1.0f, 0 };
+
 	VkRenderPassBeginInfo rpInfo = {};
 	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	rpInfo.pNext = nullptr;
@@ -712,6 +738,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	rpInfo.framebuffer = _SwapChainFramebuffers[imageIndex];
 	rpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	rpInfo.pClearValues = clearValues.data();
+
 	vkCmdBeginRenderPass(
 		cmd,
 		&rpInfo,
@@ -724,15 +751,13 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		_Pipeline
 	);
 
-	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
 	f->Global.Data.CameraView = camera->ViewMatrix();
 	f->Global.Data.CameraProjection = camera->ProjectionMatrix();
 	f->Global.Data.CameraViewProjection = camera->Matrix();
 	f->Global.Data.CameraPosition = camera->Position();
-	// f->Global.Data.CameraPosition = glm::vec4(camera->Position, 1.0f);
 
-	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
+	_RenderCamera(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
 
 	VkDeviceSize offset = 0;
 	vkCmdBindDescriptorSets(
@@ -807,6 +832,44 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	}
 	CheckVkResult(result2);
 }
+
+void RenderingEngine::_RenderCamera(const VulkanContext context, const float width, const float height, float delta, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
+{
+	GlobalData* data = &(frameData->Global.Data);
+
+	data->SunDirection = SUN_DIRECTION;
+	data->SunColor = SUN_COLOR;
+	data->AmbientLight = AMBIENT_LIGHT;
+
+	frameData->Global.Update(context);
+	updateDescriptorSet(
+		context,
+		frameData->Global.Buffer.Buffer,
+		frameData->Global.Buffer.Size,
+		0,
+		frameData->Global.DescriptorSet,
+		1,
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+	);
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr
+	);
+
+	frameData->Objects.Update(context);
+	updateDescriptorSet(
+		context,
+		frameData->Objects.Buffer.Buffer,
+		frameData->Objects.Buffer.Size,
+		0,
+		frameData->Objects.DescriptorSet,
+		1,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+	);
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(frameData->Objects.DescriptorSet), 0, nullptr
+	);
+}
+
 
 void RenderingEngine::Cleanup()
 {

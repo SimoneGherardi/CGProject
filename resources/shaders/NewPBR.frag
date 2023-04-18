@@ -200,6 +200,7 @@ void main()
 	outFragColor = vec4(directLighting + ambientLighting, 1.0f);
 	if (data.modelId == globalData.SkyboxId)
 	{
-		outFragColor = texture(cubeSampler, normalize(inPosition.xyz));
+		int levels = textureQueryLevels(cubeSampler);
+		outFragColor = textureLod(cubeSampler, normalize(inPosition.xyz), levels * 1/4.0f);
 	}
 }

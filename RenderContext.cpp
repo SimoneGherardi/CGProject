@@ -154,10 +154,14 @@ Texture createTexture(
 		VK_IMAGE_VIEW_TYPE_2D,
 		1
 	);
+	t.Context = context;
 	return t;
 }
 
-
+void Texture::Cleanup()
+{
+	vkDestroyImageView(Context->Device, View, nullptr);
+}
 
 
 
@@ -318,8 +322,14 @@ void RenderContext::Cleanup(const VulkanContext context)
 	{
 		throw std::runtime_error("RenderContext not initialized");
 	}
+	Skybox.Cleanup();
+	for (auto& t : Textures)
+	{
+		t.Cleanup();
+	}
 	Memory->FreeBuffer(VertexBuffer);
 	Memory->FreeBuffer(IndexBuffer);
+	vkDestroySampler(context->Device, TextureSampler, nullptr);
 }
 
 RenderContext& RenderContext::GetInstance()

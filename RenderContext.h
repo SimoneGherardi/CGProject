@@ -13,8 +13,11 @@
 
 struct Texture
 {
+	VulkanContext Context;
 	Image ImageItem;
 	VkImageView View;
+
+	void Cleanup();
 };
 
 struct RenderContext

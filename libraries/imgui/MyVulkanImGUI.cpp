@@ -925,7 +925,7 @@ void Vulkan_RemoveTexture_GUI(VkDescriptorSet descriptor_set)
 // You may read this code to learn about Vulkan, but it is recommended you use you own custom tailored code to do equivalent work.
 // (The ImGui_ImplVulkanH_XXX functions do not interact with any of the state used by the regular ImGui_ImplVulkan_XXX functions)
 //-------------------------------------------------------------------------
-
+/*
 VkSurfaceFormatKHR Vulkan_SelectSurfaceFormat_GUI(VkPhysicalDevice physical_device, VkSurfaceKHR surface, const VkFormat* request_formats, int request_formats_count, VkColorSpaceKHR request_color_space)
 {
     IM_ASSERT(g_FunctionsLoaded && "Need to call Vulkan_LoadFunctions_GUI() if IMGUI_IMPL_VULKAN_NO_PROTOTYPES or VK_NO_PROTOTYPES are set!");
@@ -1205,7 +1205,7 @@ void Vulkan_CreateOrResizeWindow(VkInstance instance, VkPhysicalDevice physical_
     Vulkan_CreateWindowSwapChain_GUI(physical_device, device, wd, allocator, width, height, min_image_count);
     VulkanH_CreateWindowCommandBuffers_GUI(physical_device, device, wd, queue_family, allocator);
 }
-
+*/
 void Vulkan_DestroyWindow_GUI(VkInstance instance, VkDevice device, Vulkan_Window* wd, const VkAllocationCallbacks* allocator)
 {
     vkDeviceWaitIdle(device);

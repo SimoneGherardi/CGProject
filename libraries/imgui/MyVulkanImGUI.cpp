@@ -7,9 +7,6 @@
 #pragma warning (disable: 4127) // condition expression is constant
 #endif
 
-
-// Reusable buffers used for rendering 1 current in-flight frame, for Vulkan_RenderDrawData_GUI()
-// [Please zero-clear before use!]
 struct Vulkan_FrameRenderBuffers
 {
     VkDeviceMemory      VertexBufferMemory;
@@ -20,8 +17,6 @@ struct Vulkan_FrameRenderBuffers
     VkBuffer            IndexBuffer;
 };
 
-// Each viewport will hold 1 Vulkan_WindowRenderBuffers
-// [Please zero-clear before use!]
 struct Vulkan_WindowRenderBuffers
 {
     uint32_t            Index;
@@ -29,7 +24,6 @@ struct Vulkan_WindowRenderBuffers
     Vulkan_FrameRenderBuffers*   FrameRenderBuffers;
 };
 
-// Vulkan data
 struct Vulkan_Data_GUI
 {
     Vulkan_InitInfo_GUI         VulkanInitInfo;
@@ -43,7 +37,6 @@ struct Vulkan_Data_GUI
     VkShaderModule              ShaderModuleVert;
     VkShaderModule              ShaderModuleFrag;
 
-    // Font data
     VkSampler                   FontSampler;
     VkDeviceMemory              FontMemory;
     VkImage                     FontImage;
@@ -52,7 +45,6 @@ struct Vulkan_Data_GUI
     VkDeviceMemory              UploadBufferMemory;
     VkBuffer                    UploadBuffer;
 
-    // Render buffers for main window
     Vulkan_WindowRenderBuffers MainWindowRenderBuffers;
 
     Vulkan_Data_GUI()
@@ -72,8 +64,6 @@ void Vulkan_DestroyWindowRenderBuffers_GUI(VkDevice device, Vulkan_WindowRenderB
 void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice device, Vulkan_Window* wd, const VkAllocationCallbacks* allocator, int w, int h, uint32_t min_image_count);
 void VulkanH_CreateWindowCommandBuffers_GUI(VkPhysicalDevice physical_device, VkDevice device, Vulkan_Window* wd, uint32_t queue_family, const VkAllocationCallbacks* allocator);
 
-// Vulkan prototypes for use with custom loaders
-// (see description of IMGUI_IMPL_VULKAN_NO_PROTOTYPES in imgui_impl_vulkan.h
 #ifdef VK_NO_PROTOTYPES
 static bool g_FunctionsLoaded = false;
 #else
@@ -146,10 +136,6 @@ static bool g_FunctionsLoaded = true;
 IMGUI_VULKAN_FUNC_MAP(IMGUI_VULKAN_FUNC_DEF)
 #undef IMGUI_VULKAN_FUNC_DEF
 #endif // VK_NO_PROTOTYPES
-
-//-----------------------------------------------------------------------------
-// SHADERS
-//-----------------------------------------------------------------------------
 
 static uint32_t __glsl_shader_vert_spv[] =
 {
@@ -241,7 +227,7 @@ static uint32_t Vulkan_MemoryType_GUI(VkMemoryPropertyFlags properties, uint32_t
     for (uint32_t i = 0; i < prop.memoryTypeCount; i++)
         if ((prop.memoryTypes[i].propertyFlags & properties) == properties && type_bits & (1 << i))
             return i;
-    return 0xFFFFFFFF; // Unable to find memoryType
+    return 0xFFFFFFFF;
 }
 
 static void check_vk_result(VkResult err)
@@ -318,8 +304,6 @@ static void Vulkan_SetupRenderState_GUI(ImDrawData* draw_data, VkPipeline pipeli
         vkCmdSetViewport(command_buffer, 0, 1, &viewport);
     }
 
-    // Setup scale and translation:
-    // Our visible imgui space lies from draw_data->DisplayPps (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right). DisplayPos is (0,0) for single viewport apps.
     {
         float scale[2];
         scale[0] = 2.0f / draw_data->DisplaySize.x;
@@ -332,10 +316,9 @@ static void Vulkan_SetupRenderState_GUI(ImDrawData* draw_data, VkPipeline pipeli
     }
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Render function
+
 void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_buffer, VkPipeline pipeline)
 {
-    // Avoid rendering when minimized, scale coordinates for retina displays (screen coordinates != framebuffer coordinates)
     int fb_width = (int)(draw_data->DisplaySize.x * draw_data->FramebufferScale.x);
     int fb_height = (int)(draw_data->DisplaySize.y * draw_data->FramebufferScale.y);
     if (fb_width <= 0 || fb_height <= 0)
@@ -346,7 +329,6 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
     if (pipeline == VK_NULL_HANDLE)
         pipeline = bd->Pipeline;
 
-    // Allocate array to store enough vertex/index buffers
     Vulkan_WindowRenderBuffers* wrb = &bd->MainWindowRenderBuffers;
     if (wrb->FrameRenderBuffers == nullptr)
     {
@@ -369,7 +351,6 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
         if (rb->IndexBuffer == VK_NULL_HANDLE || rb->IndexBufferSize < index_size)
             CreateOrResizeBuffer(rb->IndexBuffer, rb->IndexBufferMemory, rb->IndexBufferSize, index_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
-        // Upload vertex/index data into a single contiguous GPU buffer
         ImDrawVert* vtx_dst = nullptr;
         ImDrawIdx* idx_dst = nullptr;
         VkResult err = vkMapMemory(v->Device, rb->VertexBufferMemory, 0, rb->VertexBufferSize, 0, (void**)(&vtx_dst));
@@ -397,15 +378,11 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
         vkUnmapMemory(v->Device, rb->IndexBufferMemory);
     }
 
-    // Setup desired Vulkan state
     Vulkan_SetupRenderState_GUI(draw_data, pipeline, command_buffer, rb, fb_width, fb_height);
 
-    // Will project scissor/clipping rectangles into framebuffer space
     ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
     ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
-    // Render command lists
-    // (Because we merged all buffers into a single one, we maintain our own offset into them)
     int global_vtx_offset = 0;
     int global_idx_offset = 0;
     for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -416,8 +393,6 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
             const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
             if (pcmd->UserCallback != nullptr)
             {
-                // User callback, registered via ImDrawList::AddCallback()
-                // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
                 if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
                     Vulkan_SetupRenderState_GUI(draw_data, pipeline, command_buffer, rb, fb_width, fb_height);
                 else
@@ -425,11 +400,9 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
             }
             else
             {
-                // Project scissor/clipping rectangles into framebuffer space
                 ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
                 ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
 
-                // Clamp to viewport as vkCmdSetScissor() won't accept values that are off bounds
                 if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
                 if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
                 if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
@@ -437,7 +410,6 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
-                // Apply scissor/clipping rectangle
                 VkRect2D scissor;
                 scissor.offset.x = (int32_t)(clip_min.x);
                 scissor.offset.y = (int32_t)(clip_min.y);
@@ -445,11 +417,9 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
                 scissor.extent.height = (uint32_t)(clip_max.y - clip_min.y);
                 vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 
-                // Bind DescriptorSet with font or user texture
                 VkDescriptorSet desc_set[1] = { (VkDescriptorSet)pcmd->TextureId };
                 if (sizeof(ImTextureID) < sizeof(ImU64))
                 {
-                    // We don't support texture switches if ImTextureID hasn't been redefined to be 64-bit. Do a flaky check that other textures haven't been used.
                     IM_ASSERT(pcmd->TextureId == (ImTextureID)bd->FontDescriptorSet);
                     desc_set[0] = bd->FontDescriptorSet;
                 }
@@ -463,13 +433,6 @@ void Vulkan_RenderDrawData_GUI(ImDrawData* draw_data, VkCommandBuffer command_bu
         global_vtx_offset += cmd_list->VtxBuffer.Size;
     }
 
-    // Note: at this point both vkCmdSetViewport() and vkCmdSetScissor() have been called.
-    // Our last values will leak into user/application rendering IF:
-    // - Your app uses a pipeline with VK_DYNAMIC_STATE_VIEWPORT or VK_DYNAMIC_STATE_SCISSOR dynamic state
-    // - And you forgot to call vkCmdSetViewport() and vkCmdSetScissor() yourself to explicitly set that state.
-    // If you use VK_DYNAMIC_STATE_VIEWPORT or VK_DYNAMIC_STATE_SCISSOR you are responsible for setting the values before rendering.
-    // In theory we should aim to backup/restore those values but I am not sure this is possible.
-    // We perform a call to vkCmdSetScissor() to set back a full viewport which is likely to fix things for 99% users but technically this is not perfect. (See github #4644)
     VkRect2D scissor = { { 0, 0 }, { (uint32_t)fb_width, (uint32_t)fb_height } };
     vkCmdSetScissor(command_buffer, 0, 1, &scissor);
 }
@@ -487,7 +450,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
 
     VkResult err;
 
-    // Create the Image:
     {
         VkImageCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -517,7 +479,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
         check_vk_result(err);
     }
 
-    // Create the Image View:
     {
         VkImageViewCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -531,10 +492,8 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
         check_vk_result(err);
     }
 
-    // Create the Descriptor Set:
     bd->FontDescriptorSet = (VkDescriptorSet)Vulkan_AddTexture_GUI(bd->FontSampler, bd->FontView, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 
-    // Create the Upload Buffer:
     {
         VkBufferCreateInfo buffer_info = {};
         buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
@@ -556,7 +515,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
         check_vk_result(err);
     }
 
-    // Upload to Buffer:
     {
         char* map = nullptr;
         err = vkMapMemory(v->Device, bd->UploadBufferMemory, 0, upload_size, 0, (void**)(&map));
@@ -571,7 +529,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
         vkUnmapMemory(v->Device, bd->UploadBufferMemory);
     }
 
-    // Copy to Image:
     {
         VkImageMemoryBarrier copy_barrier[1] = {};
         copy_barrier[0].sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
@@ -609,7 +566,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
         vkCmdPipelineBarrier(command_buffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, use_barrier);
     }
 
-    // Store our identifier
     io.Fonts->SetTexID((ImTextureID)bd->FontDescriptorSet);
 
     return true;
@@ -617,7 +573,6 @@ bool Vulkan_CreateFontsTexture_GUI(VkCommandBuffer command_buffer)
 
 static void Vulkan_CreateShaderModules_GUI(VkDevice device, const VkAllocationCallbacks* allocator)
 {
-    // Create the shader modules
     Vulkan_Data_GUI* bd = Vulkan_GetBackendData_GUI();
     if (bd->ShaderModuleVert == VK_NULL_HANDLE)
     {
@@ -751,7 +706,6 @@ bool Vulkan_CreateDeviceObjects_GUI()
 
     if (!bd->FontSampler)
     {
-        // Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling.
         VkSamplerCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
         info.magFilter = VK_FILTER_LINEAR;
@@ -783,7 +737,6 @@ bool Vulkan_CreateDeviceObjects_GUI()
 
     if (!bd->PipelineLayout)
     {
-        // Constants: we are using 'vec2 offset' and 'vec2 scale' instead of a full 3d projection matrix
         VkPushConstantRange push_constants[1] = {};
         push_constants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         push_constants[0].offset = sizeof(float) * 0;
@@ -840,10 +793,6 @@ void    Vulkan_DestroyDeviceObjects_GUI()
 
 bool    Vulkan_LoadFunctions_GUI(PFN_vkVoidFunction(*loader_func)(const char* function_name, void* user_data), void* user_data)
 {
-    // Load function pointers
-    // You can use the default Vulkan loader using:
-    //      Vulkan_LoadFunctions_GUI([](const char* function_name, void*) { return vkGetInstanceProcAddr(your_vk_isntance, function_name); });
-    // But this would be equivalent to not setting VK_NO_PROTOTYPES.
 #ifdef VK_NO_PROTOTYPES
 #define IMGUI_VULKAN_FUNC_LOAD(func) \
     func = reinterpret_cast<decltype(func)>(loader_func(#func, user_data)); \
@@ -866,11 +815,10 @@ bool    Vulkan_Init_GUI(Vulkan_InitInfo_GUI* info, VkRenderPass render_pass)
     ImGuiIO& io = ImGui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == nullptr && "Already initialized a renderer backend!");
 
-    // Setup backend capabilities flags
     Vulkan_Data_GUI* bd = IM_NEW(Vulkan_Data_GUI)();
     io.BackendRendererUserData = (void*)bd;
     io.BackendRendererName = "imgui_impl_vulkan";
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;
 
     IM_ASSERT(info->Instance != VK_NULL_HANDLE);
     IM_ASSERT(info->PhysicalDevice != VK_NULL_HANDLE);
@@ -923,14 +871,11 @@ void Vulkan_SetMinImageCount_GUI(uint32_t min_image_count)
     bd->VulkanInitInfo.MinImageCount = min_image_count;
 }
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-// Register a texture
-// FIXME: This is experimental in the sense that we are unsure how to best design/tackle this problem, please post to https://github.com/ocornut/imgui/pull/914 if you have suggestions.
 VkDescriptorSet Vulkan_AddTexture_GUI(VkSampler sampler, VkImageView image_view, VkImageLayout image_layout)
 {
     Vulkan_Data_GUI* bd = Vulkan_GetBackendData_GUI();
     Vulkan_InitInfo_GUI* v = &bd->VulkanInitInfo;
 
-    // Create Descriptor Set:
     VkDescriptorSet descriptor_set;
     {
         VkDescriptorSetAllocateInfo alloc_info = {};
@@ -942,7 +887,6 @@ VkDescriptorSet Vulkan_AddTexture_GUI(VkSampler sampler, VkImageView image_view,
         check_vk_result(err);
     }
 
-    // Update the Descriptor Set:
     {
         VkDescriptorImageInfo desc_image[1] = {};
         desc_image[0].sampler = sampler;
@@ -988,17 +932,12 @@ VkSurfaceFormatKHR Vulkan_SelectSurfaceFormat_GUI(VkPhysicalDevice physical_devi
     IM_ASSERT(request_formats != nullptr);
     IM_ASSERT(request_formats_count > 0);
 
-    // Per Spec Format and View Format are expected to be the same unless VK_IMAGE_CREATE_MUTABLE_BIT was set at image creation
-    // Assuming that the default behavior is without setting this bit, there is no need for separate Swapchain image and image view format
-    // Additionally several new color spaces were introduced with Vulkan Spec v1.0.40,
-    // hence we must make sure that a format with the mostly available color space, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR, is found and used.
     uint32_t avail_count;
     vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &avail_count, nullptr);
     ImVector<VkSurfaceFormatKHR> avail_format;
     avail_format.resize((int)avail_count);
     vkGetPhysicalDeviceSurfaceFormatsKHR(physical_device, surface, &avail_count, avail_format.Data);
 
-    // First check if only one format, VK_FORMAT_UNDEFINED, is available, which would imply that any format is available
     if (avail_count == 1)
     {
         if (avail_format[0].format == VK_FORMAT_UNDEFINED)
@@ -1010,19 +949,16 @@ VkSurfaceFormatKHR Vulkan_SelectSurfaceFormat_GUI(VkPhysicalDevice physical_devi
         }
         else
         {
-            // No point in searching another format
             return avail_format[0];
         }
     }
     else
     {
-        // Request several formats, the first found will be used
         for (int request_i = 0; request_i < request_formats_count; request_i++)
             for (uint32_t avail_i = 0; avail_i < avail_count; avail_i++)
                 if (avail_format[avail_i].format == request_formats[request_i] && avail_format[avail_i].colorSpace == request_color_space)
                     return avail_format[avail_i];
 
-        // If none of the requested image formats could be found, use the first available
         return avail_format[0];
     }
 }
@@ -1033,21 +969,18 @@ VkPresentModeKHR Vulkan_SelectPresentMode_GUI(VkPhysicalDevice physical_device, 
     IM_ASSERT(request_modes != nullptr);
     IM_ASSERT(request_modes_count > 0);
 
-    // Request a certain mode and confirm that it is available. If not use VK_PRESENT_MODE_FIFO_KHR which is mandatory
     uint32_t avail_count = 0;
     vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &avail_count, nullptr);
     ImVector<VkPresentModeKHR> avail_modes;
     avail_modes.resize((int)avail_count);
     vkGetPhysicalDeviceSurfacePresentModesKHR(physical_device, surface, &avail_count, avail_modes.Data);
-    //for (uint32_t avail_i = 0; avail_i < avail_count; avail_i++)
-    //    printf("[vulkan] avail_modes[%d] = %d\n", avail_i, avail_modes[avail_i]);
 
     for (int request_i = 0; request_i < request_modes_count; request_i++)
         for (uint32_t avail_i = 0; avail_i < avail_count; avail_i++)
             if (request_modes[request_i] == avail_modes[avail_i])
                 return request_modes[request_i];
 
-    return VK_PRESENT_MODE_FIFO_KHR; // Always available
+    return VK_PRESENT_MODE_FIFO_KHR;
 }
 
 void VulkanH_CreateWindowCommandBuffers_GUI(VkPhysicalDevice physical_device, VkDevice device, Vulkan_Window* wd, uint32_t queue_family, const VkAllocationCallbacks* allocator)
@@ -1056,7 +989,6 @@ void VulkanH_CreateWindowCommandBuffers_GUI(VkPhysicalDevice physical_device, Vk
     (void)physical_device;
     (void)allocator;
 
-    // Create Command Buffers
     VkResult err;
     for (uint32_t i = 0; i < wd->ImageCount; i++)
     {
@@ -1109,7 +1041,6 @@ int VulkanH_GetMinImageCountFromPresentMode_GUI(VkPresentModeKHR present_mode)
     return 1;
 }
 
-// Also destroy old swap chain and in-flight frames data, if any.
 void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice device, Vulkan_Window* wd, const VkAllocationCallbacks* allocator, int w, int h, uint32_t min_image_count)
 {
     VkResult err;
@@ -1118,8 +1049,6 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
     err = vkDeviceWaitIdle(device);
     check_vk_result(err);
 
-    // We don't use Vulkan_DestroyWindow_GUI() because we want to preserve the old swapchain to create the new one.
-    // Destroy old Framebuffer
     for (uint32_t i = 0; i < wd->ImageCount; i++)
     {
         Vulkan_DestroyFrame_GUI(device, &wd->Frames[i], allocator);
@@ -1135,11 +1064,9 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
     if (wd->Pipeline)
         vkDestroyPipeline(device, wd->Pipeline, allocator);
 
-    // If min image count was not specified, request different count of images dependent on selected present mode
     if (min_image_count == 0)
         min_image_count = VulkanH_GetMinImageCountFromPresentMode_GUI(wd->PresentMode);
 
-    // Create Swapchain
     {
         VkSwapchainCreateInfoKHR info = {};
         info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
@@ -1194,7 +1121,6 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
     if (old_swapchain)
         vkDestroySwapchainKHR(device, old_swapchain, allocator);
 
-    // Create the Render Pass
     {
         VkAttachmentDescription attachment = {};
         attachment.format = wd->SurfaceFormat.format;
@@ -1230,12 +1156,8 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
         err = vkCreateRenderPass(device, &info, allocator, &wd->RenderPass);
         check_vk_result(err);
 
-        // We do not create a pipeline by default as this is also used by examples' main.cpp,
-        // but secondary viewport in multi-viewport mode may want to create one with:
-        //Vulkan_CreatePipeline_GUI(device, allocator, VK_NULL_HANDLE, wd->RenderPass, VK_SAMPLE_COUNT_1_BIT, &wd->Pipeline, bd->Subpass);
     }
 
-    // Create The Image Views
     {
         VkImageViewCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -1256,7 +1178,6 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
         }
     }
 
-    // Create Framebuffer
     {
         VkImageView attachment[1];
         VkFramebufferCreateInfo info = {};
@@ -1277,7 +1198,6 @@ void Vulkan_CreateWindowSwapChain_GUI(VkPhysicalDevice physical_device, VkDevice
     }
 }
 
-// Create or resize window
 void Vulkan_CreateOrResizeWindow(VkInstance instance, VkPhysicalDevice physical_device, VkDevice device, Vulkan_Window* wd, uint32_t queue_family, const VkAllocationCallbacks* allocator, int width, int height, uint32_t min_image_count)
 {
     IM_ASSERT(g_FunctionsLoaded && "Need to call Vulkan_LoadFunctions_GUI() if IMGUI_IMPL_VULKAN_NO_PROTOTYPES or VK_NO_PROTOTYPES are set!");
@@ -1288,8 +1208,7 @@ void Vulkan_CreateOrResizeWindow(VkInstance instance, VkPhysicalDevice physical_
 
 void Vulkan_DestroyWindow_GUI(VkInstance instance, VkDevice device, Vulkan_Window* wd, const VkAllocationCallbacks* allocator)
 {
-    vkDeviceWaitIdle(device); // FIXME: We could wait on the Queue if we had the queue in wd-> (otherwise VulkanH functions can't use globals)
-    //vkQueueWaitIdle(bd->Queue);
+    vkDeviceWaitIdle(device);
 
     for (uint32_t i = 0; i < wd->ImageCount; i++)
     {

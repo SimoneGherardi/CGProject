@@ -224,18 +224,16 @@ void CameraInfos::Inputs(GLFWwindow* window)
 
 		if (spaceEvent == GLFW_PRESS && _LastSpaceEvent == GLFW_RELEASE)
 		{
-			_JumpDuration = std::chrono::duration<double, std::ratio<1,1>>(0.03).count();
-		}
-
-		if (_JumpDuration > 0)
-		{
-			rp3d::Vector3 force(0, 2000, 0);
 			auto body = CameraEntity.get<RigidBody>()->Body;
-			body->applyLocalForceAtCenterOfMass(force);
-			_JumpDuration -= gameEngine.DeltaTime.count();
+			auto velocity = body->getLinearVelocity();
+			if (velocity.y <= 0.2 && velocity.y >= -0.2)
+			{
+				velocity.y = 8;
+				body->setLinearVelocity(velocity);
+			}
 		}
 
-		WASD(window, SpeedGame);
+		WASDInGame(window, SpeedGame);
 	}
 
 	
@@ -275,6 +273,71 @@ void CameraInfos::WASD(GLFWwindow* window, float speed)
 		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
 		CameraHorizontalSlide(movement);
 	}
+	_LastWEvent = wEvent;
+	_LastAEvent = aEvent;
+	_LastSEvent = sEvent;
+	_LastDEvent = dEvent;
+}
+
+
+
+void CameraInfos::WASDInGame(GLFWwindow* window, float speed)
+{
+	char wEvent = glfwGetKey(window, GLFW_KEY_W);
+	char aEvent = glfwGetKey(window, GLFW_KEY_A);
+	char sEvent = glfwGetKey(window, GLFW_KEY_S);
+	char dEvent = glfwGetKey(window, GLFW_KEY_D);
+
+	
+	rp3d::Vector3 forwardDirection = rp3d::Vector3(Orientation.x, 0, Orientation.z);
+	forwardDirection.normalize();
+	auto rightDirectionGlm = glm::normalize(glm::cross(Orientation, Up));
+	rp3d::Vector3 rightDirection = rp3d::Vector3(rightDirectionGlm.x, 0, rightDirectionGlm.z);
+	rightDirection.normalize();
+	rp3d::Vector3 movementDirection	= rp3d::Vector3(0, 0, 0);
+
+	// If the key is pressed, we add the corresponding direction to the movement direction
+	if (wEvent == GLFW_PRESS)
+	{
+		movementDirection += forwardDirection;
+	}
+	if (aEvent == GLFW_PRESS)
+	{
+		movementDirection -= rightDirection;
+	}
+	if (sEvent == GLFW_PRESS)
+	{
+		movementDirection -= forwardDirection;
+	}
+	if (dEvent == GLFW_PRESS)
+	{
+		movementDirection += rightDirection;
+	}
+
+	// If the key is released, we remove the corresponding direction to the movement direction
+	if (wEvent == GLFW_RELEASE && _LastWEvent == GLFW_PRESS)
+	{
+		movementDirection -= forwardDirection;
+	}
+	if (aEvent == GLFW_RELEASE && _LastAEvent == GLFW_PRESS)
+	{
+		movementDirection += rightDirection;
+	}
+	if (sEvent == GLFW_RELEASE && _LastSEvent == GLFW_PRESS)
+	{
+		movementDirection += forwardDirection;
+	}
+	if (dEvent == GLFW_RELEASE && _LastDEvent == GLFW_PRESS)
+	{
+		movementDirection -= rightDirection;
+	}
+	
+	auto velocity = CameraEntity.get_mut<Velocity>();
+	movementDirection.normalize();
+	velocity->Direction = movementDirection;
+	velocity->Magnitude = speed;
+
+	
 	_LastWEvent = wEvent;
 	_LastAEvent = aEvent;
 	_LastSEvent = sEvent;

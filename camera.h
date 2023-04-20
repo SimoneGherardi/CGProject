@@ -24,7 +24,7 @@ public:
 	int Height = 1;
 
 	// Adjust the speed of the camera and it's sensitivity when looking around
-	float SpeedGame = 20.0f;
+	float SpeedGame = 10.0f;
 	float SpeedEditor = 15.0f;
 	float SensitivityRotation = 100.0f;
 	float SensitivityTranslation = 15.0f;
@@ -48,6 +48,7 @@ public:
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
 	void WASD(GLFWwindow* window, float speed);
+	void WASDInGame(GLFWwindow* window, float speed);
 private:
 	double _LastMouseX;
 	double _LastMouseY;

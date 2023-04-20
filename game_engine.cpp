@@ -176,7 +176,7 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::BRICK })
             .add<Transform>()
             .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
-            .set<Collider>({ {8.5, 0.5,8.5}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
+            .set<Collider>({ {10, 0.25,10}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
             .set<Renderer>({ Models::BRICK });
     };
 }

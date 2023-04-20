@@ -71,6 +71,8 @@ public:
     double ScaleMouseY(double mouseY);  
     void PrefabAddButton(const char* label, PREFABS prefab);
     void SetPrefabsMap();
+    void OpenScene(std::string sceneName);
+    void SaveScene(std::string sceneName);
     
 protected:
     EditorGUI();

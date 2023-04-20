@@ -47,7 +47,7 @@ public:
 	void Inputs(GLFWwindow* window);
 	void CameraZoom(double offset);
 	void CameraHorizontalSlide(double offset);
-	void WASD(GLFWwindow* window, float speed);
+	void WASDInEditor(GLFWwindow* window, float speed);
 	void WASDInGame(GLFWwindow* window, float speed);
 private:
 	double _LastMouseX;

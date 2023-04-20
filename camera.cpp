@@ -3,6 +3,7 @@
 #include "glm/ext.hpp"
 #include "glm/gtx/string_cast.hpp"
 #include "math.h"
+#include "EditorGUI.h"
 
 CameraInfos::CameraInfos(float FOVDeg, glm::vec3 position): FOVDeg(FOVDeg)
 {
@@ -95,16 +96,19 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	// Switch between editor and game mode
 	if (pEvent == GLFW_RELEASE && _LastPEvent == GLFW_PRESS)
 	{
+		std::string playingSceneName = "playingScene.txt";
 		gameEngine.SetIsEditor(!gameEngine.IsEditor);
 		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
 		if (gameEngine.IsEditor)
 		{
+			EditorGUI::GetInstance()->OpenScene(playingSceneName.c_str());
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}
 		else
 		{
 			_LastMouseX = mouseX;
 			_LastMouseY = mouseY;
+			EditorGUI::GetInstance()->SaveScene(playingSceneName.c_str());
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 		}
 	}
@@ -196,7 +200,7 @@ void CameraInfos::Inputs(GLFWwindow* window)
 			global_xoffset = 0;
 		};
 
-		WASD(window, SpeedEditor);
+		WASDInEditor(window, SpeedEditor);
 		
 	}
 	
@@ -246,33 +250,46 @@ void CameraInfos::Inputs(GLFWwindow* window)
 	
 }
 
-void CameraInfos::WASD(GLFWwindow* window, float speed)
+void CameraInfos::WASDInEditor(GLFWwindow* window, float speed)
 {
 	char wEvent = glfwGetKey(window, GLFW_KEY_W);
 	char aEvent = glfwGetKey(window, GLFW_KEY_A);
 	char sEvent = glfwGetKey(window, GLFW_KEY_S);
 	char dEvent = glfwGetKey(window, GLFW_KEY_D);
 
+	glm::vec3 forwardDirection = glm::normalize(glm::vec3(Orientation.x, 0, Orientation.z));
+	glm::vec3 rightDirection = glm::normalize(glm::cross(Orientation, Up));
+	rightDirection = glm::normalize(glm::vec3(rightDirection.x, rightDirection.y,	rightDirection.z));
+	glm::vec3 movementDirection = glm::vec3(0, 0, 0);
+	
+
 	if (wEvent == GLFW_PRESS)
 	{
-		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
-		CameraZoom(movement);
+		glm::vec3 movement = forwardDirection * (float)GameEngine::GetInstance().DeltaTime.count() * speed;
+		movementDirection += movement;
 	}
 	if (aEvent == GLFW_PRESS)
 	{
-		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
-		CameraHorizontalSlide(-movement);
+		glm::vec3 movement = -rightDirection * (float)GameEngine::GetInstance().DeltaTime.count() * speed;
+		movementDirection += movement;
 	}
 	if (sEvent == GLFW_PRESS)
 	{
-		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
-		CameraZoom(-movement);
+		glm::vec3 movement = -forwardDirection * (float)GameEngine::GetInstance().DeltaTime.count() * speed;
+		movementDirection += movement;
 	}
 	if (dEvent == GLFW_PRESS)
 	{
-		double movement = GameEngine::GetInstance().DeltaTime.count() * speed;
-		CameraHorizontalSlide(movement);
+		glm::vec3 movement = rightDirection * (float)GameEngine::GetInstance().DeltaTime.count() * speed;
+		movementDirection += movement;
 	}
+	
+	if (movementDirection != glm::vec3(0, 0, 0))
+	{
+		auto transform = CameraEntity.get_mut<Transform>();
+		transform->Position += rp3d::Vector3(movementDirection.x, movementDirection.y, movementDirection.z);
+	}
+
 	_LastWEvent = wEvent;
 	_LastAEvent = aEvent;
 	_LastSEvent = sEvent;

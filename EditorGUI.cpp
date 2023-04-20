@@ -274,6 +274,21 @@ void EditorGUI::PrefabAddButton(const char* label, PREFABS prefab) {
     }
 }
 
+void EditorGUI::OpenScene(std::string sceneName)
+{
+    GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
+    for (auto entity : GameEngine::GetInstance().Entities) {
+        entity.destruct();
+    }
+    GameEngine::GetInstance().Entities.erase(GameEngine::GetInstance().Entities.begin(), GameEngine::GetInstance().Entities.end());
+    GameEngine::GetInstance().DeserializeEntities(sceneName.c_str());
+}
+
+void EditorGUI::SaveScene(std::string sceneName)
+{
+	GameEngine::GetInstance().SerializeEntities(sceneName.c_str());
+}
+
 void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSize, GLFWwindow* window) {
 
     // Menu bar
@@ -283,12 +298,7 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
     ImGui::Begin("Menu Bar", NULL, flags);
     if (ImGui::Button("Open") || _OpenPrompt) 
     {
-        GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
-        for (auto entity : GameEngine::GetInstance().Entities) {
-            entity.destruct();
-        }
-        GameEngine::GetInstance().Entities.erase(GameEngine::GetInstance().Entities.begin(), GameEngine::GetInstance().Entities.end());
-        GameEngine::GetInstance().DeserializeEntities("scene.txt");
+        OpenScene(std::string("scene.txt"));
         /*
         _OpenPrompt = true;
         char* buff = (char*)calloc(128, 1);
@@ -384,21 +394,6 @@ void EditorGUI::ShowCustomWindow(ImTextureID renderTexture, WindowSize windowSiz
             gameEngine.SelectedEntityId = entity;
         }
     }
-    /*
-    ImGui::ListBoxHeader(" ", gameEngine.Entities.size(), gameEngine.Entities.size());
-        for (auto& entity : gameEngine.Entities)
-        {
-            std::string tmp = "##" + std::to_string(entity.id());
-            //ImGui::SameLine();
-            if (ImGui::Selectable(tmp.c_str(), gameEngine.SelectedEntityId==entity))
-            {
-                gameEngine.SelectedEntityId = entity;
-            }
-            ImGui::SameLine();
-            ImGui::Text(entity.name());
-        }
-    ImGui::ListBoxFooter();
-    */
     ImGui::End();
 
     PrintPrompt();

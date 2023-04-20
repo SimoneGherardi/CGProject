@@ -270,7 +270,7 @@ void EditorGUI::PrefabAddButton(const char* label, PREFABS prefab) {
         std::string name = label;
         name = std::to_string(GameEngine::GetInstance().Entities.size()) + " " + name;
         GameEngine::GetInstance().SelectedEntityId = GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
-            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.95)) });
+            .set<Transform>({ GameEngine::GetInstance().ScreenToWorldSpace(glm::vec3(0, 0, 0.97)) });
     }
 }
 

@@ -7,9 +7,10 @@
 
 CameraInfos::CameraInfos(float FOVDeg, glm::vec3 position): FOVDeg(FOVDeg)
 {
+	SpawnPoint = rp3d::Vector3(position.x, position.y, position.z);
 	CameraEntity = GameEngine::GetInstance().ECSWorld.entity("camera")
 		.set<Prefab>({PREFABS::PLAYER})
-		.set<Transform>({ {position.x, position.y, position.z}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})
+		.set<Transform>({ {SpawnPoint}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})
 		.set<RigidBody>({ 70.0f, rp3d::BodyType::DYNAMIC, false, NULL })
 		.set<Collider>({ {1, 2, 1}, rp3d::CollisionShapeName::BOX, false, 0, NULL })
 		.add<Velocity>();
@@ -101,6 +102,10 @@ void CameraInfos::Inputs(GLFWwindow* window)
 		std::cout << spaceEvent << " " << gameEngine.IsEditor << std::endl;
 		if (gameEngine.IsEditor)
 		{
+			auto body = CameraEntity.get<RigidBody>()->Body;
+			body->setLinearVelocity(rp3d::Vector3(0,0,0));
+			auto transform = CameraEntity.get_mut<Transform>();
+			transform->Position = SpawnPoint;
 			EditorGUI::GetInstance()->OpenScene(playingSceneName.c_str());
 			glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
 		}

@@ -30,6 +30,16 @@ const uint32_t findMemoryType(
 	throw "Cannot find memory";
 }
 
+bool operator == (const Buffer& lhs, const Buffer& rhs)
+{
+	return lhs.Buffer == rhs.Buffer;
+}
+
+bool operator == (const Image& lhs, const Image& rhs)
+{
+	return lhs.Image == rhs.Image;
+}
+
 DeviceMemory::DeviceMemory(
 	VulkanContext context,
 	VkDeviceSize size,
@@ -78,7 +88,9 @@ Buffer DeviceMemory::NewBuffer(const VkDeviceSize size, const VkBufferUsageFlags
 		offset
 	));
 	Blocks.Allocate(alignedSize);
-	return Buffer{ b, size, alignedSize, offset, Memory };
+	auto result = Buffer{ b, size, alignedSize, offset, Memory };
+	Buffers.push_back(result);
+	return result;
 }
 
 Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height, const VkImageUsageFlags usage, const uint32_t arrayLayers, const VkImageCreateFlags createFlags, const uint32_t mipLevels)
@@ -123,22 +135,34 @@ Image DeviceMemory::NewImage(const VkDeviceSize width, const VkDeviceSize height
 	));
 
 	Blocks.Allocate(alignedSize, memReqs.alignment);
-	return Image{ image, size, alignedSize, offset, Memory, format, extent };
+	auto result = Image{ image, size, alignedSize, offset, Memory, format, extent };
+	Images.push_back(result);
+	return result;
 }
 
 void DeviceMemory::FreeBuffer(const Buffer buffer)
 {
 	vkDestroyBuffer(Context->Device, buffer.Buffer, nullptr);
 	Blocks.Free(buffer.Offset);
+	Buffers.erase(std::remove(Buffers.begin(), Buffers.end(), buffer), Buffers.end());
 }
 
 void DeviceMemory::FreeImage(const Image image)
 {
 	vkDestroyImage(Context->Device, image.Image, nullptr);
 	Blocks.Free(image.Offset);
+	Images.erase(std::remove(Images.begin(), Images.end(), image), Images.end());
 }
 
 void DeviceMemory::Cleanup()
 {
+	while (Buffers.size() > 0) {
+		auto buffer = Buffers.back();
+		FreeBuffer(buffer);
+	}
+	while (Images.size() > 0) {
+		auto image = Images.back();
+		FreeImage(image);
+	}
 	vkFreeMemory(Context->Device, Memory, nullptr);
 }

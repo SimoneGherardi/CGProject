@@ -9,6 +9,8 @@
 
 struct SkyboxImage
 {
+    VulkanContext Context;
+
     VkImage Image;
     VkImageView ImageView;
     VkSampler Sampler;
@@ -17,6 +19,8 @@ struct SkyboxImage
     uint32_t Width;
     uint32_t Height;
     uint32_t Channels;
+
+    void Cleanup();
 };
 
 enum SkyboxFaceRotation

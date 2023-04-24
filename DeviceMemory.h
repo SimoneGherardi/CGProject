@@ -12,6 +12,7 @@ struct Buffer
 	VkDeviceSize Offset;
 	VkDeviceMemory Memory;
 };
+bool operator == (const Buffer& lhs, const Buffer& rhs);
 
 struct Image
 {
@@ -23,6 +24,7 @@ struct Image
 	VkFormat Format;
 	VkExtent3D Extent;
 };
+bool operator == (const Image& lhs, const Image& rhs);
 
 struct DeviceMemory
 {
@@ -31,6 +33,9 @@ struct DeviceMemory
 	VkDeviceSize Size;
 	VkMemoryPropertyFlags Flags;
 	MemoryBlock Blocks;
+
+	std::vector<Buffer> Buffers = {};
+	std::vector<Image> Images = {};
 
 	DeviceMemory(
 		VulkanContext context,

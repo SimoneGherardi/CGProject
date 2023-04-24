@@ -11,6 +11,7 @@ typedef struct RigidBody
 {
     float Weight;
     rp3d::BodyType Type;
+    bool CanRotate = true;
     rp3d::RigidBody* Body;
 } RigidBody;
 
@@ -18,7 +19,8 @@ typedef struct Collider
 {
     rp3d::Vector3 Size;
     rp3d::CollisionShapeName Type;
-    bool isTrigger;
+    bool isTrigger = false;
+    float bounciness = 0;
     rp3d::Collider* RP3DCollider;
 } Collider;
 

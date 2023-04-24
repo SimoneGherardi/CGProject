@@ -7,19 +7,20 @@
 #include <filesystem>
 #include <sys/stat.h>
 
-#if _WINDLL
+#if _WIN32
 #else
 #define sscanf_s(buf, fmt, ...) sscanf((buf), (fmt), __VA_ARGS__)
 #endif
 
 flecs::entity DEBUGGO;
 
-GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)))
+GameEngine::GameEngine()
 {
     SetIsEditor(IsEditor);
 
     //SetupPhysicsLogger();
     PhysicsWorld = PhysicsCommon.createPhysicsWorld();
+    PhysicsWorld->setEventListener(new PhysicsEventListener());
     _PreviousFrameTime = std::chrono::system_clock::now();
 
     ECSWorld.import<General>();
@@ -38,6 +39,10 @@ GameEngine::GameEngine(): _Camera(CameraInfos(1600, 900, 60, glm::vec3(0, 7, 14)
     ECSWorld.entity("skybox")
         .set<Transform>({ {0, 0, 0} })
         .set<Renderer>({Models::SKYBOX_MODEL_ID});
+
+    /*DEBUGGO = ECSWorld.entity("Debuggo")
+        .set<Transform>({ {10, 10, 1} })
+        .set<Renderer>({ Models::DEBUG });*/
     //_TestEcs();
 }
 
@@ -49,7 +54,11 @@ GameEngine& GameEngine::GetInstance()
 
 CameraInfos& GameEngine::Camera()
 {
-	return _Camera;
+    if (_Camera == nullptr)
+    {
+        _Camera = new CameraInfos(60, glm::vec3(0, 7, 14));
+    }
+	return *_Camera;
 }
 
 void GameEngine::_InitPrefabs()
@@ -58,8 +67,8 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({PREFABS::MONKEY})
             .add<Transform>()
-            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-            .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
+            .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
     };
@@ -68,97 +77,107 @@ void GameEngine::_InitPrefabs()
             .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
             .set<CollisionBody>({ NULL })
-            .set<Collider>({ {1, 0.3, 1}, rp3d::CollisionShapeName::BOX, true, NULL })
+            .set<Collider>({ {1, 0.1, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
             .set<Renderer>({ Models::BUSH });
     };
     _Prefabs[PREFABS::COIN] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::COIN })
             .add<Transform>()
-            .set<CollisionBody>({ NULL })
-            .set<Collider>({ {0.3, 1, 1}, rp3d::CollisionShapeName::BOX, true, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {0.2, 0.9, 0.9}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
+            .set<AngularVelocity>({ rp3d::Quaternion::fromEulerAngles(0, 0.001, 0), 1 })
             .set<Renderer>({ Models::COIN });
     };
     _Prefabs[PREFABS::GRASSBLOCK] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::GRASSBLOCK })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {2.2, 2.2, 2.2}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {2.1, 2.1, 2.1}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
             .set<Renderer>({ Models::GRASSBLOCK });
     };
     _Prefabs[PREFABS::ROCK1] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK1 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK1 });
     };
     _Prefabs[PREFABS::ROCK2] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK2 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {1.7, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK2 });
     };
     _Prefabs[PREFABS::SIGN] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::SIGN })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.1, 4, 0.1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {0.1, 1.8, 0.1}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::SIGN });
     };
     _Prefabs[PREFABS::TREE1] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::TREE1 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {0.4, 3.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE1 });
     };
     _Prefabs[PREFABS::TREE2] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::TREE2 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {0.4, 3, 0.2}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {0.4, 4.5, 0.2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::TREE2 });
     };
     _Prefabs[PREFABS::WOODBRIDGE] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODBRIDGE })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {2, 0.2, 2}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODBRIDGE });
     };
     _Prefabs[PREFABS::WOODPLATFORM] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODPLATFORM })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {1.5, 0.8, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODPLATFORM });
     };
     _Prefabs[PREFABS::WOODSHELF] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::WOODSHELF })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, NULL })
-            .set<Collider>({ {1, 0.2, 0.5}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {1.5, 0.2, 0.7}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .set<Renderer>({ Models::WOODSHELF });
     };
     _Prefabs[PREFABS::CUBE] = [this](const char* name) {
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::CUBE })
             .add<Transform>()
-            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, NULL })
-            .set<Collider>({ {1, 1, 1}, rp3d::CollisionShapeName::BOX, false, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
+            .set<Collider>({ {1.5, 1.5, 1.5}, rp3d::CollisionShapeName::BOX, false, 0.5, NULL })
             .add<Velocity>()
             .set<Renderer>({ Models::SUZANNE });
+    };
+
+    _Prefabs[PREFABS::BRICK] = [this](const char* name) {
+        return ECSWorld.entity(name)
+            .set<Prefab>({ PREFABS::BRICK })
+            .add<Transform>()
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<Collider>({ {10, 0.25,10}, rp3d::CollisionShapeName::BOX, false, 0.1, NULL })
+            .set<Renderer>({ Models::BRICK });
     };
 }
 
@@ -190,10 +209,6 @@ void GameEngine::_TestEcs()
         .set<Transform>({ { 6, 0, 0 } });
     InstantiateEntity(PREFABS::GRASSBLOCK)
         .set<Transform>({ { 8, 0, 0 } });
-
-    DEBUGGO = ECSWorld.entity("Debuggo")
-        .set<Transform>({ {10, 10, 1} })
-        .set<Renderer>({ Models::DEBUG });
     
     ECSWorld.entity("coin")
         .set<Transform>({ {4, 2, 0} })
@@ -231,7 +246,7 @@ std::chrono::system_clock::time_point GameEngine::GetCurrentFrameTime()
     return this->_CurrentFrameTime;
 }
 
-void GameEngine::Loop(float delta)
+void GameEngine::Loop()
 {
     _CurrentFrameTime = std::chrono::system_clock::now();
     DeltaTime = _CurrentFrameTime - _PreviousFrameTime;
@@ -248,6 +263,26 @@ flecs::entity GameEngine::InstantiateEntity(PREFABS prefab, const char* name)
     return entity;
 }
 
+void GameEngine::DeleteEntity(flecs::entity entity)
+{
+	Entities.erase(std::remove(Entities.begin(), Entities.end(), entity), Entities.end());
+    ecs_defer_begin(ECSWorld);
+	entity.destruct();
+    if (entity.has<RigidBody>())
+    {
+        auto rigidbody = entity.get_mut<RigidBody>();
+        PhysicsWorld->destroyRigidBody(rigidbody->Body);
+        rigidbody->Body = nullptr;
+    }
+    if (entity.has<CollisionBody>())
+    {
+        auto collisionBody = entity.get_mut<CollisionBody>();
+        PhysicsWorld->destroyCollisionBody(collisionBody->Body);
+        collisionBody->Body = nullptr;
+    }
+    ecs_defer_end(ECSWorld);
+}
+
 flecs::entity GameEngine::EntityFromId(flecs::entity_t id)
 {
     return ECSWorld.entity(id);
@@ -261,7 +296,7 @@ flecs::entity GameEngine::SelectedEntity()
 rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
 {
     GameEngine &engine = GameEngine::GetInstance();
-    glm::vec4 positionFromCamera = engine._Camera.ViewMatrix() * glm::vec4(position.x, position.y, position.z, 1);
+    glm::vec4 positionFromCamera = engine._Camera->ViewMatrix() * glm::vec4(position.x, position.y, position.z, 1);
     positionFromCamera = positionFromCamera / positionFromCamera.w;
     return rp3d::Vector3(positionFromCamera.x, positionFromCamera.y, positionFromCamera.z);
 }
@@ -269,7 +304,7 @@ rp3d::Vector3 GameEngine::WorldToCameraSpace(rp3d::Vector3 position)
 rp3d::Vector3 GameEngine::CameraToWorldSpace(rp3d::Vector3 position)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    glm::vec4 positionInWorld = glm::inverse(engine._Camera.ViewMatrix()) * glm::vec4(position.x, position.y, position.z, 1);
+    glm::vec4 positionInWorld = glm::inverse(engine._Camera->ViewMatrix()) * glm::vec4(position.x, position.y, position.z, 1);
     positionInWorld = positionInWorld / positionInWorld.w;
     return rp3d::Vector3(positionInWorld.x, positionInWorld.y, positionInWorld.z);
 }
@@ -278,7 +313,7 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
 {
     GameEngine &engine = GameEngine::GetInstance();
     auto x = glm::vec4(position.x, position.y, position.z, 1);
-	glm::vec4 positionFromScreen = engine._Camera.Matrix() * x;
+	glm::vec4 positionFromScreen = engine._Camera->Matrix() * x;
 	positionFromScreen = positionFromScreen / positionFromScreen.w;
     return glm::vec3(positionFromScreen.x, positionFromScreen.y, positionFromScreen.z);
 }
@@ -286,10 +321,24 @@ glm::vec3 GameEngine::WorldToScreenSpace(rp3d::Vector3 position)
 rp3d::Vector3 GameEngine::ScreenToWorldSpace(glm::vec3 screenPoint)
 {
     GameEngine& engine = GameEngine::GetInstance();
-    auto I = glm::inverse(engine._Camera.Matrix());
+    auto I = glm::inverse(engine._Camera->Matrix());
     auto d = I * glm::vec4(screenPoint.x, screenPoint.y, screenPoint.z, 1.0);
     d /= d.w;
     return rp3d::Vector3(d.x, d.y, d.z);
+}
+
+flecs::entity GameEngine::EntityFromBody(rp3d::CollisionBody* body)
+{
+    flecs::entity entity;
+    RaycastTargets.iter([&](flecs::iter& it) {
+        auto rb = it.field<RigidBody>(2);
+        auto cb = it.field<CollisionBody>(3);
+        for (int i = 0; i < it.count(); i++) {
+            if (it.is_set(2) && rb[i].Body == body) entity = it.entity(i);
+            if (it.is_set(3) && cb[i].Body == body) entity = it.entity(i);
+        }
+    });
+    return entity;
 }
 
 rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo& info)
@@ -305,25 +354,48 @@ rp3d::decimal GatherAllRaycastCallback::notifyRaycastHit(const rp3d::RaycastInfo
 
     GameEngine &engine = GameEngine::GetInstance();
 
-    engine.RaycastTargets.iter([&](flecs::iter& it) {
-        auto rb = it.field<RigidBody>(2);
-        auto cb = it.field<CollisionBody>(3);
-        for (int i = 0; i < it.count(); i++) {
-			if (it.is_set(2) && rb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
-			if (it.is_set(3) && cb[i].Body == info.body) raycastInfo->Entity = it.entity(i);
-		}
-    });
+    raycastInfo->Entity = engine.EntityFromBody(info.body);
     
     Infos.push_back(raycastInfo);
     return rp3d::decimal(1.0);
 }
 
+void PhysicsEventListener::onTrigger(const rp3d::OverlapCallback::CallbackData& callbackData)
+{
+    GameEngine& engine = GameEngine::GetInstance();
+
+    auto count = callbackData.getNbOverlappingPairs();
+    for (size_t i = 0; i < count; i++)
+    {
+        auto pair = callbackData.getOverlappingPair(i);
+        auto body1 = pair.getBody1();
+        auto body2 = pair.getBody2();
+        auto entity1 = engine.EntityFromBody(body1);
+        auto entity2 = engine.EntityFromBody(body2);
+        if (entity1.has<Prefab>() && entity2.has<Prefab>())
+        {
+            auto prefab1 = entity1.get<Prefab>();
+            auto prefab2 = entity2.get<Prefab>();
+            if (prefab1->Prefab == PREFABS::COIN && prefab2->Prefab == PREFABS::PLAYER)
+            {
+                engine.DeleteEntity(entity1);
+            }
+            if (prefab2->Prefab == PREFABS::COIN && prefab1->Prefab == PREFABS::PLAYER)
+            {
+                engine.DeleteEntity(entity2);
+            }
+        }
+    }
+}
+
 std::vector<RaycastInfo*> GameEngine::RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance)
 {
     GameEngine &engine = GameEngine::GetInstance();
-    CameraInfos camera = engine._Camera;
-    rp3d::Vector3 origin{ camera.Position.x, camera.Position.y, camera.Position.z };
+    CameraInfos camera = *engine._Camera;
+    auto cameraPos = _Camera->CameraEntity.get<Transform>()->Position;
+    rp3d::Vector3 origin{ cameraPos.x, cameraPos.y, cameraPos.z };
     auto pos = engine.ScreenToWorldSpace(glm::vec3(screenPoint.x, screenPoint.y, 0.95));
+    //DEBUGGO.get_mut<Transform>()->Position = rp3d::Vector3(pos.x, pos.y, pos.z);
 
     rp3d::Vector3 direction = pos - origin;
     direction.normalize();
@@ -344,7 +416,7 @@ void GameEngine::SetIsEditor(bool isEditor)
     IsEditor = isEditor;
 }
 
-void GameEngine::SerializeEntities() {
+void GameEngine::SerializeEntities(const char* filename) {
     flecs::entity_to_json_desc_t serializer;
     serializer.serialize_path = true;
     serializer.serialize_values = true;
@@ -361,7 +433,13 @@ void GameEngine::SerializeEntities() {
     std::string entitiesString;
     for (auto entity : Entities) {
         entitiesString += "ENTITY\n";
-        entitiesString += entity.name();
+        char nameNoId[128];
+        std::string nameWithoutId = (std::string)entity.name();
+        while (isdigit(nameWithoutId[0]) || nameWithoutId[0] == ' ')
+        {
+            nameWithoutId.erase(0, 1);
+        }
+        entitiesString += nameWithoutId;
         entitiesString += "\n";
         rp3d::Vector3 position = entity.get<Transform>()->Position;
         entitiesString += position.to_string();
@@ -373,8 +451,8 @@ void GameEngine::SerializeEntities() {
         entitiesString += std::to_string(prefabs);
         entitiesString += "\n";
     }
-    std::string fileName = RootName + "/" + "scene.txt";
-    Outfile.open(fileName, std::ios::out);
+    std::string filePath = RootName + "/" + filename;
+    Outfile.open(filePath, std::ios::out);
     Outfile.write(entitiesString.c_str(), entitiesString.size());
     Outfile.close();
 }
@@ -385,10 +463,20 @@ PREFABS GetPrefabFromInt(int X)
     return p;
 }
 
-void  GameEngine::DeserializeEntities(std::string filename)
+void  GameEngine::DeserializeEntities(const char* filename)
 {
+    struct stat sb;
+    std::string RootName = "./resources/scene";
+    int ret = stat(RootName.c_str(), &sb);
+    int tmp = errno;
+    if (stat(RootName.c_str(), &sb) != 0)
+    {
+        std::cout << "Scene directory does not exist";
+        return;
+    };
+    std::string filePath = RootName + "/" + filename;
     std::ifstream Infile;
-    Infile.open(filename, std::ios::in);
+    Infile.open(filePath, std::ios::in);
     std::string line;
 
     while (std::getline(Infile, line))
@@ -396,6 +484,7 @@ void  GameEngine::DeserializeEntities(std::string filename)
         std::getline(Infile, line);
         std::string name = line;
         std::getline(Infile, line);
+        name = std::to_string(GameEngine::GetInstance().Entities.size()) + " " + name;
         rp3d::Vector3 position;
         sscanf_s(line.c_str(), "Vector3(%f,%f,%f)", &position.x, &position.y, &position.z);
         std::getline(Infile, line);
@@ -405,7 +494,7 @@ void  GameEngine::DeserializeEntities(std::string filename)
         int tmpprefab;
         sscanf_s(line.c_str(), "%d", &tmpprefab);
         PREFABS prefab = GetPrefabFromInt(tmpprefab);
-
+        
         GameEngine::GetInstance().InstantiateEntity(prefab, name.c_str())
             .set<Transform>({ position, rotation });
 

@@ -24,6 +24,7 @@ void CreateRigidBody(flecs::entity e, Transform& transform, RigidBody& rigidbody
     rp3d::Transform initialTransform(position, rotation);
     rigidbody.Body = engine.PhysicsWorld->createRigidBody(initialTransform);
     rigidbody.Body->setType(rigidbody.Type);
+    if (!rigidbody.CanRotate) rigidbody.Body->setAngularLockAxisFactor(rp3d::Vector3(0, 0, 0));
     rigidbody.Body->setMass(rigidbody.Weight);
 }
 
@@ -49,6 +50,7 @@ void CreateCollider(rp3d::CollisionBody* body, Collider& collider)
     }
     collider.RP3DCollider = body->addCollider(shape, rp3d::Transform::identity());
     collider.RP3DCollider->setIsTrigger(collider.isTrigger);
+    collider.RP3DCollider->getMaterial().setBounciness(collider.bounciness);
 }
 
 void CreateColliderCollisioniBody(flecs::entity e, CollisionBody& body, Collider& collider)

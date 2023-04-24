@@ -18,7 +18,12 @@ public:
 	virtual rp3d::decimal notifyRaycastHit(const rp3d::RaycastInfo& info);
 };
 
-constexpr std::chrono::duration<double> PHYSICS_TIMESTEP = std::chrono::duration<double>(1.0f / 60.0f);
+class PhysicsEventListener : public rp3d::EventListener {
+public:
+	void onTrigger(const rp3d::OverlapCallback::CallbackData& callbackData);
+};
+
+constexpr std::chrono::duration<double, std::ratio<1,1>> PHYSICS_TIMESTEP = std::chrono::duration<double, std::ratio<1,1>>(1.0f / 60.0f);
 
 class GameEngine
 {
@@ -27,18 +32,17 @@ private:
 	std::chrono::system_clock::time_point _CurrentFrameTime;
 	std::chrono::system_clock::time_point _PreviousFrameTime;
 
-	CameraInfos _Camera;
+	CameraInfos* _Camera;
 
 	std::map<PREFABS, std::function<flecs::entity(const char*)>> _Prefabs;
 	void _InitPrefabs();
 	void _TestEcs();
 	void _SetupPhysicsLogger();
-	
 
 public:
 	static GameEngine& GetInstance();
-	std::chrono::duration<double> DeltaTime = std::chrono::duration<double>::zero();
-	std::chrono::duration<double> Accumulator = std::chrono::duration<double>::zero();
+	std::chrono::duration<double, std::ratio<1,1>> DeltaTime = std::chrono::duration<double, std::ratio<1,1>>::zero();
+	std::chrono::duration<double, std::ratio<1,1>> Accumulator = std::chrono::duration<double, std::ratio<1,1>>::zero();
 	flecs::world ECSWorld;
 	std::vector<flecs::entity> Entities;
 	flecs::entity_t SelectedEntityId = FLECS_INVALID_ENTITY;
@@ -54,12 +58,13 @@ public:
 
 	CameraInfos& Camera();
 
-	void Loop(float delta);
+	void Loop();
 
 	GameEngine(GameEngine const&) = delete;
 	void operator=(GameEngine const&) = delete;
 
 	flecs::entity InstantiateEntity(PREFABS prefab, const char* name = nullptr);
+	void DeleteEntity(flecs::entity);
 	flecs::entity EntityFromId(flecs::entity_t id);
 	flecs::entity SelectedEntity();
 
@@ -71,7 +76,9 @@ public:
 
 	std::vector<RaycastInfo*> RaycastFromCamera(glm::vec2 screenPoint, rp3d::decimal maxDistance);
 
+	flecs::entity EntityFromBody(rp3d::CollisionBody*);
+
 	void SetIsEditor(bool isEditor);
-	void SerializeEntities();
-	void DeserializeEntities(std::string filename);
+	void SerializeEntities(const char* filename);
+	void DeserializeEntities(const char* filename);
 };

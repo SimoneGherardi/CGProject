@@ -3,6 +3,9 @@
 #include "camera.h"
 #include "VulkanStructs.h"
 
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(+0.4f, -1.0f, -0.6f));
+glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f) * 1.5f;
+glm::vec3 AMBIENT_LIGHT = glm::vec3(1.f,1.f,1.f) * 0.2f;
 
 void RenderingEngine::_InitializeInstance(const char* title)
 {
@@ -79,16 +82,19 @@ void RenderingEngine::_InitializeLogicalDevice() {
 	TRACEEND;
 }
 
-void RenderingEngine::_InitializeSwapchain(WindowSize windowSize) {
+void RenderingEngine::_InitializeSwapchain() {
 	TRACESTART;
+	int width, height;
+	glfwGetFramebufferSize(_Window, &width, &height);
 	_Swapchain.Initialize(
-		windowSize.Width, windowSize.Height,
+		width, height,
 		_Context.PhysicalDevice, _Context.Device, _Context.Surface
 	);
-	_CleanupStack.push([=]() {
+	_WindowSize = { width, height };
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up logical device");
 		_Swapchain.Cleanup();
-		});
+	});
 	TRACEEND;
 }
 
@@ -101,7 +107,7 @@ void RenderingEngine::_InitializeRenderPass() {
 		VK_SAMPLE_COUNT_2_BIT,
 		&_RenderPass
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render pass");
 		cleanupRenderPass(_Context.Device, _RenderPass);
 		});
@@ -119,7 +125,7 @@ void RenderingEngine::_InitializeGUIRenderPass() {
 		VK_SAMPLE_COUNT_2_BIT,
 		&_GUIRenderPass
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render pass");
 		cleanupRenderPass(_Context.Device, _GUIRenderPass);
 		});
@@ -307,6 +313,16 @@ void RenderingEngine::_InitializeDescriptorSet()
 		);
 	}
 
+	_CleanupStack.push([=]() {
+		LOGDBG("cleaning up frame data objects");
+		for (size_t i = 0; i < FRAME_OVERLAP; i++)
+		{
+			auto f = _FrameData[i];
+			// f.Global.Cleanup(&_Context);
+			// f.Objects.Cleanup(&_Context);
+		}
+	});
+
 	TRACEEND;
 }
 
@@ -338,7 +354,7 @@ void RenderingEngine::_InitializePipeline()
 		_RenderPass,
 		&_Pipeline
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up pipeline");
 		cleanupGraphicsPipeline(_Context.Device, _Pipeline);
 		cleanupGraphicsPipelineLayout(_Context.Device, _PipelineLayout);
@@ -387,7 +403,7 @@ void RenderingEngine::_InitializeGUICommandPool() {
 	_CleanupStack.push([=]() {
 		LOGDBG("cleaning up command pool");
 		cleanupCommandPool(_Context.Device, _GUICommandPool);
-		});
+	});
 	TRACEEND;
 }
 
@@ -476,7 +492,7 @@ void RenderingEngine::_InitializeRenderTargets()
 		VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
 		VK_IMAGE_ASPECT_DEPTH_BIT
 	);
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up render targets");
 		_ColorGUIRenderTarget.Cleanup();
 		_DepthGUIRenderTarget.Cleanup();
@@ -494,7 +510,9 @@ void RenderingEngine::_InitializeFrameBuffer() {
 		std::array<VkImageView, 3> attachments = {
 			_ColorRenderTarget.GetImageView(),
 			_DepthRenderTarget.GetImageView(),
-			_ColorResolveRenderTarget.GetImageView(),
+			GameEngine::GetInstance().IsEditor ? 
+				_ColorResolveRenderTarget.GetImageView() :
+				_Swapchain.GetImagesViews()[i],
 		};
 
 		initializeFrameBuffer(
@@ -506,7 +524,7 @@ void RenderingEngine::_InitializeFrameBuffer() {
 			&_SwapChainFramebuffers[i]
 		);
 
-		_CleanupStack.push([=]() {
+		_CleanupStackSizeDependent.push([=]() {
 			LOGDBG("cleaning up framebuffer");
 			cleanupFrameBuffer(
 				_Context.Device,
@@ -519,6 +537,10 @@ void RenderingEngine::_InitializeFrameBuffer() {
 
 void RenderingEngine::_InitializeGUIFrameBuffer() {
 	TRACESTART;
+	if (!GameEngine::GetInstance().IsEditor)
+	{
+		return;
+	}
 	_GUISwapChainFramebuffers.resize(_Swapchain.GetImagesViews().size());
 	for (size_t i = 0; i < _Swapchain.GetImagesViews().size(); i++) {
 		std::array<VkImageView, 3> attachments = {
@@ -536,13 +558,13 @@ void RenderingEngine::_InitializeGUIFrameBuffer() {
 			&_GUISwapChainFramebuffers[i]
 		);
 
-		_CleanupStack.push([=]() {
+		_CleanupStackSizeDependent.push([=]() {
 			LOGDBG("cleaning up framebuffer");
 			cleanupFrameBuffer(
 				_Context.Device,
 				_GUISwapChainFramebuffers[i]
 			);
-			});
+		});
 	}
 	TRACEEND;
 }
@@ -580,7 +602,7 @@ void RenderingEngine::_InitializeGui()
 		&_GuiDescriptorPool
 	);
 
-	ImGui_ImplVulkan_InitInfo init_info = {};
+	Vulkan_InitInfo_GUI init_info = {};
 	init_info.Instance = _Context.Instance;
 	init_info.PhysicalDevice = _Context.PhysicalDevice;
 	init_info.Device = _Context.Device;
@@ -590,37 +612,65 @@ void RenderingEngine::_InitializeGui()
 	init_info.ImageCount = 3;
 	init_info.MSAASamples = VK_SAMPLE_COUNT_2_BIT;
 
-	ImGui_ImplVulkan_Init(&init_info, _RenderPass);
+	Vulkan_Init_GUI(&init_info, _RenderPass);
 
 	_GuiCommandBuffer = new ImmediateCommandBuffer(&_Context);
 
 	_GuiCommandBuffer->Submit([&](VkCommandBuffer cmd) {
-		ImGui_ImplVulkan_CreateFontsTexture(cmd);
+		Vulkan_CreateFontsTexture_GUI(cmd);
 		});
 	_GuiCommandBuffer->Wait();
 	_GuiCommandBuffer->Cleanup();
-
-	ImGui_ImplVulkan_DestroyFontUploadObjects();
+	
+	Vulkan_DestroyFontUploadObjects_GUI();
 
 
 	//ImGui Render texture
-	renderTextureId = ImGui_ImplVulkan_AddTexture(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+	renderTextureId = Vulkan_AddTexture_GUI(renderSamplerForGUI, _ColorResolveRenderTarget.GetImageView(), VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 	EditGUI = EditorGUI::GetInstance();
 	EditGUI->Initialize(_WindowSize, _Window);
 
-	_CleanupStack.push([=]() {
+	_CleanupStackSizeDependent.push([=]() {
 		LOGDBG("cleaning up gui");
+		vkDestroySampler(_Context.Device, renderSamplerForGUI, nullptr);
 		cleanupDescriptorPool(&_Context, _GuiDescriptorPool);
-		ImGui_ImplVulkan_Shutdown();
-		});
+		Vulkan_Cleanup_GUI();
+	});
 	TRACEEND;
 }
 
-void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window)
+void RenderingEngine::InitializeSizeDependent()
+{
+ 	TRACESTART;
+	vkDeviceWaitIdle(_Context.Device);
+
+	_CleanupStackSizeDependent.flush();
+
+	_InitializeSwapchain();
+	_InitializeRenderPass();
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		_InitializeGUIRenderPass();
+	}
+	_InitializePipeline();
+	_InitializeRenderTargets();
+	_InitializeFrameBuffer();
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		_InitializeGUIFrameBuffer();
+		_InitializeGui();
+	}
+
+	GameEngine::GetInstance().Camera().Width = _WindowSize.Width;
+	GameEngine::GetInstance().Camera().Height = _WindowSize.Height;
+
+ 	TRACEEND;
+}
+
+void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, GLFWwindow* window)
 {
 	TRACESTART;
-	_WindowSize = windowSize;
 	_Window = window;
 	_InitializeInstance(title);
 #ifdef ENABLE_VALIDATION_LAYERS
@@ -630,44 +680,54 @@ void RenderingEngine::Initialize(const char* title, SurfaceFactory* factory, Win
 	_InitializePhysicalDevice();
 	_InitializeLogicalDevice();
 
-	_InitializeSwapchain(windowSize);
-	_InitializeRenderPass();
-	_InitializeGUIRenderPass();
-
 	_InitializeSyncStructures();
 	_InitializeAllocators();
 	_InitializeModels();
 	_InitializeDescriptorSet();
-	_InitializePipeline();
 	_InitializeCommandPool();
 	_InitializeGUICommandPool();
 	_InitializeCommandBuffers();
 	_InitializeGUICommandBuffers();
-	_InitializeRenderTargets();
-	_InitializeFrameBuffer();
-	_InitializeGUIFrameBuffer();
-	_InitializeGui();
+
 	TRACEEND;
 }
 
-void RenderingEngine::Render(float delta, CameraInfos* camera)
+void RenderingEngine::Wait()
 {
-	// TODO refactor
 	_RenderFence->Wait();
 	_RenderFence->Reset();
+}
+
+void RenderingEngine::WaitIdle()
+{
+	Wait();
+	vkDeviceWaitIdle(_Context.Device);
+}
+
+void RenderingEngine::Render(CameraInfos* camera)
+{
+	Wait();
+
 	uint32_t imageIndex;
-	CheckVkResult(
-		vkAcquireNextImageKHR(
-			_Context.Device, _Swapchain.GetSwapchain(),
-			1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
-		)
+	auto result = vkAcquireNextImageKHR(
+		_Context.Device, _Swapchain.GetSwapchain(),
+		1000000000, _PresentSemaphore->Instance, nullptr, &imageIndex
 	);
+	if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+		InitializeSizeDependent();
+		return;
+	} else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+		throw std::runtime_error("failed to acquire swap chain image!");
+	}
+	CheckVkResult(result);
+
 	_MainCommandBuffer->Begin(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
 	VkCommandBuffer cmd = _MainCommandBuffer->Buffer;
 
 	std::array<VkClearValue, 2> clearValues;
 	clearValues[0].color = { {.05f, .0f, .05f, 1.0f} };
 	clearValues[1].depthStencil = { 1.0f, 0 };
+
 	VkRenderPassBeginInfo rpInfo = {};
 	rpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
 	rpInfo.pNext = nullptr;
@@ -678,6 +738,7 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	rpInfo.framebuffer = _SwapChainFramebuffers[imageIndex];
 	rpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
 	rpInfo.pClearValues = clearValues.data();
+
 	vkCmdBeginRenderPass(
 		cmd,
 		&rpInfo,
@@ -690,15 +751,13 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 		_Pipeline
 	);
 
-	// TODO frame overlap?
 	auto f = GetCurrentFrameData();
 	f->Global.Data.CameraView = camera->ViewMatrix();
 	f->Global.Data.CameraProjection = camera->ProjectionMatrix();
 	f->Global.Data.CameraViewProjection = camera->Matrix();
-	f->Global.Data.CameraPosition = camera->Position;
-	// f->Global.Data.CameraPosition = glm::vec4(camera->Position, 1.0f);
+	f->Global.Data.CameraPosition = camera->Position();
 
-	TEST_CAMERA(&_Context, _WindowSize.Width, _WindowSize.Height, delta, cmd, _PipelineLayout, f);
+	_RenderCamera(&_Context, _WindowSize.Width, _WindowSize.Height, cmd, _PipelineLayout, f);
 
 	VkDeviceSize offset = 0;
 	vkCmdBindDescriptorSets(
@@ -717,28 +776,31 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 
 	vkCmdEndRenderPass(cmd);
 
-	VkRenderPassBeginInfo uiRpInfo = {};
-	uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-	uiRpInfo.pNext = nullptr;
-	uiRpInfo.renderPass = _RenderPass;
-	uiRpInfo.renderArea.offset.x = 0;
-	uiRpInfo.renderArea.offset.y = 0;
-	uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
-	uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
-	uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
-	uiRpInfo.pClearValues = clearValues.data();
-	vkCmdBeginRenderPass(
-		cmd,
-		&uiRpInfo,
-		VK_SUBPASS_CONTENTS_INLINE
-	);
+	if (GameEngine::GetInstance().IsEditor)
+	{
+		VkRenderPassBeginInfo uiRpInfo = {};
+		uiRpInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		uiRpInfo.pNext = nullptr;
+		uiRpInfo.renderPass = _RenderPass;
+		uiRpInfo.renderArea.offset.x = 0;
+		uiRpInfo.renderArea.offset.y = 0;
+		uiRpInfo.renderArea.extent = _Swapchain.GetExtent();
+		uiRpInfo.framebuffer = _GUISwapChainFramebuffers[imageIndex];
+		uiRpInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+		uiRpInfo.pClearValues = clearValues.data();
+		vkCmdBeginRenderPass(
+			cmd,
+			&uiRpInfo,
+			VK_SUBPASS_CONTENTS_INLINE
+		);
 
-	EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
+		EditGUI->ShowCustomWindow(renderTextureId, _WindowSize, _Window);
 
-	ImGui::Render();
-	ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), cmd);
+		ImGui::Render();
+		Vulkan_RenderDrawData_GUI(ImGui::GetDrawData(), cmd);
 
-	vkCmdEndRenderPass(cmd);
+		vkCmdEndRenderPass(cmd);
+	}
 
 	_MainCommandBuffer->End();
 	_MainCommandBuffer->Submit(
@@ -760,13 +822,60 @@ void RenderingEngine::Render(float delta, CameraInfos* camera)
 	presentInfo.pWaitSemaphores = &(_RenderSemaphore->Instance);
 	presentInfo.waitSemaphoreCount = 1;
 	presentInfo.pImageIndices = &imageIndex;
-	CheckVkResult(vkQueuePresentKHR(_Context.GraphicsQueue, &presentInfo));
+	auto result2 = vkQueuePresentKHR(_Context.GraphicsQueue, &presentInfo);
+
+	if (result2 == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
+		InitializeSizeDependent();
+		return;
+	} else if (result != VK_SUCCESS) {
+		throw std::runtime_error("failed to present swap chain image!");
+	}
+	CheckVkResult(result2);
 }
+
+void RenderingEngine::_RenderCamera(const VulkanContext context, const float width, const float height, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData)
+{
+	GlobalData* data = &(frameData->Global.Data);
+
+	data->SunDirection = SUN_DIRECTION;
+	data->SunColor = SUN_COLOR;
+	data->AmbientLight = AMBIENT_LIGHT;
+
+	frameData->Global.Update(context);
+	updateDescriptorSet(
+		context,
+		frameData->Global.Buffer.Buffer,
+		frameData->Global.Buffer.Size,
+		0,
+		frameData->Global.DescriptorSet,
+		1,
+		VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER
+	);
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 0, 1, &(frameData->Global.DescriptorSet), 0, nullptr
+	);
+
+	frameData->Objects.Update(context);
+	updateDescriptorSet(
+		context,
+		frameData->Objects.Buffer.Buffer,
+		frameData->Objects.Buffer.Size,
+		0,
+		frameData->Objects.DescriptorSet,
+		1,
+		VK_DESCRIPTOR_TYPE_STORAGE_BUFFER
+	);
+	vkCmdBindDescriptorSets(
+		cmd, VK_PIPELINE_BIND_POINT_GRAPHICS, layout, 1, 1, &(frameData->Objects.DescriptorSet), 0, nullptr
+	);
+}
+
 
 void RenderingEngine::Cleanup()
 {
 	TRACESTART;
 	RenderContext::GetInstance().Cleanup(&_Context);
+	_CleanupStackSizeDependent.flush();
 	_CleanupStack.flush();
 	TRACEEND;
 }

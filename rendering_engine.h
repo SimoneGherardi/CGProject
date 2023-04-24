@@ -14,7 +14,6 @@
 #include "command_pool.h"
 #include "render_target.h"
 #include "framebuffers.h"
-// #include "Allocator.h"
 #include "FrameData.h"
 #include "descriptor_set_layout.h"
 #include "descriptor_pool.h"
@@ -22,10 +21,10 @@
 #include "std_pipeline.h"
 #include "SyncStructures.h"
 #include "CommandBuffer.h"
-#include "tests.h"
 #include "RenderContext.h"
 #include "imgui.h"
 #include "backends/imgui_impl_vulkan.h"
+#include "MyVulkanImGUI.h"
 #include "MemoryTransferer.h"
 #include "ImmediateCommandBuffer.h"
 #include "camera.h"
@@ -36,8 +35,6 @@ constexpr auto HOST_VISIBLE_MEMORY_SIZE = (128 * 1024 * 1024);
 constexpr auto DEVICE_LOCAL_MEMORY_SIZE = (512 * 1024 * 1024);
 constexpr auto MAX_COMMANDS = 2048;
 constexpr auto MAX_INSTANCES = 4096;
-
-
 
 class RenderingEngine
 {
@@ -98,6 +95,7 @@ private:
 	DeviceMemory* _DeviceLocalMemory;
 
 	CleanupStack _CleanupStack;
+	CleanupStack _CleanupStackSizeDependent;
 
 	
 
@@ -123,7 +121,7 @@ private:
 	void _InitializeSurface(SurfaceFactory* factory);
 	void _InitializePhysicalDevice();
 	void _InitializeLogicalDevice();
-	void _InitializeSwapchain(WindowSize windowSize);
+	void _InitializeSwapchain();
 	void _InitializeRenderPass();
 	void _InitializeGUIRenderPass();
 	void _InitializeAllocators();
@@ -140,13 +138,18 @@ private:
 	void _InitializeModels();
 	void _InitializeGui();
 
+	void _RenderCamera(const VulkanContext context, const float width, const float height, const VkCommandBuffer cmd, const VkPipelineLayout layout, FrameData* frameData);
+
 	RenderingEngine() = default;
 public:
 	EditorGUI* EditGUI;
 	FrameData* GetCurrentFrameData();
 
-	void Initialize(const char* title, SurfaceFactory* factory, WindowSize windowSize, GLFWwindow* window);
-	void Render(float delta, CameraInfos* camera);
+	void InitializeSizeDependent();
+	void Initialize(const char* title, SurfaceFactory* factory, GLFWwindow* window);
+	void Render(CameraInfos* camera);
+	void Wait();
+	void WaitIdle();
 	void Cleanup();
 
 	static RenderingEngine& GetInstance();

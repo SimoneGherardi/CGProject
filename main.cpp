@@ -28,7 +28,6 @@ void onResize(GLFWwindow* window, int width, int height)
 {
     TRACESTART;
     auto engine = reinterpret_cast<RenderingEngine*>(glfwGetWindowUserPointer(window));
-    // TODO engine resize
     TRACEEND;
 }
 
@@ -39,7 +38,8 @@ void initialize()
     Window = initializeWindow(TITLE, WIDTH, HEIGHT, &(RenderingEngine::GetInstance()), onResize);
     ImGui::CreateContext();
     ImGui_ImplGlfw_InitForVulkan(Window, true);
-    RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, {WIDTH, HEIGHT}, Window);
+    RenderingEngine::GetInstance().Initialize(TITLE, surfaceFactory, Window);
+	RenderingEngine::GetInstance().InitializeSizeDependent();
     
     TRACEEND;
 }
@@ -52,6 +52,7 @@ void cleanup()
     TRACEEND;
 }
 
+
 int main(int argc, char** argv)
 {
     TRACESTART;
@@ -63,33 +64,38 @@ int main(int argc, char** argv)
     try
     {
         initialize();
-        float delta = 0;
-        using clock = std::chrono::system_clock;
-        using millisec = std::chrono::duration<float>;
         GameEngine& engine = GameEngine::GetInstance();
         RenderingEngine& rendEngine = RenderingEngine::GetInstance();
         CameraInfos& Camera = engine.Camera();
         WindowSize windowSize;
         glfwGetWindowSize(Window, &windowSize.Width, &windowSize.Height);
         EditorGUI* editorGUI = rendEngine.EditGUI;
-        
+        bool lastIsEditor = engine.IsEditor;
+
         while (!glfwWindowShouldClose(Window)) {
-            const auto start = clock::now();
             glfwPollEvents();
             
-            GameEngine::GetInstance().Loop(delta);
-            ImGui_ImplVulkan_NewFrame();
-            ImGui_ImplGlfw_NewFrame();
-            ImGui::NewFrame();
+            engine.Loop();
             
             // Read Inputs
             Camera.Inputs(Window);
-            editorGUI->Inputs(Window);
+            
+            if (lastIsEditor != engine.IsEditor) {
+                lastIsEditor = engine.IsEditor;
+                rendEngine.InitializeSizeDependent();
+            }
 
-            RenderingEngine::GetInstance().Render(delta, &Camera);
-            const millisec duration = clock::now() - start;
-            delta = duration.count();
+            if (engine.IsEditor)
+            {
+                Vulkan_NewFrame_GUI();
+                ImGui_ImplGlfw_NewFrame();
+                ImGui::NewFrame();
+                editorGUI->Inputs(Window);
+            }
+
+            rendEngine.Render(&Camera);
         }
+        rendEngine.WaitIdle();
         cleanup();
     }
     catch (const std::exception& e) {

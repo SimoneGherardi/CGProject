@@ -85,6 +85,9 @@
 		"string_view": "cpp",
 		"numbers": "cpp",
 		"semaphore": "cpp",
-		"cinttypes": "cpp"
+		"cinttypes": "cpp",
+		"ranges": "cpp",
+		"span": "cpp",
+		"stack": "cpp"
 	}
 }

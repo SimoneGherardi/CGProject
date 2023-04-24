@@ -50,7 +50,7 @@ struct ObjectData{
 	mat4 model;
 	int modelId;
 	int texIndex;
-	int _padding0;
+	int normalIndex;
 	int _padding1;
 };
 
@@ -112,9 +112,14 @@ void main()
 	vec3 Lo = normalize(eyePosition - vertPosition);
 
 	// Get current fragment's normal and transform to world space.
-	// vec3 N = normalize(inTangentBasis * inNormal);
+	mat3 TBN = inTangentBasis;
 	vec3 N = inNormal;
-	
+	if (data.normalIndex != 0xFFFFFFFF)
+	{
+		vec4 norm = texture(sampler2D(Textures[data.normalIndex], samp), UV);
+		N = normalize(norm.xyz*2.0 - 1.0);
+	}
+
 	// Angle between surface normal and outgoing light direction.
 	float cosLo = max(0.0, dot(N, Lo));
 		
@@ -127,7 +132,7 @@ void main()
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
 	
-	vec3 Li = -globalData.SunDirection;
+	vec3 Li = -globalData.SunDirection * TBN;
 	vec3 Lradiance = globalData.SunColor;
 
 	// Half-vector between Li and Lo.

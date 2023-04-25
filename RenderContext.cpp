@@ -261,7 +261,6 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 		}
 
 		_BakeModel(context, m.Id, models, primitives, materials, textures);
-		Models[m.Id].TextureId = 0xFFFFFFFF; // no texture
 
 		auto baseTextureIndex = Textures.size();
 
@@ -272,8 +271,9 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 		}
 		if (textures.size() > 0)
 		{
-			Models[m.Id].TextureId = baseTextureIndex + materials[0].AlbedoInd;
-			Models[m.Id].NormalId = baseTextureIndex + materials[0].NormalMapInd;
+			auto material = materials[0];
+			Models[m.Id].TextureId = material.AlbedoInd != -1 ? baseTextureIndex + materials[0].AlbedoInd : -1;
+			Models[m.Id].NormalId = material.NormalMapInd != -1 ? baseTextureIndex + materials[0].NormalMapInd : -1;
 		}
 	}
 

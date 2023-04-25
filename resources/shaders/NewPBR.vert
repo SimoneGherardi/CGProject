@@ -50,8 +50,8 @@ layout(std140, set = 1, binding = 0) readonly buffer ObjectBuffer{
 
 void main()
 {
-	vec3 tangent = Tangent.xyz * Tangent.w;
-	vec3 bitangent = cross(tangent, Normal);
+	vec3 tangent = Tangent.xyz / Tangent.w;
+	vec3 bitangent = - normalize(cross(tangent, Normal));
 	ObjectData data = objectBuffer.objects[gl_InstanceIndex];
 	mat4 model = data.model;
     mat4 transform = globalData.CameraViewProjection * model;

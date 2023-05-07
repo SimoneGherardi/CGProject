@@ -4,6 +4,7 @@
 #define NEAR_PLANE 0.1f
 #define FAR_PLANE 1000.0f
 
+#include "defines.h"
 #include<GLFW/glfw3.h>
 #include<glm/glm.hpp>
 #include<glm/gtc/matrix_transform.hpp>

@@ -3,7 +3,7 @@
 #include "camera.h"
 #include "VulkanStructs.h"
 
-glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(+0.4f, -1.0f, -0.6f));
+glm::vec3 SUN_DIRECTION = glm::normalize(glm::vec3(-0.83593f, -0.512043f, -0.197567f));
 glm::vec3 SUN_COLOR = glm::vec3(1.0f,1.0f,1.0f) * 1.5f;
 glm::vec3 AMBIENT_LIGHT = glm::vec3(1.f,1.f,1.f) * 0.2f;
 

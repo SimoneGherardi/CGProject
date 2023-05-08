@@ -76,7 +76,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
-            .set<CollisionBody>({ NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {1, 0.1, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
             .set<Renderer>({ Models::BUSH });
     };
@@ -101,7 +101,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK1 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
             .set<Collider>({ {2, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK1 });
     };
@@ -109,7 +109,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::ROCK2 })
             .add<Transform>()
-            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
+            .set<RigidBody>({ 10.0f, rp3d::BodyType::DYNAMIC, true, NULL })
             .set<Collider>({ {1.7, 1, 1}, rp3d::CollisionShapeName::SPHERE, false, 0.5, NULL })
             .set<Renderer>({ Models::ROCK2 });
     };

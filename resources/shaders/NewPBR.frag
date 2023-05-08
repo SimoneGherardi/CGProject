@@ -50,7 +50,7 @@ struct ObjectData{
 	mat4 model;
 	int modelId;
 	int texIndex;
-	int _padding0;
+	int normalIndex;
 	int _padding1;
 };
 
@@ -96,6 +96,8 @@ vec3 fresnelSchlick(vec3 F0, float cosTheta)
 
 void main()
 {
+	mat3 TBN = inTangentBasis;
+	vec3 sunColor = globalData.SunColor;
 	// Sample input textures to get shading model params.
 	ObjectData data = objectBuffer.objects[instanceIndex];
 	vec3 albedo = inColor.xyz;
@@ -109,12 +111,18 @@ void main()
 	// Outgoing light direction (vector from world-space fragment position to the "eye").
 	vec3 eyePosition = globalData.CameraPosition.xyz;
 	vec3 vertPosition = inPosition.xyz / inPosition.w;
-	vec3 Lo = normalize(eyePosition - vertPosition);
+	vec3 Lo = normalize((eyePosition - vertPosition));
 
 	// Get current fragment's normal and transform to world space.
-	// vec3 N = normalize(inTangentBasis * inNormal);
 	vec3 N = inNormal;
-	
+	if (data.normalIndex != 0xFFFFFFFF)
+	{
+		vec4 norm = texture(sampler2D(Textures[data.normalIndex], samp), UV);
+		N = normalize(norm.xyz*2.0 - 1.0);
+		N = normalize(TBN * N);
+		sunColor *= 8;
+	}
+
 	// Angle between surface normal and outgoing light direction.
 	float cosLo = max(0.0, dot(N, Lo));
 		
@@ -128,7 +136,7 @@ void main()
 	vec3 directLighting = vec3(0);
 	
 	vec3 Li = -globalData.SunDirection;
-	vec3 Lradiance = globalData.SunColor;
+	vec3 Lradiance = sunColor;
 
 	// Half-vector between Li and Lo.
 	vec3 Lh = normalize(Li + Lo);

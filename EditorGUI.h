@@ -2,6 +2,7 @@
 #define EDITOR_CLASS_H
 
 #pragma once
+#include "defines.h"
 #include "imgui.h"
 #include "imgui_internal.h"
 #include <GLFW/glfw3.h>

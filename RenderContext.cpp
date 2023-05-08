@@ -261,14 +261,19 @@ void RenderContext::Initialize(const VulkanContext context, DeviceMemory* stagin
 		}
 
 		_BakeModel(context, m.Id, models, primitives, materials, textures);
-		Models[m.Id].TextureId = 0xFFFFFFFF; // no texture
 
+		auto baseTextureIndex = Textures.size();
+
+		for (auto source : textures)
+		{
+			Texture t = createTexture(context, source, stagingMemory, memory);
+			Textures.push_back(t);
+		}
 		if (textures.size() > 0)
 		{
-			auto& source = textures[0]; // load only first texture... for now. TODO
-			Texture t = createTexture(context, source, stagingMemory, memory);
-			Models[m.Id].TextureId = Textures.size();
-			Textures.push_back(t);
+			auto material = materials[0];
+			Models[m.Id].TextureId = material.AlbedoInd != -1 ? baseTextureIndex + materials[0].AlbedoInd : -1;
+			Models[m.Id].NormalId = material.NormalMapInd != -1 ? baseTextureIndex + materials[0].NormalMapInd : -1;
 		}
 	}
 
@@ -314,7 +319,6 @@ void RenderContext::_InitializeSkybox(const VulkanContext context, DeviceMemory*
 		.AddFace(SKYBOX_PATH + std::string("/negy.jpg"), DOWN, CW_90)
 		.Build();
 }
-
 
 void RenderContext::Cleanup(const VulkanContext context)
 {

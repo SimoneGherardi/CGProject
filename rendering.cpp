@@ -28,6 +28,7 @@ void CopyToRenderingEngine(flecs::entity e, Renderer renderer)
     GPUInstanceData d = {};
     d.ModelId = renderer.Mesh;
     d.TextureIndex = RenderContext::GetInstance().Models[renderer.Mesh].TextureId;
+    d.NormalIndex = RenderContext::GetInstance().Models[renderer.Mesh].NormalId;
     d.ModelMatrix = glm::mat4(
         matrix[0], matrix[1], matrix[2], matrix[3],
         matrix[4], matrix[5], matrix[6], matrix[7],

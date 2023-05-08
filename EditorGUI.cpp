@@ -138,7 +138,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
     {
         // Only inside Scene
         // Left mouse button pressed
-        if (leftEvent == GLFW_PRESS)
+        if (leftEvent == GLFW_PRESS && _LastLeftEvent == GLFW_PRESS)
         {
             
             // Prevents camera from jumping on the first click
@@ -188,6 +188,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
         // Left mouse button released
         if (_LastLeftEvent == GLFW_PRESS && leftEvent == GLFW_RELEASE)
         {
+            /*
             auto mousePosition = glm::vec2(MouseToNorm(mouseX, WindowWidth), MouseToNorm(mouseY, WindowHeight));
             std::cout << "mousePosition: " << glm::to_string(mousePosition) << std::endl;
 
@@ -199,7 +200,7 @@ void EditorGUI::Inputs(GLFWwindow* window) {
             else {
                 gameEngine.SelectedEntityId = FLECS_INVALID_ENTITY;
             }
-            
+            */
             _FirstClick = true;
         }
     

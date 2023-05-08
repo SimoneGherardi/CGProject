@@ -277,10 +277,10 @@ void EditorGUI::PrefabAddButton(const char* label, PREFABS prefab) {
 void EditorGUI::OpenScene(std::string sceneName)
 {
     GameEngine::GetInstance().SelectedEntityId = FLECS_INVALID_ENTITY;
-    for (auto entity : GameEngine::GetInstance().Entities) {
-        entity.destruct();
+    auto entities = GameEngine::GetInstance().Entities;
+    for (auto entity : entities) {
+        GameEngine::GetInstance().DeleteEntity(entity);
     }
-    GameEngine::GetInstance().Entities.erase(GameEngine::GetInstance().Entities.begin(), GameEngine::GetInstance().Entities.end());
     GameEngine::GetInstance().DeserializeEntities(sceneName.c_str());
 }
 

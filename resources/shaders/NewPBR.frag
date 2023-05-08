@@ -64,10 +64,9 @@ layout(set = 2, binding = 1) uniform samplerCube cubeSampler;
 layout(set = 2, binding = 2) uniform texture2D Textures[8192];
 
 // GGX/Towbridge-Reitz normal distribution function.
-// Uses Disney's reparametrization of alpha = roughness^2.
 float ndfGGX(float cosLh, float roughness)
 {
-	float alpha   = roughness * roughness;
+	float alpha = roughness;
 	float alphaSq = alpha * alpha;
 
 	float denom = (cosLh * cosLh) * (alphaSq - 1.0) + 1.0;
@@ -84,7 +83,7 @@ float gaSchlickG1(float cosTheta, float k)
 float gaSchlickGGX(float cosLi, float cosLo, float roughness)
 {
 	float r = roughness + 1.0;
-	float k = (r * r) / 8.0; // Epic suggests using this roughness remapping for analytic lights.
+	float k = (r * r) / 8.0;
 	return gaSchlickG1(cosLi, k) * gaSchlickG1(cosLo, k);
 }
 
@@ -130,7 +129,7 @@ void main()
 	vec3 Lr = 2.0 * cosLo * N - Lo;
 
 	// Fresnel reflectance at normal incidence (for metals use albedo color).
-	vec3 F0 = mix(Fdielectric, albedo, metalness);
+	vec3 F0 = mix(Fdielectric, albedo, metalness); // mix(a,b,c) = a * (1-c) + b * c
 
 	// Direct lighting calculation for analytical lights.
 	vec3 directLighting = vec3(0);
@@ -138,7 +137,7 @@ void main()
 	vec3 Li = -globalData.SunDirection;
 	vec3 Lradiance = sunColor;
 
-	// Half-vector between Li and Lo.
+	// Half-vector between Li and Lo. half between viewing ray and light ray
 	vec3 Lh = normalize(Li + Lo);
 
 	// Calculate angles between surface normal and various light vectors.
@@ -152,60 +151,22 @@ void main()
 	// Calculate geometric attenuation for specular BRDF.
 	float G = gaSchlickGGX(cosLi, cosLo, roughness);
 
-	// Diffuse scattering happens due to light being refracted multiple times by a dielectric medium.
-	// Metals on the other hand either reflect or absorb energy, so diffuse contribution is always zero.
-	// To be energy conserving we must scale diffuse BRDF contribution based on Fresnel factor & metalness.
-	vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
-
 	// Lambert diffuse BRDF.
-	// We don't scale by 1/PI for lighting & material units to be more convenient.
-	// See: https://seblagarde.wordpress.com/2012/01/08/pi-or-not-to-pi-in-game-lighting-equation/
-	vec3 diffuseBRDF = kd * albedo;
+	vec3 diffuseBRDF = cosLi * albedo * sunColor;
 
 	// Cook-Torrance specular microfacet BRDF.
-	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLi * cosLo);
+	vec3 specularBRDF = (F * D * G) / max(Epsilon, 4.0 * cosLo);
+
+	// "Fake" irradiance
+	int specularTextureLevels = textureQueryLevels(cubeSampler);
+	vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb;
 
 	// Total contribution for this light.
-	directLighting += (diffuseBRDF + specularBRDF) * Lradiance * cosLi;
-
-	// Ambient lighting (IBL).
-	// vec3 ambientLighting = globalData.AmbientLight;
-
-	// Ambient lighting (IBL).
-	vec3 ambientLighting;
-	{
-		// Sample diffuse irradiance at normal direction.
-		// vec3 irradiance = texture(cubeSampler, N).rgb;
-		// vec3 irradiance = vec3(1, 1, 1);
-		vec3 irradiance = globalData.AmbientLight;
-
-		// Calculate Fresnel term for ambient lighting.
-		// Since we use pre-filtered cubemap(s) and irradiance is coming from many directions
-		// use cosLo instead of angle with light's half-vector (cosLh above).
-		// See: https://seblagarde.wordpress.com/2011/08/17/hello-world/
-		vec3 F = fresnelSchlick(F0, cosLo);
-
-		// Get diffuse contribution factor (as with direct lighting).
-		vec3 kd = mix(vec3(1.0) - F, vec3(0.0), metalness);
-
-		// Irradiance map contains exitant radiance assuming Lambertian BRDF, no need to scale by 1/PI here either.
-		vec3 diffuseIBL = kd * albedo * irradiance;
-
-		// Sample pre-filtered specular reflection environment at correct mipmap level.
-		int specularTextureLevels = textureQueryLevels(cubeSampler);
-		vec3 specularIrradiance = textureLod(cubeSampler, Lr, roughness * specularTextureLevels).rgb * (1-roughness);
-		// vec3 specularIrradiance = mix(texture(cubeSampler, Lr).rgb, globalData.AmbientLight, roughness);
-		// vec3 specularIrradiance = texture(cubeSampler, Lr).rgb * (1-roughness);
-
-		// Total specular IBL contribution.
-		vec3 specularIBL = (F0) * specularIrradiance;
-
-		// Total ambient lighting contribution.
-		ambientLighting = diffuseIBL + specularIBL;
-	}
+	directLighting += ((1-F) * (1-metalness) * (diffuseBRDF + globalData.AmbientLight * albedo) + specularBRDF * specularIrradiance) + F0 * specularIrradiance;
 
 	// Final fragment color.
-	outFragColor = vec4(directLighting + ambientLighting, 1.0f);
+	outFragColor = vec4(directLighting, 1.0f);
+	// outFragColor = vec4(specularBRDF, 1.0f);
 	if (data.modelId == globalData.SkyboxId)
 	{
 		int levels = textureQueryLevels(cubeSampler);

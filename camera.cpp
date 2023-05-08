@@ -12,7 +12,7 @@ CameraInfos::CameraInfos(float FOVDeg, glm::vec3 position): FOVDeg(FOVDeg)
 		.set<Prefab>({PREFABS::PLAYER})
 		.set<Transform>({ {SpawnPoint}, rp3d::Quaternion::fromEulerAngles(0, 0, 0)})
 		.set<RigidBody>({ 70.0f, rp3d::BodyType::DYNAMIC, false, NULL })
-		.set<Collider>({ {1, 2, 1}, rp3d::CollisionShapeName::BOX, false, 0, NULL })
+		.set<Collider>({ {3, 3, 3}, rp3d::CollisionShapeName::CAPSULE, false, 0, NULL })
 		.add<Velocity>();
 }
 

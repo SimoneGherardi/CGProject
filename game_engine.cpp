@@ -76,7 +76,7 @@ void GameEngine::_InitPrefabs()
         return ECSWorld.entity(name)
             .set<Prefab>({ PREFABS::BUSH })
             .add<Transform>()
-            .set<CollisionBody>({ NULL })
+            .set<RigidBody>({ 0, rp3d::BodyType::STATIC, true, NULL })
             .set<Collider>({ {1, 0.1, 1}, rp3d::CollisionShapeName::BOX, true, 0.5, NULL })
             .set<Renderer>({ Models::BUSH });
     };

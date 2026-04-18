@@ -1,0 +1,285 @@
+<!-- Save as project_schema.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CGProject Architecture</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0d1117; color: #c9d1d9; padding: 20px; }
+  h1 { text-align: center; margin-bottom: 20px; color: #58a6ff; }
+  .legend { display: flex; gap: 16px; justify-content: center; margin-bottom: 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 3px; }
+  .container { display: flex; flex-direction: column; gap: 16px; max-width: 1200px; margin: 0 auto; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+  .group { border: 1px solid #30363d; border-radius: 8px; padding: 12px; flex: 1; min-width: 250px; max-width: 400px; }
+  .group-title { font-size: 14px; font-weight: 600; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 1px solid #21262d; }
+  .node { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 8px 10px; margin-bottom: 6px; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+  .node:hover { border-color: #58a6ff; background: #1c2333; }
+  .node.active { border-color: #58a6ff; }
+  .node-name { font-weight: 600; color: #e6edf3; }
+  .node-files { font-size: 11px; color: #8b949e; margin-top: 2px; }
+  .node-desc { font-size: 12px; color: #8b949e; margin-top: 4px; display: none; line-height: 1.4; }
+  .node.active .node-desc { display: block; }
+  .cat-vulkan { border-left: 3px solid #f97583; }
+  .cat-resource { border-left: 3px solid #d2a8ff; }
+  .cat-scene { border-left: 3px solid #79c0ff; }
+  .cat-ecs { border-left: 3px solid #56d364; }
+  .cat-physics { border-left: 3px solid #e3b341; }
+  .cat-ui { border-left: 3px solid #f778ba; }
+  .cat-infra { border-left: 3px solid #8b949e; }
+  .g-vulkan .group-title { color: #f97583; }
+  .g-resource .group-title { color: #d2a8ff; }
+  .g-scene .group-title { color: #79c0ff; }
+  .g-ecs .group-title { color: #56d364; }
+  .g-physics .group-title { color: #e3b341; }
+  .g-ui .group-title { color: #f778ba; }
+  .g-infra .group-title { color: #8b949e; }
+  .flow { text-align: center; color: #484f58; font-size: 20px; }
+</style>
+</head>
+<body>
+
+<h1>🎮 CGProject — Vulkan 3D Engine Architecture</h1>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#f97583"></div>Vulkan Core</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d2a8ff"></div>Resources</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#79c0ff"></div>Scene</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#56d364"></div>ECS</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e3b341"></div>Physics</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f778ba"></div>Editor UI</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#8b949e"></div>Infrastructure</div>
+</div>
+
+<div class="container">
+
+  <!-- Row 1: Vulkan Init -->
+  <div class="row">
+    <div class="group g-vulkan">
+      <div class="group-title">Vulkan Initialization</div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Instance</div>
+        <div class="node-files">instance.h / .cpp</div>
+        <div class="node-desc">Creates the VkInstance — the connection between the app and the Vulkan library. Configures validation layers and instance extensions.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Debug Messenger</div>
+        <div class="node-files">debug_messenger.h / .cpp</div>
+        <div class="node-desc">Validation layer callback. Intercepts Vulkan errors, warnings, and performance issues during development.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Surface</div>
+        <div class="node-files">surface.h / .cpp</div>
+        <div class="node-desc">Platform-specific window surface (VkSurfaceKHR) created via GLFW. The target for rendered image presentation.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Physical Device</div>
+        <div class="node-files">physical_device.h / .cpp</div>
+        <div class="node-desc">Enumerates GPUs, checks queue family support (graphics, present), required extensions, and swap chain adequacy.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Logical Device</div>
+        <div class="node-files">logical_device.h / .cpp</div>
+        <div class="node-desc">Creates VkDevice with required queues and features. The primary interface for all GPU operations.</div>
+      </div>
+    </div>
+
+    <div class="group g-vulkan">
+      <div class="group-title">Vulkan Rendering Pipeline</div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Swap Chain</div>
+        <div class="node-files">swap_chain.h / .cpp</div>
+        <div class="node-desc">Queue of images for presentation. Handles format selection, present mode (V-Sync), extent, and recreation on resize.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Image Views</div>
+        <div class="node-files">image_views.h / .cpp</div>
+        <div class="node-desc">VkImageView wrappers describing how to access swap chain images (format, aspect, mip levels).</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Render Pass</div>
+        <div class="node-files">render_pass.h / .cpp</div>
+        <div class="node-desc">Defines attachment descriptions (color + depth), subpasses, and subpass dependencies. Blueprint for rendering operations.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Graphics Pipeline</div>
+        <div class="node-files">graphics_pipeline.h / .cpp</div>
+        <div class="node-desc">Immutable pipeline object: shader stages, vertex input, rasterization, MSAA, depth test, blending. Created once, bound at draw time.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Framebuffers</div>
+        <div class="node-files">framebuffers.h / .cpp</div>
+        <div class="node-desc">Bind image views to render pass attachments. One framebuffer per swap chain image.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">⬇ draw commands flow ⬇</div>
+
+  <!-- Row 2: Command & Sync -->
+  <div class="row">
+    <div class="group g-vulkan">
+      <div class="group-title">Command & Synchronization</div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Command Pool</div>
+        <div class="node-files">command_pool.h / .cpp</div>
+        <div class="node-desc">Allocator for command buffers, tied to a queue family. Manages memory for recorded GPU commands.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Command Buffers</div>
+        <div class="node-files">command_buffers.h / .cpp, CommandBuffer.h / .cpp</div>
+        <div class="node-desc">Record draw calls, pipeline binds, descriptor set binds, push constants. Submitted to GPU queues for execution.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Sync Objects</div>
+        <div class="node-files">sync_objects.h / .cpp</div>
+        <div class="node-desc">Semaphores (GPU-GPU sync: image acquired → render done) and fences (CPU-GPU sync: wait for frame completion). Enables multi-frame-in-flight.</div>
+      </div>
+    </div>
+
+    <div class="group g-vulkan">
+      <div class="group-title">Descriptor System</div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Descriptor Set Layout</div>
+        <div class="node-files">descriptor_set_layout.h / .cpp</div>
+        <div class="node-desc">Defines the shader binding interface — which binding points expect UBOs, samplers, etc. Must match GLSL layout qualifiers.</div>
+      </div>
+      <div class="node cat-vulkan" onclick="toggle(this)">
+        <div class="node-name">Descriptor Pool</div>
+        <div class="node-files">descriptor_pool.h / .cpp</div>
+        <div class="node-desc">Pre-allocates a pool of descriptors by type (uniform buffer, combined image sampler). Descriptor sets are allocated from here.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">⬇ resources bound via descriptors ⬇</div>
+
+  <!-- Row 3: Resources -->
+  <div class="row">
+    <div class="group g-resource">
+      <div class="group-title">GPU Resources</div>
+      <div class="node cat-resource" onclick="toggle(this)">
+        <div class="node-name">Vertex Buffer</div>
+        <div class="node-files">vertex_buffer.h / .cpp</div>
+        <div class="node-desc">Device-local buffer holding vertex data (position, normal, UV, color). Uses staging buffer for host→device transfer.</div>
+      </div>
+      <div class="node cat-resource" onclick="toggle(this)">
+        <div class="node-name">Index Buffer</div>
+        <div class="node-files">index_buffer.h / .cpp</div>
+        <div class="node-desc">Triangle index data for indexed drawing, reducing vertex duplication. Also staged to device-local memory.</div>
+      </div>
+      <div class="node cat-resource" onclick="toggle(this)">
+        <div class="node-name">Uniform Buffers</div>
+        <div class="node-files">uniform_buffers.h / .cpp</div>
+        <div class="node-desc">Per-frame data (MVP matrices, light params) mapped to host-visible memory. Updated each frame before draw submission.</div>
+      </div>
+      <div class="node cat-resource" onclick="toggle(this)">
+        <div class="node-name">Textures</div>
+        <div class="node-files">texture.h / .cpp, texture_image.h / .cpp, texture_sampler.h / .cpp</div>
+        <div class="node-desc">Image loading → VkImage creation → layout transitions → mipmap generation → VkSampler (filtering, wrap modes). Full texture pipeline.</div>
+      </div>
+      <div class="node cat-resource" onclick="toggle(this)">
+        <div class="node-name">Depth Resources</div>
+        <div class="node-files">depth_resources.h / .cpp</div>
+        <div class="node-desc">Depth buffer (VkImage + VkImageView) for depth testing. Format selected based on GPU support (D32/D24).</div>
+      </div>
+    </div>
+
+    <div class="group g-scene">
+      <div class="group-title">Scene & Assets</div>
+      <div class="node cat-scene" onclick="toggle(this)">
+        <div class="node-name">Asset Types & Loading</div>
+        <div class="node-files">asset_types.hpp / .cpp, assets.h</div>
+        <div class="node-desc">Loads 3D models via tiny_gltf (glTF 2.0) and tiny_obj (OBJ). Parses vertices, indices, materials, textures from files.</div>
+      </div>
+      <div class="node cat-scene" onclick="toggle(this)">
+        <div class="node-name">Camera</div>
+        <div class="node-files">camera.h / .cpp</div>
+        <div class="node-desc">Computes view matrix (lookAt) and projection matrix (perspective). Handles input for movement and rotation.</div>
+      </div>
+      <div class="node cat-scene" onclick="toggle(this)">
+        <div class="node-name">Angles</div>
+        <div class="node-files">Angles.h</div>
+        <div class="node-desc">Rotation representation utilities (Euler angles, conversions). Used by camera and transform systems.</div>
+      </div>
+      <div class="node cat-scene" onclick="toggle(this)">
+        <div class="node-name">Shaders</div>
+        <div class="node-files">shaders/ directory</div>
+        <div class="node-desc">GLSL vertex/fragment shaders compiled to SPIR-V. Handle MVP transforms, texture sampling, lighting calculations on the GPU.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">⬇ game logic layer ⬇</div>
+
+  <!-- Row 4: ECS + Physics + UI -->
+  <div class="row">
+    <div class="group g-ecs">
+      <div class="group-title">Entity Component System</div>
+      <div class="node cat-ecs" onclick="toggle(this)">
+        <div class="node-name">flecs (ECS Framework)</div>
+        <div class="node-files">libraries/flecs/</div>
+        <div class="node-desc">Data-oriented architecture. Entities = IDs, Components = data structs (Transform, Mesh, RigidBody), Systems = queries that iterate matching entities. Cache-friendly and scalable.</div>
+      </div>
+    </div>
+
+    <div class="group g-physics">
+      <div class="group-title">Physics</div>
+      <div class="node cat-physics" onclick="toggle(this)">
+        <div class="node-name">ReactPhysics3D</div>
+        <div class="node-files">libraries/reactphysics3d/</div>
+        <div class="node-desc">Rigid body dynamics, collision detection (broad/narrow phase), collision shapes. Physics world stepped each frame, transforms synced to ECS entities.</div>
+      </div>
+    </div>
+
+    <div class="group g-ui">
+      <div class="group-title">Editor</div>
+      <div class="node cat-ui" onclick="toggle(this)">
+        <div class="node-name">Editor GUI</div>
+        <div class="node-files">EditorGUI.h / .cpp</div>
+        <div class="node-desc">Dear ImGui-based immediate mode editor. Inspect/modify entities, transforms, components at runtime. Rendered as an overlay via Vulkan ImGui backend.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow">⬇ foundation ⬇</div>
+
+  <!-- Row 5: Infrastructure -->
+  <div class="row">
+    <div class="group g-infra" style="max-width: 600px;">
+      <div class="group-title">Infrastructure & Build</div>
+      <div class="node cat-infra" onclick="toggle(this)">
+        <div class="node-name">Cleanup Stack</div>
+        <div class="node-files">cleanup_stack.h / .cpp</div>
+        <div class="node-desc">Deferred destruction pattern. Vulkan resources must not be freed while GPU is using them. Queues deletions for safe execution after sync.</div>
+      </div>
+      <div class="node cat-infra" onclick="toggle(this)">
+        <div class="node-name">Defines & Conventions</div>
+        <div class="node-files">defines.h / .cpp, conventions.txt</div>
+        <div class="node-desc">Global constants (MAX_FRAMES_IN_FLIGHT, validation layer names), macros, and project coding standards.</div>
+      </div>
+      <div class="node cat-infra" onclick="toggle(this)">
+        <div class="node-name">Build System</div>
+        <div class="node-files">CGProject.vcxproj, _maker.ps1</div>
+        <div class="node-desc">VS2022 / v143 / C++17 / x64. Configs: Debug, Release, Build Assets. Links: vulkan-1.lib, glfw3.lib, reactphysics3d.lib. _maker.ps1 compiles shaders to SPIR-V.</div>
+      </div>
+      <div class="node cat-infra" onclick="toggle(this)">
+        <div class="node-name">Libraries</div>
+        <div class="node-files">libraries/</div>
+        <div class="node-desc">GLM (math), GLFW 3.3.8 (windowing/input), Dear ImGui (GUI), tiny_gltf/tiny_obj (model loading), flecs (ECS), ReactPhysics3D (physics), stb (image loading).</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function toggle(el) {
+  el.classList.toggle('active');
+}
+</script>
+</body>
+</html>
